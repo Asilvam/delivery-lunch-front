@@ -1,7 +1,6 @@
 // src/types/menu.ts
 
 export interface SelectableMenuOption {
-    defaultValue: string;
     options: string[];
 }
 
@@ -13,7 +12,7 @@ export interface DailyMenuIncludes {
 
 export interface DishSelections {
     protein?: string;
-    salad: string;
+    salad?: string;
     dessert: string;
 }
 
@@ -30,6 +29,7 @@ export interface Dish {
     imageUrl?: string;
     isHipo?: boolean;
     proteinOptions?: string[];
+    stock?: number;
 }
 
 export interface DailyMenu {
@@ -47,6 +47,7 @@ export interface BackendDishDto {
     imagen_url?: string | null;
     opciones?: string[] | null;
     es_hipo?: boolean;
+    stock?: number | null;
 }
 
 export interface BackendDailyMenuDto {

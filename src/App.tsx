@@ -72,6 +72,46 @@ const buildCartItemKey = (dishId: string, selections: DishSelections) => {
   return `${dishId}::${selections.protein ?? ''}::${selections.salad ?? ''}::${selections.dessert}`;
 };
 
+const getDishQuantityInCart = (items: CartItem[], dishId: string) => {
+  return items
+    .filter((item) => item.dish.id === dishId)
+    .reduce((total, item) => total + item.quantity, 0);
+};
+
+const showAddToCartFeedback = async (dishName: string, nextQuantity: number, wasExisting: boolean) => {
+  await Swal.fire({
+    title: wasExisting ? 'Actualizando tu pedido…' : 'Agregando al pedido…',
+    html: `<strong>${dishName}</strong>`,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    timer: 650,
+    timerProgressBar: true,
+    backdrop: 'rgba(26,10,46,0.35)',
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+
+  await userToast.fire({
+    icon: 'success',
+    title: wasExisting
+      ? `${dishName} ahora tiene ${nextQuantity} ${nextQuantity === 1 ? 'unidad' : 'unidades'}`
+      : `${dishName} fue agregado al pedido`,
+    timer: 1600,
+  });
+};
+
+const showStockLimitFeedback = async (dishName: string, isSoldOut: boolean, stock?: number) => {
+  await userToast.fire({
+    icon: isSoldOut ? 'error' : 'warning',
+    title: isSoldOut
+      ? `${dishName} está agotado`
+      : `Solo quedan ${stock ?? 0} ${stock === 1 ? 'plato disponible' : 'platos disponibles'} de ${dishName}`,
+    timer: 1800,
+  });
+};
+
 function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -128,25 +168,50 @@ function App() {
     visibility: DishSelectionVisibility,
   ) => {
     const cartItemKey = buildCartItemKey(dishToAdd.id, selections);
+    const stock = dishToAdd.stock;
+    const totalDishQuantity = getDishQuantityInCart(cartItems, dishToAdd.id);
 
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.key === cartItemKey);
+    if (stock === 0) {
+      void showStockLimitFeedback(dishToAdd.name, true, stock);
+      return;
+    }
 
-      if (existing) {
-        return prev.map((item) => item.key === cartItemKey ? { ...item, quantity: item.quantity + 1 } : item);
-      }
+    if (typeof stock === 'number' && totalDishQuantity >= stock) {
+      void showStockLimitFeedback(dishToAdd.name, false, stock);
+      return;
+    }
 
-      return [...prev, {
+    const existing = cartItems.find((item) => item.key === cartItemKey);
+    const nextQuantity = existing ? existing.quantity + 1 : 1;
+    const nextItems = existing
+      ? cartItems.map((item) => item.key === cartItemKey ? { ...item, quantity: item.quantity + 1 } : item)
+      : [...cartItems, {
         key: cartItemKey,
         dish: dishToAdd,
         quantity: 1,
         selections,
         visibility,
       }];
-    });
+
+    setCartItems(nextItems);
+
+    void showAddToCartFeedback(dishToAdd.name, nextQuantity, Boolean(existing));
   };
 
   const handleUpdateQuantity = (cartItemKey: string, delta: number) => {
+    const targetItem = cartItems.find((item) => item.key === cartItemKey);
+    if (!targetItem) {
+      return;
+    }
+
+    if (delta > 0 && typeof targetItem.dish.stock === 'number') {
+      const totalDishQuantity = getDishQuantityInCart(cartItems, targetItem.dish.id);
+      if (totalDishQuantity >= targetItem.dish.stock) {
+        void showStockLimitFeedback(targetItem.dish.name, targetItem.dish.stock === 0, targetItem.dish.stock);
+        return;
+      }
+    }
+
     setCartItems((prev) =>
       prev.map((item) =>
         item.key === cartItemKey ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
@@ -235,57 +300,79 @@ function App() {
             <Typography variant="caption" color="text.secondary">Explora el menú y agrega tus favoritos</Typography>
           </Box>
         ) : (
-          cartItems.map((item) => (
-            <ListItem key={item.key} disablePadding sx={{ py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                <Box sx={{ pr: 1, flex: 1 }}>
-                  <Typography fontWeight={600} sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
-                    {item.dish.name}
-                  </Typography>
-                  <Box sx={{ display: 'grid', gap: 0.35, mt: 0.5 }}>
-                    {item.visibility.protein && item.selections.protein && (
-                      <Typography variant="caption" color="text.secondary">
-                        Proteína: {item.selections.protein}
-                      </Typography>
-                    )}
-                    {item.visibility.salad && item.selections.salad && (
-                      <Typography variant="caption" color="text.secondary">
-                        Ensalada: {item.selections.salad}
-                      </Typography>
-                    )}
-                    {item.visibility.dessert && (
-                      <Typography variant="caption" color="text.secondary">
-                        Postre: {item.selections.dessert}
-                      </Typography>
-                    )}
+          cartItems.map((item) => {
+            const totalDishQuantity = getDishQuantityInCart(cartItems, item.dish.id);
+            const stockLimit = item.dish.stock;
+            const hasStockLimit = typeof stockLimit === 'number';
+            const isAtStockLimit = hasStockLimit && totalDishQuantity >= stockLimit;
+
+            return (
+              <ListItem key={item.key} disablePadding sx={{ py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Box sx={{ pr: 1, flex: 1 }}>
+                    <Typography fontWeight={600} sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
+                      {item.dish.name}
+                    </Typography>
+                    <Box sx={{ display: 'grid', gap: 0.35, mt: 0.5 }}>
+                      {item.visibility.protein && item.selections.protein && (
+                        <Typography variant="caption" color="text.secondary">
+                          Proteína: {item.selections.protein}
+                        </Typography>
+                      )}
+                      {item.visibility.salad && item.selections.salad && (
+                        <Typography variant="caption" color="text.secondary">
+                          Ensalada: {item.selections.salad}
+                        </Typography>
+                      )}
+                      {item.visibility.dessert && (
+                        <Typography variant="caption" color="text.secondary">
+                          Postre: {item.selections.dessert}
+                        </Typography>
+                      )}
+                      {hasStockLimit && (
+                        <Typography variant="caption" color={stockLimit === 0 ? 'error.main' : isAtStockLimit ? 'warning.main' : 'text.secondary'}>
+                          {stockLimit === 0
+                            ? 'Agotado'
+                            : isAtStockLimit
+                              ? `Llegaste al máximo disponible (${stockLimit})`
+                              : `Stock disponible: ${stockLimit}`}
+                        </Typography>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-                <Typography fontWeight={800} color="primary.main" sx={{ whiteSpace: 'nowrap', fontSize: '0.95rem' }}>
-                  ${(item.dish.price * item.quantity).toLocaleString('es-CL')}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'secondary.light', borderRadius: 99, px: 0.5, py: 0.3 }}>
-                  <IconButton size="small" onClick={() => handleUpdateQuantity(item.key, -1)} color="primary" sx={{ p: 0.4 }}>
-                    <RemoveIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                  <Typography fontWeight={700} sx={{ minWidth: 22, textAlign: 'center', fontSize: '0.9rem' }}>
-                    {item.quantity}
+                  <Typography fontWeight={800} color="primary.main" sx={{ whiteSpace: 'nowrap', fontSize: '0.95rem' }}>
+                    ${(item.dish.price * item.quantity).toLocaleString('es-CL')}
                   </Typography>
-                  <IconButton size="small" onClick={() => handleUpdateQuantity(item.key, 1)} color="primary" sx={{ p: 0.4 }}>
-                    <AddIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
                 </Box>
-                <Tooltip title="Eliminar plato">
-                  <IconButton onClick={() => handleRemoveFromCart(item.key)} size="small"
-                    sx={{ color: 'error.main', bgcolor: 'rgba(211,47,47,0.06)', '&:hover': { bgcolor: 'rgba(211,47,47,0.14)' } }}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Divider sx={{ mt: 1.5 }} />
-            </ListItem>
-          ))
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'secondary.light', borderRadius: 99, px: 0.5, py: 0.3 }}>
+                    <IconButton size="small" onClick={() => handleUpdateQuantity(item.key, -1)} color="primary" sx={{ p: 0.4 }}>
+                      <RemoveIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                    <Typography fontWeight={700} sx={{ minWidth: 22, textAlign: 'center', fontSize: '0.9rem' }}>
+                      {item.quantity}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleUpdateQuantity(item.key, 1)}
+                      color="primary"
+                      disabled={Boolean(hasStockLimit && isAtStockLimit)}
+                      sx={{ p: 0.4 }}
+                    >
+                      <AddIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                  <Tooltip title="Eliminar plato">
+                    <IconButton onClick={() => handleRemoveFromCart(item.key)} size="small"
+                      sx={{ color: 'error.main', bgcolor: 'rgba(211,47,47,0.06)', '&:hover': { bgcolor: 'rgba(211,47,47,0.14)' } }}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Divider sx={{ mt: 1.5 }} />
+              </ListItem>
+            );
+          })
         )}
       </List>
 
