@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container, CssBaseline, ThemeProvider, createTheme, Typography, Box, Grid,
   AppBar, Toolbar, IconButton, Badge, Drawer, Dialog, List, ListItem, Divider, Button, useMediaQuery, Tooltip
@@ -9,8 +9,18 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete'; // NUEVO: Ícono del basurero
+import Swal from 'sweetalert2';
 import { DishCard } from './components/DishCard';
+import { fetchDailyMenusMock, getMenuDateTimestamp } from './api/menuMocks';
 import type { DailyMenu, Dish } from './types/menu';
+
+const userToast = Swal.mixin({
+  toast: true,
+  position: 'center',
+  showConfirmButton: false,
+  timer: 2800,
+  timerProgressBar: true,
+});
 
 // 1. TEMA ANGELICAL (Se mantiene igual)
 const angelicalTheme = createTheme({
@@ -22,20 +32,6 @@ const angelicalTheme = createTheme({
   typography: { fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif', h3: { fontWeight: 700 } },
 });
 
-// 2. DATOS DE PRUEBA (Se mantienen igual)
-const mockMenuToday: DailyMenu = {
-  date: '10/02/26',
-  includes: { salad: 'Tomate con cebolla', bread: 'Pan amasado', dessert: 'Leche asada' },
-  dishes: [
-    { id: '1', name: 'Pollo krispy con arroz y papas fritas', price: 5500, imageUrl: 'https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?q=80&w=400&auto=format&fit=crop' },
-    { id: '2', name: 'Cazuela de vacuno', price: 5500, imageUrl: 'https://images.unsplash.com/photo-1512132411229-c30391241dd8?q=80&w=400&auto=format&fit=crop' },
-    { id: '3', name: 'Pulpa asada con arroz y papas fritas', price: 5500 },
-    { id: '4', name: 'Pulpa asada con puré', price: 5500 },
-    { id: '5', name: 'Pulpa asada con fideos', price: 5500 },
-    { id: '6', name: 'Hipo', price: 5500, options: ['Pollo asado', 'Pulpa asada', 'Atún'], imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=400&auto=format&fit=crop' },
-  ]
-};
-
 interface CartItem {
   dish: Dish;
   quantity: number;
@@ -44,7 +40,77 @@ interface CartItem {
 function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [menus, setMenus] = useState<DailyMenu[]>([]);
+  const [isLoadingMenus, setIsLoadingMenus] = useState(true);
+  const [menuLoadError, setMenuLoadError] = useState<string | null>(null);
+  const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
   const isMobile = useMediaQuery(angelicalTheme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadMenus = async () => {
+      try {
+        setIsLoadingMenus(true);
+        console.info('[App] Cargando menus diarios desde mock backend...');
+        void userToast.fire({
+          icon: 'info',
+          title: 'Cargando menus diarios...',
+          timer: 1200,
+        });
+
+        const data = await fetchDailyMenusMock();
+        if (!mounted) return;
+
+        setMenus(data);
+        setMenuLoadError(null);
+        setSelectedMenuIndex(0);
+        console.info(`[App] Menus diarios cargados: ${data.length}`);
+
+        if (data.length === 0) {
+          console.warn('[App] El backend no devolvio menus disponibles.');
+          void userToast.fire({
+            icon: 'info',
+            title: 'Sin menus disponibles para hoy o fechas siguientes.',
+          });
+        }
+      } catch (error) {
+        if (!mounted) return;
+        setMenuLoadError('No se pudieron cargar los menus diarios.');
+        setMenus([]);
+        console.error('[App] Error cargando menus mock:', error);
+        void userToast.fire({
+          icon: 'error',
+          title: 'Error al cargar menus diarios. Intenta nuevamente.',
+        });
+      } finally {
+        if (mounted) {
+          setIsLoadingMenus(false);
+        }
+      }
+    };
+
+    void loadMenus();
+    return () => {
+      mounted = false;
+      Swal.close();
+    };
+  }, []);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTimestamp = today.getTime();
+
+  const availableMenus: DailyMenu[] = menus.filter((menu) => {
+    const timestamp = getMenuDateTimestamp(menu.date);
+    return timestamp !== null && timestamp >= todayTimestamp;
+  });
+
+  const menusForNavigation = availableMenus.length > 0 ? availableMenus : menus;
+  const selectedMenu = menusForNavigation[selectedMenuIndex] ?? menusForNavigation[0];
+
+  const canGoBack = selectedMenuIndex > 0;
+  const canGoForward = selectedMenuIndex < menusForNavigation.length - 1;
 
   // MODIFICADO: Ya no abre el carrito automáticamente al agregar
   const handleAddToCart = (dishToAdd: Dish) => {
@@ -78,6 +144,105 @@ function App() {
   // NUEVO: Función para eliminar el plato al presionar el basurero
   const handleRemoveFromCart = (dishId: string) => {
     setCartItems(prevItems => prevItems.filter(item => item.dish.id !== dishId));
+  };
+
+  const triggerCompletionFeedback = () => {
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([120, 60, 120]);
+      }
+
+      const AudioContextConstructor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextConstructor) {
+        return;
+      }
+
+      const audioContext = new AudioContextConstructor();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 880;
+      gainNode.gain.value = 0.03;
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.12);
+      oscillator.onended = () => {
+        void audioContext.close();
+      };
+    } catch (error) {
+      console.warn('[App] No fue posible reproducir feedback de exito:', error);
+    }
+  };
+
+  const handleConfirmOrder = async () => {
+    if (cartItems.length === 0) {
+      void userToast.fire({
+        icon: 'info',
+        title: 'No hay platos en el carrito.',
+      });
+      return;
+    }
+
+    // Cerramos el carrito antes de iniciar la transferencia para evitar superposicion de modales.
+    setIsCartOpen(false);
+
+    let progress = 0;
+    let intervalId: number | undefined;
+
+    await Swal.fire({
+      title: 'Transfiriendo dinero',
+      html: `
+        <div style="margin-bottom: 10px;">
+          Transfiriendo dinero a Ricardo Olguin cuenta rut del Tortuga.
+        </div>
+        <div style="width: 100%; height: 12px; background: #f3c6d8; border-radius: 999px; overflow: hidden; margin-bottom: 8px;">
+          <div id="transfer-progress-bar" style="width: 0%; height: 100%; background: #d81b60; transition: width 40ms linear;"></div>
+        </div>
+        <strong id="transfer-progress">0%</strong>
+      `,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+        intervalId = window.setInterval(() => {
+          progress = Math.min(progress + 1, 100);
+          const progressNode = Swal.getHtmlContainer()?.querySelector('#transfer-progress');
+          const progressBarNode = Swal.getHtmlContainer()?.querySelector('#transfer-progress-bar') as HTMLElement | null;
+          if (progressNode) {
+            progressNode.textContent = `${progress}%`;
+          }
+          if (progressBarNode) {
+            progressBarNode.style.width = `${progress}%`;
+          }
+
+          if (progress >= 100) {
+            window.clearInterval(intervalId);
+            Swal.close();
+          }
+        }, 40);
+      },
+      willClose: () => {
+        if (intervalId) {
+          window.clearInterval(intervalId);
+        }
+      },
+    });
+
+    const successResult = await Swal.fire({
+      icon: 'success',
+      title: 'Dineros transferidos con exito!',
+      confirmButtonText: 'Ok',
+    });
+
+    if (successResult.isConfirmed) {
+      triggerCompletionFeedback();
+      setCartItems([]);
+    }
   };
 
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -146,7 +311,7 @@ function App() {
                   ${totalPrice.toLocaleString('es-CL')}
                 </Typography>
               </Box>
-              <Button variant="contained" color="primary" fullWidth size="large" sx={{ borderRadius: 2, fontWeight: 'bold' }}>
+              <Button variant="contained" color="primary" fullWidth size="large" onClick={() => void handleConfirmOrder()} sx={{ borderRadius: 2, fontWeight: 'bold' }}>
                 Confirmar Pedido
               </Button>
             </Box>
@@ -174,22 +339,46 @@ function App() {
         <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
           <Box sx={{ textAlign: 'center', mb: 5 }}>
             <Typography variant="h5" color="text.secondary" gutterBottom>
-              Menú del Día ({mockMenuToday.date})
+              Menu diario ({selectedMenu?.date ?? 'Sin fecha'})
             </Typography>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 1.5 }}>
+              <Button variant="text" disabled={!canGoBack} onClick={() => setSelectedMenuIndex((prev) => Math.max(0, prev - 1))}>
+                Anterior
+              </Button>
+              <Button variant="text" disabled={!canGoForward} onClick={() => setSelectedMenuIndex((prev) => Math.min(menusForNavigation.length - 1, prev + 1))}>
+                Siguiente
+              </Button>
+              <Button
+                variant="outlined"
+                disabled={selectedMenuIndex === 0}
+                onClick={() => setSelectedMenuIndex(0)}
+              >
+                Volver a hoy
+              </Button>
+            </Box>
           </Box>
 
-          <Grid container spacing={4} justifyContent="center">
-            {mockMenuToday.dishes.map((dish) => (
-                <Grid item key={dish.id} xs={12} sm={6} md={4}>
-                  <DishCard dish={dish} dailyIncludes={mockMenuToday.includes} onAddToCart={handleAddToCart} />
-                </Grid>
-            ))}
-          </Grid>
+
+          {!isLoadingMenus && !menuLoadError && selectedMenu && (
+            <Grid container spacing={4} justifyContent="center">
+              {selectedMenu.dishes.map((dish) => (
+                  <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                    <DishCard dish={dish} dailyIncludes={selectedMenu.includes} onAddToCart={handleAddToCart} />
+                  </Grid>
+              ))}
+            </Grid>
+          )}
         </Container>
 
         {/* Renderizado condicional del Carrito según el dispositivo */}
         {isMobile ? (
-            <Dialog open={isCartOpen} onClose={() => setIsCartOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 3, m: 2 } }}>
+            <Dialog
+              open={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              fullWidth
+              maxWidth="sm"
+              slotProps={{ paper: { sx: { borderRadius: 3, m: 2 } } }}
+            >
               {cartContent}
             </Dialog>
         ) : (

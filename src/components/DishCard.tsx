@@ -1,4 +1,5 @@
 // src/components/DishCard.tsx
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardMedia, Typography, Button, CardActions, Chip, Box, CardHeader } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import type {Dish} from '../types/menu';
@@ -11,6 +12,11 @@ interface DishCardProps {
 
 export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) => {
     const defaultImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop';
+    const [imageSrc, setImageSrc] = useState(dish.imageUrl || defaultImage);
+
+    useEffect(() => {
+        setImageSrc(dish.imageUrl || defaultImage);
+    }, [dish.id, dish.imageUrl]);
 
     return (
         <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 4, boxShadow: '0 4px 20px rgba(216, 27, 96, 0.15)', overflow: 'hidden' }}>
@@ -19,14 +25,26 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                 titleTypographyProps={{ variant: 'h6', fontWeight: 'bold', minHeight: 64, color: 'primary.dark' }}
                 sx={{ pb: 1, pt: 2, px: 2 }}
             />
-            <CardMedia component="img" height="200" image={dish.imageUrl || defaultImage} alt={dish.name} />
+            <CardMedia
+                component="img"
+                height="200"
+                image={imageSrc}
+                alt={dish.name}
+                onError={() => {
+                    if (imageSrc !== defaultImage) {
+                        setImageSrc(defaultImage);
+                    }
+                }}
+            />
 
             <CardContent sx={{ flexGrow: 1, pt: 2, px: 2 }}>
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 2 }}>
-                    <Chip label={`🥗 ${dailyIncludes.salad}`} size="small" variant="outlined" color="secondary" sx={{ fontWeight: 500 }} />
-                    <Chip label={`🥖 ${dailyIncludes.bread}`} size="small" variant="outlined" color="secondary" sx={{ fontWeight: 500 }} />
-                    <Chip label={`🍮 ${dailyIncludes.dessert}`} size="small" variant="outlined" color="secondary" sx={{ fontWeight: 500 }} />
-                </Box>
+                {dish.hasSides !== false && (
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 2 }}>
+                        <Chip label={`🥗 ${dailyIncludes.salad}`} size="small" variant="outlined" color="secondary" sx={{ fontWeight: 500 }} />
+                        <Chip label={`🥖 ${dailyIncludes.bread}`} size="small" variant="outlined" color="secondary" sx={{ fontWeight: 500 }} />
+                        <Chip label={`🍮 ${dailyIncludes.dessert}`} size="small" variant="outlined" color="secondary" sx={{ fontWeight: 500 }} />
+                    </Box>
+                )}
 
                 {dish.options && (
                     <Box sx={{ mt: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
