@@ -79,20 +79,6 @@ const getDishQuantityInCart = (items: CartItem[], dishId: string) => {
 };
 
 const showAddToCartFeedback = async (dishName: string, nextQuantity: number, wasExisting: boolean) => {
-  await Swal.fire({
-    title: wasExisting ? 'Actualizando tu pedido…' : 'Agregando al pedido…',
-    html: `<strong>${dishName}</strong>`,
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    showConfirmButton: false,
-    timer: 650,
-    timerProgressBar: true,
-    backdrop: 'rgba(26,10,46,0.35)',
-    didOpen: () => {
-      Swal.showLoading();
-    },
-  });
-
   await userToast.fire({
     icon: 'success',
     title: wasExisting
@@ -327,15 +313,6 @@ function App() {
                       {item.visibility.dessert && (
                         <Typography variant="caption" color="text.secondary">
                           Postre: {item.selections.dessert}
-                        </Typography>
-                      )}
-                      {hasStockLimit && (
-                        <Typography variant="caption" color={stockLimit === 0 ? 'error.main' : isAtStockLimit ? 'warning.main' : 'text.secondary'}>
-                          {stockLimit === 0
-                            ? 'Agotado'
-                            : isAtStockLimit
-                              ? `Llegaste al máximo disponible (${stockLimit})`
-                              : `Stock disponible: ${stockLimit}`}
                         </Typography>
                       )}
                     </Box>
