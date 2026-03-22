@@ -71,3 +71,23 @@ export default defineConfig([
   },
 ])
 ```
+
+## Backend real para menus
+
+La app usa este flujo:
+
+- Si existe `VITE_API_BASE_URL`, intenta consultar backend real.
+- Si falla el backend o no existe esa variable, cae automaticamente al mock local.
+
+Variables disponibles:
+
+- `VITE_API_BASE_URL`: URL base del backend.
+- `VITE_MENUS_PATH`: path del endpoint de menus (default: `/menus`).
+
+Ejemplo rapido:
+
+```bash
+cp .env.example .env
+npm run dev
+```
+

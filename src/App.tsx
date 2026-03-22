@@ -18,6 +18,7 @@ import Swal from 'sweetalert2';
 import { DishCard } from './components/DishCard';
 import { fetchDailyMenusMock, getMenuDateTimestamp } from './api/menuMocks';
 import type { DailyMenu, Dish, DishSelectionVisibility, DishSelections } from './types/menu';
+import { canAddDish, getRemainingDishStock } from './domain/cart/stock.rules';
 
 const userToast = Swal.mixin({
   toast: true,
@@ -72,19 +73,6 @@ const buildCartItemKey = (dishId: string, selections: DishSelections) => {
   return `${dishId}::${selections.protein ?? ''}::${selections.salad ?? ''}::${selections.dessert}`;
 };
 
-const getDishQuantityInCart = (items: CartItem[], dishId: string) => {
-  return items
-    .filter((item) => item.dish.id === dishId)
-    .reduce((total, item) => total + item.quantity, 0);
-};
-
-const getRemainingDishStock = (items: CartItem[], dish: Dish) => {
-  if (typeof dish.stock !== 'number') {
-    return undefined;
-  }
-
-  return Math.max(dish.stock - getDishQuantityInCart(items, dish.id), 0);
-};
 
 const showAddToCartFeedback = async (dishName: string, nextQuantity: number, wasExisting: boolean) => {
   await userToast.fire({
@@ -171,8 +159,8 @@ function App() {
       return;
     }
 
-    if (remainingStock === 0) {
-      void showStockLimitFeedback(dishToAdd.name, false, 0);
+    if (!canAddDish(cartItems, dishToAdd)) {
+      void showStockLimitFeedback(dishToAdd.name, false, remainingStock ?? 0);
       return;
     }
 
@@ -181,8 +169,7 @@ function App() {
     let wasBlocked = false;
 
     setCartItems((prev) => {
-      const latestRemainingStock = getRemainingDishStock(prev, dishToAdd);
-      if (latestRemainingStock === 0) {
+      if (!canAddDish(prev, dishToAdd)) {
         wasBlocked = true;
         return prev;
       }
@@ -212,24 +199,17 @@ function App() {
 
   const handleUpdateQuantity = (cartItemKey: string, delta: number) => {
     const targetItem = cartItems.find((item) => item.key === cartItemKey);
-    if (!targetItem) {
-      return;
-    }
+    if (!targetItem) return;
 
     let wasBlocked = false;
 
     setCartItems((prev) => {
       const currentTargetItem = prev.find((item) => item.key === cartItemKey);
-      if (!currentTargetItem) {
-        return prev;
-      }
+      if (!currentTargetItem) return prev;
 
-      if (delta > 0) {
-        const remainingStock = getRemainingDishStock(prev, currentTargetItem.dish);
-        if (remainingStock === 0) {
-          wasBlocked = true;
-          return prev;
-        }
+      if (delta > 0 && !canAddDish(prev, currentTargetItem.dish)) {
+        wasBlocked = true;
+        return prev;
       }
 
       return prev.map((item) =>
@@ -325,11 +305,11 @@ function App() {
         ) : (
           cartItems.map((item) => {
             const remainingStock = getRemainingDishStock(cartItems, item.dish);
-            const isAtStockLimit = remainingStock === 0;
+            const isAtStockLimit = typeof remainingStock === 'number' && remainingStock === 0;
 
             return (
               <ListItem key={item.key} disablePadding sx={{ py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.75 }}>
                   <Box sx={{ pr: 1, flex: 1 }}>
                     <Typography fontWeight={600} sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
                       {item.dish.name}
@@ -356,6 +336,7 @@ function App() {
                     ${(item.dish.price * item.quantity).toLocaleString('es-CL')}
                   </Typography>
                 </Box>
+
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'secondary.light', borderRadius: 99, px: 0.5, py: 0.3 }}>
                     <IconButton size="small" onClick={() => handleUpdateQuantity(item.key, -1)} color="primary" sx={{ p: 0.4 }}>
@@ -364,15 +345,19 @@ function App() {
                     <Typography fontWeight={700} sx={{ minWidth: 22, textAlign: 'center', fontSize: '0.9rem' }}>
                       {item.quantity}
                     </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleUpdateQuantity(item.key, 1)}
-                      color="primary"
-                      disabled={isAtStockLimit}
-                      sx={{ p: 0.4 }}
-                    >
-                      <AddIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
+                    <Tooltip title={isAtStockLimit ? 'Stock máximo alcanzado' : ''} placement="top">
+                      <span>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleUpdateQuantity(item.key, 1)}
+                          color="primary"
+                          disabled={isAtStockLimit}
+                          sx={{ p: 0.4 }}
+                        >
+                          <AddIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </Box>
                   <Tooltip title="Eliminar plato">
                     <IconButton onClick={() => handleRemoveFromCart(item.key)} size="small"
