@@ -1,26 +1,45 @@
 // src/types/menu.ts
 
+export interface SelectableMenuOption {
+    defaultValue: string;
+    options: string[];
+}
+
+export interface DailyMenuIncludes {
+    salad: SelectableMenuOption;
+    bread: string;
+    dessert: SelectableMenuOption;
+}
+
+export interface DishSelections {
+    protein?: string;
+    salad: string;
+    dessert: string;
+}
+
+export interface DishSelectionVisibility {
+    protein: boolean;
+    salad: boolean;
+    dessert: boolean;
+}
+
 export interface Dish {
     id: string;
     name: string;
-    price: number; // Ya lo teníamos, pero asegúrate de usarlo
-    imageUrl?: string; // Nuevo campo para la imagen del plato
-    options?: string[];
-    hasSides?: boolean;
+    price: number;
+    imageUrl?: string;
+    isHipo?: boolean;
+    proteinOptions?: string[];
 }
 
-// DailyMenu permanece igual
 export interface DailyMenu {
     date: string;
-    includes: {
-        salad: string;
-        bread: string;
-        dessert: string;
-    };
+    includes: DailyMenuIncludes;
     dishes: Dish[];
 }
 
-// Contrato esperado desde backend (DTO)
+export type BackendSelectableText = string | string[] | null | undefined;
+
 export interface BackendDishDto {
     id: string;
     nombre: string;
@@ -31,10 +50,10 @@ export interface BackendDishDto {
 }
 
 export interface BackendDailyMenuDto {
-    fecha: string; // ISO: yyyy-mm-dd
-    ensalada: string;
+    fecha: string;
+    ensalada: BackendSelectableText;
     pan: string;
-    postre: string;
+    postre: BackendSelectableText;
     platos: BackendDishDto[];
 }
 

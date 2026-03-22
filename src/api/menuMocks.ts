@@ -1,4 +1,12 @@
-import type { BackendDailyMenuDto, BackendDishDto, BackendMenuResponseDto, DailyMenu, Dish } from '../types/menu';
+import type {
+  BackendDailyMenuDto,
+  BackendDishDto,
+  BackendMenuResponseDto,
+  BackendSelectableText,
+  DailyMenu,
+  Dish,
+  SelectableMenuOption,
+} from '../types/menu';
 
 const FIXED_MENU_PRICE = 5500;
 const BASE_INCLUDES = {
@@ -25,6 +33,30 @@ const formatUiDate = (date: Date) => {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const year = `${date.getFullYear()}`.slice(-2);
   return `${day}/${month}/${year}`;
+};
+
+const normalizeSelectableValues = (value: BackendSelectableText, fallback: string): string[] => {
+  if (Array.isArray(value)) {
+    const sanitized = value
+      .map((option) => option?.trim())
+      .filter((option): option is string => Boolean(option));
+
+    return sanitized.length > 0 ? sanitized : [fallback];
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+
+  return [fallback];
+};
+
+const toSelectableMenuOption = (value: BackendSelectableText, fallback: string): SelectableMenuOption => {
+  const options = normalizeSelectableValues(value, fallback);
+  return {
+    options,
+    defaultValue: options[0],
+  };
 };
 
 const parseIsoDate = (isoDate: string): Date | null => {
@@ -70,9 +102,9 @@ export const backendMenuResponseMock: BackendMenuResponseDto = {
   data: [
     {
       fecha: todayIso,
-      ensalada: BASE_INCLUDES.ensalada,
+      ensalada: ['Ensalada surtida', 'Ensalada chilena', 'Repollo con zanahoria'],
       pan: BASE_INCLUDES.pan,
-      postre: BASE_INCLUDES.postre,
+      postre: ['Flan de vainilla', 'Jalea light'],
       platos: [
         createBackendDish('today-1', 'Pollo asado con arroz y papas fritas', { imagen_url: 'https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?q=80&w=400&auto=format&fit=crop' }),
         createBackendDish('today-2', 'Pollo asado con fideos con salsa o crema', { imagen_url: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80&w=400&auto=format&fit=crop' }),
@@ -88,7 +120,7 @@ export const backendMenuResponseMock: BackendMenuResponseDto = {
     },
     {
       fecha: tomorrowIso,
-      ensalada: BASE_INCLUDES.ensalada,
+      ensalada: ['Ensalada surtida', 'Apio con palta'],
       pan: BASE_INCLUDES.pan,
       postre: BASE_INCLUDES.postre,
       platos: [
@@ -107,7 +139,7 @@ export const backendMenuResponseMock: BackendMenuResponseDto = {
       fecha: afterTomorrowIso,
       ensalada: BASE_INCLUDES.ensalada,
       pan: BASE_INCLUDES.pan,
-      postre: BASE_INCLUDES.postre,
+      postre: ['Leche asada', 'Fruta de la estación'],
       platos: [
         createBackendDish('other-2-1', 'Cazuela de pollo', { imagen_url: 'https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=400&auto=format&fit=crop' }),
         createBackendDish('other-2-2', 'Zapallo italiano', { imagen_url: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?q=80&w=400&auto=format&fit=crop' }),
@@ -142,8 +174,8 @@ const mapBackendDishToDish = (dto: BackendDishDto): Dish => ({
   name: dto.nombre,
   price: dto.precio,
   imageUrl: dto.imagen_url ?? undefined,
-  options: dto.opciones ?? undefined,
-  hasSides: dto.es_hipo ? false : undefined,
+  isHipo: dto.es_hipo ?? false,
+  proteinOptions: dto.opciones ?? undefined,
 });
 
 const mapBackendMenuToDailyMenu = (dto: BackendDailyMenuDto): DailyMenu | null => {
@@ -156,9 +188,9 @@ const mapBackendMenuToDailyMenu = (dto: BackendDailyMenuDto): DailyMenu | null =
   return {
     date: formatUiDate(parsedDate),
     includes: {
-      salad: dto.ensalada,
+      salad: toSelectableMenuOption(dto.ensalada, BASE_INCLUDES.ensalada),
       bread: dto.pan,
-      dessert: dto.postre,
+      dessert: toSelectableMenuOption(dto.postre, BASE_INCLUDES.postre),
     },
     dishes: dto.platos.map(mapBackendDishToDish),
   };
