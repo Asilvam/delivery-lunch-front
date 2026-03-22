@@ -1,5 +1,4 @@
 // src/components/DishCard.tsx
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardMedia, Typography, Button, CardActions, Chip, Box, CardHeader } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import type {Dish} from '../types/menu';
@@ -12,27 +11,23 @@ interface DishCardProps {
 
 export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) => {
     const defaultImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop';
-    const [imageSrc, setImageSrc] = useState(dish.imageUrl || defaultImage);
-
-    useEffect(() => {
-        setImageSrc(dish.imageUrl || defaultImage);
-    }, [dish.id, dish.imageUrl]);
 
     return (
         <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 4, boxShadow: '0 4px 20px rgba(216, 27, 96, 0.15)', overflow: 'hidden' }}>
             <CardHeader
-                title={dish.name}
-                titleTypographyProps={{ variant: 'h6', fontWeight: 'bold', minHeight: 64, color: 'primary.dark' }}
+                title={<Typography variant="h6" fontWeight="bold" sx={{ minHeight: 64, color: 'primary.dark' }}>{dish.name}</Typography>}
                 sx={{ pb: 1, pt: 2, px: 2 }}
             />
             <CardMedia
                 component="img"
                 height="200"
-                image={imageSrc}
+                image={dish.imageUrl || defaultImage}
                 alt={dish.name}
-                onError={() => {
-                    if (imageSrc !== defaultImage) {
-                        setImageSrc(defaultImage);
+                onError={(event) => {
+                    const imageElement = event.currentTarget;
+                    if (imageElement.src !== defaultImage) {
+                        imageElement.onerror = null;
+                        imageElement.src = defaultImage;
                     }
                 }}
             />
