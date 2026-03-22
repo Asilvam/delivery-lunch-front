@@ -78,6 +78,14 @@ const getDishQuantityInCart = (items: CartItem[], dishId: string) => {
     .reduce((total, item) => total + item.quantity, 0);
 };
 
+const getRemainingDishStock = (items: CartItem[], dish: Dish) => {
+  if (typeof dish.stock !== 'number') {
+    return undefined;
+  }
+
+  return Math.max(dish.stock - getDishQuantityInCart(items, dish.id), 0);
+};
+
 const showAddToCartFeedback = async (dishName: string, nextQuantity: number, wasExisting: boolean) => {
   await userToast.fire({
     icon: 'success',
@@ -88,12 +96,14 @@ const showAddToCartFeedback = async (dishName: string, nextQuantity: number, was
   });
 };
 
-const showStockLimitFeedback = async (dishName: string, isSoldOut: boolean, stock?: number) => {
+const showStockLimitFeedback = async (dishName: string, isSoldOut: boolean, remainingStock = 0) => {
   await userToast.fire({
     icon: isSoldOut ? 'error' : 'warning',
     title: isSoldOut
       ? `${dishName} está agotado`
-      : `Solo quedan ${stock ?? 0} ${stock === 1 ? 'plato disponible' : 'platos disponibles'} de ${dishName}`,
+      : remainingStock > 0
+        ? `Solo quedan ${remainingStock} ${remainingStock === 1 ? 'plato disponible' : 'platos disponibles'} de ${dishName}`
+        : `Ya no puedes agregar más unidades de ${dishName}`,
     timer: 1800,
   });
 };
@@ -154,34 +164,50 @@ function App() {
     visibility: DishSelectionVisibility,
   ) => {
     const cartItemKey = buildCartItemKey(dishToAdd.id, selections);
-    const stock = dishToAdd.stock;
-    const totalDishQuantity = getDishQuantityInCart(cartItems, dishToAdd.id);
+    const remainingStock = getRemainingDishStock(cartItems, dishToAdd);
 
-    if (stock === 0) {
-      void showStockLimitFeedback(dishToAdd.name, true, stock);
+    if (dishToAdd.stock === 0) {
+      void showStockLimitFeedback(dishToAdd.name, true, 0);
       return;
     }
 
-    if (typeof stock === 'number' && totalDishQuantity >= stock) {
-      void showStockLimitFeedback(dishToAdd.name, false, stock);
+    if (remainingStock === 0) {
+      void showStockLimitFeedback(dishToAdd.name, false, 0);
       return;
     }
 
-    const existing = cartItems.find((item) => item.key === cartItemKey);
-    const nextQuantity = existing ? existing.quantity + 1 : 1;
-    const nextItems = existing
-      ? cartItems.map((item) => item.key === cartItemKey ? { ...item, quantity: item.quantity + 1 } : item)
-      : [...cartItems, {
-        key: cartItemKey,
-        dish: dishToAdd,
-        quantity: 1,
-        selections,
-        visibility,
-      }];
+    let nextQuantity = 0;
+    let wasExisting = false;
+    let wasBlocked = false;
 
-    setCartItems(nextItems);
+    setCartItems((prev) => {
+      const latestRemainingStock = getRemainingDishStock(prev, dishToAdd);
+      if (latestRemainingStock === 0) {
+        wasBlocked = true;
+        return prev;
+      }
 
-    void showAddToCartFeedback(dishToAdd.name, nextQuantity, Boolean(existing));
+      const existing = prev.find((item) => item.key === cartItemKey);
+      wasExisting = Boolean(existing);
+      nextQuantity = existing ? existing.quantity + 1 : 1;
+
+      return existing
+        ? prev.map((item) => item.key === cartItemKey ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...prev, {
+          key: cartItemKey,
+          dish: dishToAdd,
+          quantity: 1,
+          selections,
+          visibility,
+        }];
+    });
+
+    if (wasBlocked) {
+      void showStockLimitFeedback(dishToAdd.name, false, 0);
+      return;
+    }
+
+    void showAddToCartFeedback(dishToAdd.name, nextQuantity, wasExisting);
   };
 
   const handleUpdateQuantity = (cartItemKey: string, delta: number) => {
@@ -190,19 +216,30 @@ function App() {
       return;
     }
 
-    if (delta > 0 && typeof targetItem.dish.stock === 'number') {
-      const totalDishQuantity = getDishQuantityInCart(cartItems, targetItem.dish.id);
-      if (totalDishQuantity >= targetItem.dish.stock) {
-        void showStockLimitFeedback(targetItem.dish.name, targetItem.dish.stock === 0, targetItem.dish.stock);
-        return;
-      }
-    }
+    let wasBlocked = false;
 
-    setCartItems((prev) =>
-      prev.map((item) =>
+    setCartItems((prev) => {
+      const currentTargetItem = prev.find((item) => item.key === cartItemKey);
+      if (!currentTargetItem) {
+        return prev;
+      }
+
+      if (delta > 0) {
+        const remainingStock = getRemainingDishStock(prev, currentTargetItem.dish);
+        if (remainingStock === 0) {
+          wasBlocked = true;
+          return prev;
+        }
+      }
+
+      return prev.map((item) =>
         item.key === cartItemKey ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-      )
-    );
+      );
+    });
+
+    if (wasBlocked) {
+      void showStockLimitFeedback(targetItem.dish.name, targetItem.dish.stock === 0, 0);
+    }
   };
 
   const handleRemoveFromCart = (cartItemKey: string) => {
@@ -287,10 +324,8 @@ function App() {
           </Box>
         ) : (
           cartItems.map((item) => {
-            const totalDishQuantity = getDishQuantityInCart(cartItems, item.dish.id);
-            const stockLimit = item.dish.stock;
-            const hasStockLimit = typeof stockLimit === 'number';
-            const isAtStockLimit = hasStockLimit && totalDishQuantity >= stockLimit;
+            const remainingStock = getRemainingDishStock(cartItems, item.dish);
+            const isAtStockLimit = remainingStock === 0;
 
             return (
               <ListItem key={item.key} disablePadding sx={{ py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
@@ -333,7 +368,7 @@ function App() {
                       size="small"
                       onClick={() => handleUpdateQuantity(item.key, 1)}
                       color="primary"
-                      disabled={Boolean(hasStockLimit && isAtStockLimit)}
+                      disabled={isAtStockLimit}
                       sx={{ p: 0.4 }}
                     >
                       <AddIcon sx={{ fontSize: 16 }} />
@@ -533,7 +568,12 @@ function App() {
           <Grid container spacing={3} justifyContent="center">
             {selectedMenu.dishes.map((dish) => (
               <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <DishCard dish={dish} dailyIncludes={selectedMenu.includes} onAddToCart={handleAddToCart} />
+                <DishCard
+                  dish={dish}
+                  dailyIncludes={selectedMenu.includes}
+                  onAddToCart={handleAddToCart}
+                  remainingSharedStock={getRemainingDishStock(cartItems, dish)}
+                />
               </Grid>
             ))}
           </Grid>

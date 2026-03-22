@@ -21,13 +21,22 @@ interface DishCardProps {
     dish: Dish;
     dailyIncludes: DailyMenuIncludes;
     onAddToCart: (dish: Dish, selections: DishSelections, visibility: DishSelectionVisibility) => void;
+    remainingSharedStock?: number;
 }
 
-export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) => {
+export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStock }: DishCardProps) => {
     const defaultImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop';
     const isHipo = dish.isHipo === true;
     const isSoldOut = dish.stock === 0;
-    const isLowStock = typeof dish.stock === 'number' && dish.stock > 0 && dish.stock <= 5;
+    const isCartStockDepleted = typeof remainingSharedStock === 'number' && remainingSharedStock === 0 && !isSoldOut;
+    const effectiveStock = typeof remainingSharedStock === 'number' ? remainingSharedStock : dish.stock;
+    const isLowStock = typeof effectiveStock === 'number' && effectiveStock > 0 && effectiveStock <= 5;
+    const isActionDisabled = isSoldOut || isCartStockDepleted;
+    const actionLabel = isSoldOut
+        ? 'Agotado'
+        : isCartStockDepleted
+            ? 'Sin cupo en tu pedido'
+            : 'Agregar al pedido';
     const proteinOptions = useMemo(() => dish.proteinOptions ?? [], [dish.proteinOptions]);
     const saladOptions = useMemo(() => dailyIncludes.salad.options, [dailyIncludes.salad.options]);
     const dessertOptions = useMemo(() => dailyIncludes.dessert.options, [dailyIncludes.dessert.options]);
@@ -81,9 +90,22 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                             }}
                         />
                     )}
-                    {!isSoldOut && isLowStock && (
+                    {!isSoldOut && isCartStockDepleted && (
                         <Chip
-                            label={`Quedan pocos platos${dish.stock ? ` (${dish.stock})` : ''}`}
+                            label="Sin cupo en tu pedido"
+                            size="small"
+                            sx={{
+                                bgcolor: 'rgba(94, 53, 177, 0.92)',
+                                color: 'common.white',
+                                fontWeight: 800,
+                                borderRadius: '999px',
+                                backdropFilter: 'blur(6px)',
+                            }}
+                        />
+                    )}
+                    {!isSoldOut && !isCartStockDepleted && isLowStock && (
+                        <Chip
+                            label={`Quedan pocos platos${effectiveStock ? ` (${effectiveStock})` : ''}`}
                             size="small"
                             sx={{
                                 bgcolor: 'rgba(255, 143, 0, 0.92)',
@@ -186,7 +208,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                         </Typography>
 
                         {visibility.protein && (
-                            <FormControl fullWidth size="small" disabled={isSoldOut}>
+                            <FormControl fullWidth size="small" disabled={isActionDisabled}>
                                 <InputLabel id={`protein-label-${dish.id}`}>Proteína</InputLabel>
                                 <Select
                                     labelId={`protein-label-${dish.id}`}
@@ -203,7 +225,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                         )}
 
                         {visibility.salad && (
-                            <FormControl fullWidth size="small" disabled={isSoldOut}>
+                            <FormControl fullWidth size="small" disabled={isActionDisabled}>
                                 <InputLabel id={`salad-label-${dish.id}`}>Ensalada</InputLabel>
                                 <Select
                                     labelId={`salad-label-${dish.id}`}
@@ -220,7 +242,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                         )}
 
                         {visibility.dessert && (
-                            <FormControl fullWidth size="small" disabled={isSoldOut}>
+                            <FormControl fullWidth size="small" disabled={isActionDisabled}>
                                 <InputLabel id={`dessert-label-${dish.id}`}>Postre</InputLabel>
                                 <Select
                                     labelId={`dessert-label-${dish.id}`}
@@ -245,7 +267,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                     startIcon={<AddShoppingCartIcon />}
                     color="primary"
                     fullWidth
-                    disabled={isSoldOut}
+                    disabled={isActionDisabled}
                     onClick={() => onAddToCart(
                         dish,
                         isHipo
@@ -279,7 +301,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart }: DishCardProps) =>
                         },
                     }}
                 >
-                    {isSoldOut ? 'Agotado' : 'Agregar al pedido'}
+                    {actionLabel}
                 </Button>
             </CardActions>
         </Card>
