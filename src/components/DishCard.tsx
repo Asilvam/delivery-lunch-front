@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import type { DailyMenuIncludes, Dish, DishSelectionVisibility, DishSelections } from '../types/menu';
+import styles from './DishCard.module.css';
 
 interface DishCardProps {
     dish: Dish;
@@ -31,17 +32,11 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
     const isCartStockDepleted = typeof remainingSharedStock === 'number' && remainingSharedStock === 0 && !isSoldOut;
     const effectiveStock = typeof remainingSharedStock === 'number' ? remainingSharedStock : dish.stock;
     const isLowStock = typeof effectiveStock === 'number' && effectiveStock > 0 && effectiveStock <= 5;
-    const isActionDisabled = isSoldOut || isCartStockDepleted;
-    const actionLabel = isSoldOut
-        ? 'Agotado'
-        : isCartStockDepleted
-            ? 'Sin cupo en tu pedido'
-            : 'Agregar al pedido';
     const proteinOptions = useMemo(() => dish.proteinOptions ?? [], [dish.proteinOptions]);
     const saladOptions = useMemo(() => dailyIncludes.salad.options, [dailyIncludes.salad.options]);
     const dessertOptions = useMemo(() => dailyIncludes.dessert.options, [dailyIncludes.dessert.options]);
 
-    const [selectedProtein, setSelectedProtein] = useState(() => proteinOptions[0] ?? '');
+    const [selectedProtein, setSelectedProtein] = useState(() => isHipo ? '' : (proteinOptions[0] ?? ''));
     const [selectedSalad, setSelectedSalad] = useState(() => dailyIncludes.salad.options[0] ?? '');
     const [selectedDessert, setSelectedDessert] = useState(() => dailyIncludes.dessert.options[0] ?? '');
 
@@ -50,6 +45,16 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
         salad: !isHipo && saladOptions.length > 1,
         dessert: dessertOptions.length > 1,
     };
+
+    const isHipoProteinMissing = isHipo && visibility.protein && !selectedProtein;
+    const isActionDisabled = isSoldOut || isCartStockDepleted || isHipoProteinMissing;
+    const actionLabel = isSoldOut
+        ? 'Agotado'
+        : isCartStockDepleted
+            ? 'Sin cupo en tu pedido'
+            : isHipoProteinMissing
+                ? 'Elige tu proteína'
+                : 'Agregar al pedido';
 
     const hasCustomizations = visibility.protein || visibility.salad || visibility.dessert;
     const selectionChips = [
@@ -60,60 +65,36 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
     ].filter((value): value is string => Boolean(value));
 
     return (
-        <Card
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 4,
-                boxShadow: '0 2px 16px rgba(216, 27, 96, 0.10)',
-                overflow: 'hidden',
-                border: '1px solid rgba(216, 27, 96, 0.08)',
-                '&:hover': {
-                    boxShadow: '0 12px 40px rgba(216, 27, 96, 0.22)',
-                },
-            }}
-        >
+        <Card className={styles.card}>
             {/* Image with gradient overlay */}
-            <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-                <Box sx={{ position: 'absolute', top: 12, left: 12, zIndex: 2, display: 'grid', gap: 0.75 }}>
+            <Box className={styles.imageWrapper}>
+                <Box className={styles.badgeGroup}>
+                    {isHipo && (
+                        <Chip
+                            label="Hipocalórico"
+                            size="small"
+                            className={`${styles.badgeBase} ${styles.badgeHipo}`}
+                        />
+                    )}
                     {isSoldOut && (
                         <Chip
                             label="Agotado"
                             size="small"
-                            sx={{
-                                bgcolor: 'rgba(183, 28, 28, 0.92)',
-                                color: 'common.white',
-                                fontWeight: 800,
-                                borderRadius: '999px',
-                                backdropFilter: 'blur(6px)',
-                            }}
+                            className={`${styles.badgeBase} ${styles.badgeSoldOut}`}
                         />
                     )}
                     {!isSoldOut && isCartStockDepleted && (
                         <Chip
                             label="Sin cupo en tu pedido"
                             size="small"
-                            sx={{
-                                bgcolor: 'rgba(94, 53, 177, 0.92)',
-                                color: 'common.white',
-                                fontWeight: 800,
-                                borderRadius: '999px',
-                                backdropFilter: 'blur(6px)',
-                            }}
+                            className={`${styles.badgeBase} ${styles.badgeNoCupo}`}
                         />
                     )}
                     {!isSoldOut && !isCartStockDepleted && isLowStock && (
                         <Chip
                             label={`Quedan pocos platos${effectiveStock ? ` (${effectiveStock})` : ''}`}
                             size="small"
-                            sx={{
-                                bgcolor: 'rgba(255, 143, 0, 0.92)',
-                                color: '#3e2723',
-                                fontWeight: 800,
-                                borderRadius: '999px',
-                                backdropFilter: 'blur(6px)',
-                            }}
+                            className={`${styles.badgeBase} ${styles.badgeLowStock}`}
                         />
                     )}
                 </Box>
@@ -123,7 +104,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
                     height="200"
                     image={dish.imageUrl || defaultImage}
                     alt={dish.name}
-                    sx={{ display: 'block', objectFit: 'cover', transition: 'transform 0.4s ease', '&:hover': { transform: 'scale(1.04)' } }}
+                    className={styles.dishImage}
                     onError={(event) => {
                         const imageElement = event.currentTarget;
                         if (imageElement.src !== defaultImage) {
@@ -132,90 +113,57 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
                         }
                     }}
                 />
+
                 {/* Gradient overlay */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: '55%',
-                        background: 'linear-gradient(to top, rgba(26,10,46,0.55) 0%, transparent 100%)',
-                        pointerEvents: 'none',
-                    }}
-                />
+                <Box className={styles.imageGradient} />
+
                 {/* Price badge on image */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 10,
-                        right: 12,
-                        bgcolor: 'white',
-                        borderRadius: 99,
-                        px: 1.5,
-                        py: 0.4,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-                    }}
-                >
-                    <Typography variant="body1" fontWeight={800} color="primary.main" sx={{ lineHeight: 1.4, fontSize: '1rem' }}>
+                <Box className={styles.priceBadge}>
+                    <Typography
+                        variant="body1"
+                        color="primary.main"
+                        className={styles.priceText}
+                    >
                         ${dish.price.toLocaleString('es-CL')}
                     </Typography>
                 </Box>
             </Box>
 
-            <CardContent sx={{ flexGrow: 1, pt: 2, px: 2.5, pb: 1 }}>
+            <CardContent className={styles.cardContent}>
                 <Typography
                     variant="h6"
-                    fontWeight={700}
                     color="text.primary"
-                    sx={{ mb: 1.5, lineHeight: 1.3, fontSize: '1.05rem' }}
+                    className={styles.dishName}
                 >
                     {dish.name}
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 0.7, flexWrap: 'wrap', mb: hasCustomizations ? 2 : 0 }}>
+                <Box className={`${styles.chipsRow} ${hasCustomizations ? styles.chipsRowWithCustomizations : ''}`}>
                     {selectionChips.map((label) => (
                         <Chip
                             key={label}
                             label={label}
                             size="small"
-                            sx={{
-                                bgcolor: 'rgba(216,27,96,0.07)',
-                                color: 'primary.dark',
-                                fontWeight: 500,
-                                border: '1px solid rgba(216,27,96,0.15)',
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                            }}
+                            className={styles.selectionChip}
                         />
                     ))}
                 </Box>
 
                 {hasCustomizations && (
-                    <Box
-                        sx={{
-                            mt: 0.5,
-                            display: 'grid',
-                            gap: 1,
-                            p: 1.5,
-                            borderRadius: 3,
-                            bgcolor: 'rgba(255,255,255,0.72)',
-                            border: '1px solid rgba(216,27,96,0.1)',
-                        }}
-                    >
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.dark', textAlign: 'left' }}>
+                    <Box className={styles.customizationBox}>
+                        <Typography variant="caption" color="primary.dark" className={styles.customizationLabel}>
                             Personaliza tu menú
                         </Typography>
 
                         {visibility.protein && (
-                            <FormControl fullWidth size="small" disabled={isActionDisabled}>
+                            <FormControl fullWidth size="small" disabled={isSoldOut}>
                                 <InputLabel id={`protein-label-${dish.id}`}>Proteína</InputLabel>
                                 <Select
                                     labelId={`protein-label-${dish.id}`}
                                     value={selectedProtein}
                                     label="Proteína"
                                     onChange={(event) => setSelectedProtein(event.target.value)}
-                                    sx={{ borderRadius: 2.5, bgcolor: 'white' }}
+                                    className={styles.selectControl}
                                 >
                                     {proteinOptions.map((option) => (
                                         <MenuItem key={option} value={option}>{option}</MenuItem>
@@ -225,14 +173,14 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
                         )}
 
                         {visibility.salad && (
-                            <FormControl fullWidth size="small" disabled={isActionDisabled}>
+                            <FormControl fullWidth size="small" disabled={isSoldOut}>
                                 <InputLabel id={`salad-label-${dish.id}`}>Ensalada</InputLabel>
                                 <Select
                                     labelId={`salad-label-${dish.id}`}
                                     value={selectedSalad}
                                     label="Ensalada"
                                     onChange={(event) => setSelectedSalad(event.target.value)}
-                                    sx={{ borderRadius: 2.5, bgcolor: 'white' }}
+                                    className={styles.selectControl}
                                 >
                                     {saladOptions.map((option) => (
                                         <MenuItem key={option} value={option}>{option}</MenuItem>
@@ -242,14 +190,14 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
                         )}
 
                         {visibility.dessert && (
-                            <FormControl fullWidth size="small" disabled={isActionDisabled}>
+                            <FormControl fullWidth size="small" disabled={isSoldOut}>
                                 <InputLabel id={`dessert-label-${dish.id}`}>Postre</InputLabel>
                                 <Select
                                     labelId={`dessert-label-${dish.id}`}
                                     value={selectedDessert}
                                     label="Postre"
                                     onChange={(event) => setSelectedDessert(event.target.value)}
-                                    sx={{ borderRadius: 2.5, bgcolor: 'white' }}
+                                    className={styles.selectControl}
                                 >
                                     {dessertOptions.map((option) => (
                                         <MenuItem key={option} value={option}>{option}</MenuItem>
@@ -261,7 +209,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
                 )}
             </CardContent>
 
-            <CardActions sx={{ px: 2.5, pb: 2.5, pt: 0.5 }}>
+            <CardActions className={styles.cardActions}>
                 <Button
                     variant="contained"
                     startIcon={<AddShoppingCartIcon />}
@@ -282,24 +230,7 @@ export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStoc
                             },
                         visibility,
                     )}
-                    sx={{
-                        borderRadius: 3,
-                        py: 1.1,
-                        textTransform: 'none',
-                        fontSize: '0.95rem',
-                        fontWeight: 700,
-                        background: 'linear-gradient(135deg, #d81b60 0%, #f06292 100%)',
-                        boxShadow: '0 4px 14px rgba(216,27,96,0.28)',
-                        '&.Mui-disabled': {
-                            color: 'rgba(255,255,255,0.85)',
-                            background: 'linear-gradient(135deg, #b0b7c3 0%, #9098a5 100%)',
-                            boxShadow: 'none',
-                        },
-                        '&:hover': {
-                            background: 'linear-gradient(135deg, #a00037 0%, #d81b60 100%)',
-                            boxShadow: '0 6px 20px rgba(216,27,96,0.38)',
-                        },
-                    }}
+                    className={styles.addButton}
                 >
                     {actionLabel}
                 </Button>

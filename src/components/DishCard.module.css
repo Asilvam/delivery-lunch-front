@@ -1,0 +1,184 @@
+/* =========================================================
+   DishCard.module.css
+   Estilos del componente DishCard — CSS Modules
+   ========================================================= */
+
+/* --- Tarjeta raíz --- */
+.card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px; /* MUI borderRadius 4 = 4 * 4px */
+    box-shadow: 0 2px 16px rgba(216, 27, 96, 0.10);
+    overflow: hidden;
+    border: 1px solid rgba(216, 27, 96, 0.08);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 12px 40px rgba(216, 27, 96, 0.22);
+}
+
+/* --- Contenedor de imagen --- */
+.imageWrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- Badges sobre la imagen --- */
+.badgeGroup {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    display: grid;
+    gap: 6px; /* MUI gap 0.75 = 0.75 * 8px = 6px */
+}
+
+.badgeBase {
+    font-weight: 800 !important;
+    border-radius: 999px !important;
+    backdrop-filter: blur(6px);
+}
+
+.badgeHipo {
+    background-color: rgba(46, 125, 50, 0.92) !important;
+    color: #fff !important;
+}
+
+.badgeSoldOut {
+    background-color: rgba(183, 28, 28, 0.92) !important;
+    color: #fff !important;
+}
+
+.badgeNoCupo {
+    background-color: rgba(94, 53, 177, 0.92) !important;
+    color: #fff !important;
+}
+
+.badgeLowStock {
+    background-color: rgba(255, 143, 0, 0.92) !important;
+    color: #3e2723 !important;
+}
+
+/* --- Imagen del plato --- */
+.dishImage {
+    display: block;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.dishImage:hover {
+    transform: scale(1.04);
+}
+
+/* --- Gradiente sobre la imagen --- */
+.imageGradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 55%;
+    background: linear-gradient(to top, rgba(26, 10, 46, 0.55) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* --- Badge de precio sobre la imagen --- */
+.priceBadge {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    background-color: #fff;
+    border-radius: 9999px;
+    padding: 3px 12px; /* py 0.4 ≈ 3px, px 1.5 = 12px */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.priceText {
+    line-height: 1.4 !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+}
+
+/* --- Contenido de la tarjeta --- */
+.cardContent {
+    flex-grow: 1;
+    padding: 16px 20px 8px !important; /* pt 2, px 2.5, pb 1 */
+}
+
+/* --- Nombre del plato --- */
+.dishName {
+    margin-bottom: 12px !important; /* mb 1.5 */
+    line-height: 1.3 !important;
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+}
+
+/* --- Chips de selección (resumen del menú) --- */
+.chipsRow {
+    display: flex;
+    gap: 5.6px; /* gap 0.7 = 5.6px */
+    flex-wrap: wrap;
+}
+
+.chipsRowWithCustomizations {
+    margin-bottom: 16px; /* mb 2 = 16px */
+}
+
+.selectionChip {
+    background-color: rgba(216, 27, 96, 0.07) !important;
+    border: 1px solid rgba(216, 27, 96, 0.15) !important;
+    border-radius: 8px !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+}
+
+/* --- Caja de personalización --- */
+.customizationBox {
+    margin-top: 4px; /* mt 0.5 */
+    display: grid;
+    gap: 8px; /* gap 1 */
+    padding: 12px; /* p 1.5 */
+    border-radius: 12px; /* borderRadius 3 = 3 * 4px */
+    background-color: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(216, 27, 96, 0.1);
+}
+
+.customizationLabel {
+    font-weight: 700 !important;
+    text-align: left;
+}
+
+/* --- Selects de personalización --- */
+.selectControl {
+    border-radius: 10px !important; /* borderRadius 2.5 = 10px */
+    background-color: #fff !important;
+}
+
+/* --- Acciones / botón --- */
+.cardActions {
+    padding: 4px 20px 20px !important; /* pt 0.5, px 2.5, pb 2.5 */
+}
+
+.addButton {
+    border-radius: 12px !important; /* borderRadius 3 */
+    padding-top: 8.8px !important;   /* py 1.1 */
+    padding-bottom: 8.8px !important;
+    text-transform: none !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #d81b60 0%, #f06292 100%) !important;
+    box-shadow: 0 4px 14px rgba(216, 27, 96, 0.28) !important;
+}
+
+.addButton:hover {
+    background: linear-gradient(135deg, #a00037 0%, #d81b60 100%) !important;
+    box-shadow: 0 6px 20px rgba(216, 27, 96, 0.38) !important;
+}
+
+/* MUI agrega la clase .Mui-disabled al botón cuando está deshabilitado */
+.addButton:global(.Mui-disabled) {
+    color: rgba(255, 255, 255, 0.85) !important;
+    background: linear-gradient(135deg, #b0b7c3 0%, #9098a5 100%) !important;
+    box-shadow: none !important;
+}

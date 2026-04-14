@@ -33,7 +33,9 @@ export interface Dish {
 }
 
 export interface DailyMenu {
-    date: string;
+    id: string;
+    date: string;     // UI format: DD/MM/YY
+    isoDate: string;  // ISO format: YYYY-MM-DD (for API payloads)
     includes: DailyMenuIncludes;
     dishes: Dish[];
 }
@@ -41,7 +43,7 @@ export interface DailyMenu {
 export type BackendSelectableText = string | string[] | null | undefined;
 
 export interface BackendDishDto {
-    id: string;
+    _id: string;
     nombre: string;
     precio: number;
     imagen_url?: string | null;
@@ -51,6 +53,7 @@ export interface BackendDishDto {
 }
 
 export interface BackendDailyMenuDto {
+    _id: string;
     fecha: string;
     ensalada: BackendSelectableText;
     pan: string;
@@ -58,6 +61,4 @@ export interface BackendDailyMenuDto {
     platos: BackendDishDto[];
 }
 
-export interface BackendMenuResponseDto {
-    data: BackendDailyMenuDto[];
-}
+export type BackendMenuResponseDto = BackendDailyMenuDto[];
