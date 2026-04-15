@@ -17,7 +17,7 @@ import KitchenOrdersPanel from "../components/kitchen/KitchenOrdersPanel";
 import type { OrderStatus } from "../types/order";
 
 export default function KitchenPage() {
-  const { token, logout } = useAuth();
+  const { token, logout, role } = useAuth();
   const navigate = useNavigate();
   const { orders, updateOrder, connected, error } =
     useKitchenOrdersStream(token);
@@ -68,6 +68,7 @@ export default function KitchenPage() {
           connected={connected}
           error={error}
           onStatusChange={handleStatusChange}
+          isAdmin={role === "admin"}
         />
       </Container>
     </>

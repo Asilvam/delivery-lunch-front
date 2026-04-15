@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import type { Order } from "../types/order";
+import { fetchKitchenOrders } from "../data/services/kitchenApi.service";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -25,6 +26,17 @@ export function useKitchenOrdersStream(
     setOrders((prev) => prev.map((o) => (o._id === updated._id ? updated : o)));
   }, []);
 
+  // ── Snapshot inicial via REST ──────────────────────────────────────────────
+  // Carga todos los pedidos al montar para que el refresh no pierda
+  // órdenes completadas o en curso que ya existían.
+  useEffect(() => {
+    if (!token) return;
+    fetchKitchenOrders(token)
+      .then((snapshot) => setOrders(snapshot))
+      .catch(() => { /* si falla, el SSE compensará con eventos nuevos */ });
+  }, [token]);
+
+  // ── Stream SSE (actualizaciones en tiempo real) ────────────────────────────
   useEffect(() => {
     if (!token) return;
 
@@ -49,7 +61,7 @@ export function useKitchenOrdersStream(
           try {
             const order = JSON.parse(ev.data) as Order;
             setOrders((prev) => {
-              // Evitar duplicados (replay)
+              // Evitar duplicados (ya puede existir en el snapshot)
               if (prev.some((o) => o._id === order._id)) return prev;
               return [order, ...prev];
             });

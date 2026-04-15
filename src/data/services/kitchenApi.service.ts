@@ -8,6 +8,18 @@ function authHeaders(token: string) {
   return { Authorization: `Bearer ${token}` };
 }
 
+/**
+ * Carga el snapshot inicial de pedidos visibles en cocina:
+ * todos los estados relevantes del día (excluyendo PENDIENTE que aún no fue validado).
+ */
+export async function fetchKitchenOrders(token: string): Promise<Order[]> {
+  const res = await axios.get<Order[]>(`${BASE_URL}/orders`, {
+    headers: authHeaders(token),
+    timeout: 10000,
+  });
+  return res.data;
+}
+
 /** Actualiza el estado de un pedido desde cocina. */
 export async function updateOrderStatus(
   token: string,
