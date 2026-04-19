@@ -15,7 +15,7 @@ interface CancellationsChartProps {
   title?: string;
 }
 
-const COLORS = ["#4caf50", "#d32f2f"];
+// COLORS eliminado porque no se usa
 
 // Asegura que el color verde sea para entregados y rojo para cancelados
 function getColorByName(name: string) {

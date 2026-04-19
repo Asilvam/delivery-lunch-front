@@ -112,9 +112,9 @@ export default function TopDishesChart({
                     <LabelList
                       dataKey="cantidadVendida"
                       position="right"
-                      content={({ x, y, value, index }) => (
+                      content={({ x, y, value }) => (
                         <text
-                          x={x != null ? x + 16 : undefined}
+                          x={typeof x === 'number' ? x + 16 : undefined}
                           y={y}
                           dy={6}
                           fontSize={isMobile ? 16 : 20}

@@ -126,50 +126,44 @@ export default function DateRangeFilter({
         </ButtonGroup>
 
         <Box
-          sx={theme => ({
+          sx={{
             ml: "auto",
             display: "flex",
             gap: { xs: 1.5, sm: 1 },
             width: "100%",
             flexDirection: { xs: "column", sm: "row" },
-          })}
+          }}
         >
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Desde"
               value={start}
               onChange={handleStartChange}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: {
-                    flex: 1,
-                    minWidth: 0,
-                    fontSize: 13,
-                  },
-                },
-                input: {
-                  style: { textAlign: 'center', padding: 4, fontSize: 13 },
-                },
-              }}
+               slotProps={{
+                 textField: {
+                   size: "small",
+                   sx: {
+                     flex: 1,
+                     minWidth: 0,
+                     fontSize: 13,
+                   },
+                 },
+               }}
             />
             <DatePicker
               label="Hasta"
               value={end}
               onChange={handleEndChange}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: {
-                    flex: 1,
-                    minWidth: 0,
-                    fontSize: 13,
-                  },
-                },
-                input: {
-                  style: { textAlign: 'center', padding: 4, fontSize: 13 },
-                },
-              }}
+               slotProps={{
+                 textField: {
+                   size: "small",
+                   sx: {
+                     flex: 1,
+                     minWidth: 0,
+                     fontSize: 13,
+                   },
+                 },
+               }}
             />
           </LocalizationProvider>
         </Box>

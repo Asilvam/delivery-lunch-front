@@ -83,7 +83,8 @@ export default function RevenueChart({ data, title = "Ingresos por día" }: Reve
                  <LabelList
                    dataKey="total"
                    position="top"
-                   formatter={(value: number) => formatCurrency(value)}
+                     formatter={undefined}
+                     // El valor ya está formateado en el dataKey si se requiere
                    style={{
                      fill: '#1976d2',
                      fontWeight: 700,
