@@ -8,6 +8,7 @@ import CustomerApp from "./CustomerApp";
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const KitchenPage = lazy(() => import("./pages/KitchenPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 
 const Spinner = () => (
   <Box display="flex" justifyContent="center" mt={8}>
@@ -28,6 +29,14 @@ export default function App() {
           element={
             <Suspense fallback={<Spinner />}>
               <AdminPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <Suspense fallback={<Spinner />}>
+              <DashboardPage />
             </Suspense>
           }
         />

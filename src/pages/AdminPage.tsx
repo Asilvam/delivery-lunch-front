@@ -2,6 +2,7 @@
 import { AppBar, Button, Container, Toolbar, Typography } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useAdminOrdersStream } from "../hooks/useAdminOrdersStream";
@@ -43,6 +44,15 @@ export default function AdminPage() {
           <Typography variant="h6" fontWeight={700} flexGrow={1}>
             Panel Administrador
           </Typography>
+          <Button
+            startIcon={<BarChartIcon />}
+            onClick={() => navigate("/dashboard")}
+            color="inherit"
+            size="small"
+            sx={{ fontWeight: 600, mr: 1 }}
+          >
+            Dashboard
+          </Button>
           <Button
             startIcon={<LogoutIcon />}
             onClick={handleLogout}

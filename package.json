@@ -15,10 +15,13 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
+    "@mui/x-date-pickers": "^9.0.2",
     "axios": "^1.13.6",
+    "dayjs": "^1.11.20",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.1",
+    "recharts": "^3.8.1",
     "sweetalert2": "^11.26.24"
   },
   "devDependencies": {
