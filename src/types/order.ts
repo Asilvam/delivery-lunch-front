@@ -51,4 +51,7 @@ export interface Order {
   validadoPorAdmin: boolean;
   createdAt: string;
   updatedAt: string;
+  aceptadoEn?: string;
+  entregadoEn?: string;
+  canceladoEn?: string;
 }

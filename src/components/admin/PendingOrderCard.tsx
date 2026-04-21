@@ -111,18 +111,30 @@ export default function PendingOrderCard({
           />
         </Box>
 
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          display="block"
-          mb={1.5}
-        >
-          Fecha pedido: {order.fecha} &nbsp;·&nbsp;{" "}
-          {new Date(order.createdAt).toLocaleTimeString("es-CL", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Typography>
+        <Box mb={1.5}>
+          <Typography variant="caption" color="text.secondary" display="block">
+            <b>Fecha pedido:</b> {order.fecha} &nbsp;·&nbsp;{" "}
+            {new Date(order.createdAt).toLocaleTimeString("es-CL", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </Typography>
+          {order.aceptadoEn && (
+            <Typography variant="caption" color="text.secondary" display="block">
+              <b>Aceptado:</b> {new Date(order.aceptadoEn).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.aceptadoEn).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            </Typography>
+          )}
+          {order.entregadoEn && (
+            <Typography variant="caption" color="text.secondary" display="block">
+              <b>Entregado:</b> {new Date(order.entregadoEn).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.entregadoEn).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            </Typography>
+          )}
+          {order.canceladoEn && (
+            <Typography variant="caption" color="text.secondary" display="block">
+              <b>Cancelado:</b> {new Date(order.canceladoEn).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.canceladoEn).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            </Typography>
+          )}
+        </Box>
 
         <Divider sx={{ mb: 1.5 }} />
 

@@ -29,9 +29,20 @@ export default function KitchenOrdersPanel({
     (o) =>
       o.estado !== OrderStatus.ENTREGADO && o.estado !== OrderStatus.CANCELADO,
   );
+  // Solo mostrar completados/cancelados del día actual
+  const today = new Date();
+  const isToday = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return (
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate()
+    );
+  };
   const done = orders.filter(
     (o) =>
-      o.estado === OrderStatus.ENTREGADO || o.estado === OrderStatus.CANCELADO,
+      (o.estado === OrderStatus.ENTREGADO || o.estado === OrderStatus.CANCELADO) &&
+      isToday(o.updatedAt)
   );
 
   return (

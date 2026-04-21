@@ -1,4 +1,3 @@
-// src/pages/KitchenPage.tsx
 import {
   AppBar,
   Box,
