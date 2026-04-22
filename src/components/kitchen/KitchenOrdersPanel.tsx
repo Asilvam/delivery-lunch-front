@@ -150,14 +150,15 @@ export default function KitchenOrdersPanel({
               >
                 En curso ({active.length})
               </Typography>
-              <Box display="flex" flexDirection="column" gap={2}>
+              <Box display="flex" flexDirection="column" gap={2} alignItems="flex-start">
                 {active.map((order) => (
-                  <KitchenOrderCard
-                    key={order._id}
-                    order={order}
-                    onStatusChange={onStatusChange}
-                    isAdmin={isAdmin}
-                  />
+                  <Box key={order._id} sx={{ width: '100%', maxWidth: 720 }}>
+                    <KitchenOrderCard
+                      order={order}
+                      onStatusChange={onStatusChange}
+                      isAdmin={isAdmin}
+                    />
+                  </Box>
                 ))}
               </Box>
             </Box>
@@ -227,9 +228,8 @@ export default function KitchenOrdersPanel({
                             </Box>
                           </TableCell>
                           <TableCell sx={{ fontWeight: 'bold', width: 220, maxWidth: 220 }}>Plato</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Selecciones</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Precio Unitario</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>Precio Unitario</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Item</TableCell>
                       </TableRow>
                     </TableHead>
@@ -243,8 +243,7 @@ export default function KitchenOrdersPanel({
                             <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.entregadoEn || order.canceladoEn || order.updatedAt)}</TableCell>
                             <TableCell sx={{ maxWidth: 220, whiteSpace: 'normal', wordBreak: 'break-word' }}>{item.nombre}</TableCell>
                           <TableCell align="right">{item.cantidad}</TableCell>
-                          <TableCell>{Object.entries(item.selecciones || {}).map(([k, v]) => `${k}: ${v}`).join('; ')}</TableCell>
-                          <TableCell align="right">${item.precio.toLocaleString('es-CL')}</TableCell>
+                            <TableCell align="right">${item.precio.toLocaleString('es-CL')}</TableCell>
                           <TableCell align="right">${(item.precio * item.cantidad).toLocaleString('es-CL')}</TableCell>
                         </TableRow>
                       ))}
