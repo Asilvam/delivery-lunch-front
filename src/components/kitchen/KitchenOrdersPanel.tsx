@@ -212,7 +212,7 @@ export default function KitchenOrdersPanel({
                     WebkitOverflowScrolling: 'touch',
                   }}
                 >
-                  <Table size="small" stickyHeader sx={{ minWidth: 1100 }}>
+                  <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
                     <TableHead>
                       <TableRow>
                         <TableCell sx={{ fontWeight: 'bold' }}>Cliente</TableCell>

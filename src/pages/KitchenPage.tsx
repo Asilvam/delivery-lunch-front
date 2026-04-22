@@ -54,7 +54,8 @@ export default function KitchenPage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ mt: 4, mb: 8 }}>
+      {/* Use full width container for the kitchen panel to allow full-bleed table */}
+      <Container maxWidth={false} sx={{ mt: 4, mb: 8, px: 0 }}>
         <Typography variant="h5" fontWeight={800} mb={1}>
           Comandas
         </Typography>
