@@ -152,7 +152,7 @@ export default function KitchenOrdersPanel({
               </Typography>
               <Box display="flex" flexDirection="column" gap={2} alignItems="flex-start">
                 {active.map((order) => (
-                  <Box key={order._id} sx={{ width: '100%', maxWidth: 560 }}>
+                  <Box key={order._id} sx={{ width: '100%', maxWidth: 480 }}>
                     <KitchenOrderCard
                       order={order}
                       onStatusChange={onStatusChange}
