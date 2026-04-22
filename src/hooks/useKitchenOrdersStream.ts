@@ -4,7 +4,7 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 import type { Order } from "../types/order";
 import { fetchKitchenOrders } from "../data/services/kitchenApi.service";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
 
 interface UseKitchenOrdersStreamResult {
   orders: Order[];
@@ -30,7 +30,15 @@ export function useKitchenOrdersStream(
   // Carga todos los pedidos al montar para que el refresh no pierda
   // órdenes completadas o en curso que ya existían.
   useEffect(() => {
-    if (!token) return;
+    // If there is no configured API base URL, skip remote calls (dev can use mocks).
+    if (!token || !BASE_URL) {
+      if (!BASE_URL) {
+        // eslint-disable-next-line no-console
+        console.warn('useKitchenOrdersStream: VITE_API_BASE_URL not configured, skipping initial fetch');
+      }
+      return;
+    }
+
     fetchKitchenOrders(token)
       .then((snapshot) => setOrders(snapshot))
       .catch(() => { /* si falla, el SSE compensará con eventos nuevos */ });
@@ -38,7 +46,13 @@ export function useKitchenOrdersStream(
 
   // ── Stream SSE (actualizaciones en tiempo real) ────────────────────────────
   useEffect(() => {
-    if (!token) return;
+    if (!token || !BASE_URL) {
+      if (!BASE_URL) {
+        // eslint-disable-next-line no-console
+        console.warn('useKitchenOrdersStream: VITE_API_BASE_URL not configured, skipping SSE stream');
+      }
+      return;
+    }
 
     const ctrl = new AbortController();
     abortRef.current = ctrl;
