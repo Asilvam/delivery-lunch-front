@@ -25,9 +25,16 @@ export default function KitchenOrdersPanel({
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
 
-  const active = orders.filter(
-    (o) =>
-      o.estado !== OrderStatus.ENTREGADO && o.estado !== OrderStatus.CANCELADO,
+  // Defensive: if `orders` is unexpectedly not an array (e.g. API/mocking issue),
+  // avoid crashing the component. Coerce to empty array and warn in dev.
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  if (!Array.isArray(orders)) {
+    // eslint-disable-next-line no-console
+    console.warn('KitchenOrdersPanel: received orders prop that is not an array', orders);
+  }
+
+  const active = safeOrders.filter(
+    (o) => o.estado !== OrderStatus.ENTREGADO && o.estado !== OrderStatus.CANCELADO,
   );
   // Solo mostrar completados/cancelados del día actual
   const today = new Date();
@@ -39,10 +46,8 @@ export default function KitchenOrdersPanel({
       d.getDate() === today.getDate()
     );
   };
-  const done = orders.filter(
-    (o) =>
-      (o.estado === OrderStatus.ENTREGADO || o.estado === OrderStatus.CANCELADO) &&
-      isToday(o.updatedAt)
+  const done = safeOrders.filter(
+    (o) => (o.estado === OrderStatus.ENTREGADO || o.estado === OrderStatus.CANCELADO) && isToday(o.updatedAt),
   );
 
   return (
