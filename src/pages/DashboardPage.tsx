@@ -70,7 +70,9 @@ export default function DashboardPage() {
   const { token, logout } = useAuth();
   const navigate = useNavigate();
 
-  const today = new Date().toISOString().split("T")[0];
+  // Use Chile continental date as default (server uses Chile timezone)
+  const nowChile = new Date().toLocaleString("en-CA", { timeZone: "America/Santiago" });
+  const today = nowChile.split(" ")[0];
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
 
@@ -89,6 +91,11 @@ export default function DashboardPage() {
     setError(null);
 
     try {
+      // Log the requested date range to help diagnose missing "today" data
+      // (uses Chile continental dates by default)
+      // eslint-disable-next-line no-console
+      console.debug('Dashboard loadData: startDate=', startDate, 'endDate=', endDate);
+
       const [summaryRes, topDishesRes, peakHoursRes, revenueRes, cancellationsRes] =
         await Promise.all([
           fetchDashboardSummary(token, startDate, endDate),
@@ -97,6 +104,10 @@ export default function DashboardPage() {
           fetchRevenue(token, startDate, endDate),
           fetchCancellations(token, startDate, endDate),
         ]);
+
+      // Debug responses to help find why today's sales may be missing
+      // eslint-disable-next-line no-console
+      console.debug('Dashboard responses:', { summaryRes, revenueRes });
 
       setSummary(summaryRes);
       setTopDishes(topDishesRes);
