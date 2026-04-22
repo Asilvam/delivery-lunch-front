@@ -219,7 +219,13 @@ export default function KitchenOrdersPanel({
                         <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 110 }}>Creado</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 110 }}>Aceptado</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 150 }}>Entregado/Cancel.</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', width: 150 }}>
+                            <Box component="span" sx={{ display: 'inline-block', lineHeight: 1 }}>
+                              Entregado/
+                              <br />
+                              Cancel.
+                            </Box>
+                          </TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Plato</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Selecciones</TableCell>
