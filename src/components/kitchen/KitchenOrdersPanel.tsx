@@ -226,7 +226,7 @@ export default function KitchenOrdersPanel({
                               Cancel.
                             </Box>
                           </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Plato</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', width: 220, maxWidth: 220 }}>Plato</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Selecciones</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>Precio Unitario</TableCell>
@@ -241,7 +241,7 @@ export default function KitchenOrdersPanel({
                             <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.createdAt)}</TableCell>
                             <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.aceptadoEn)}</TableCell>
                             <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.entregadoEn || order.canceladoEn || order.updatedAt)}</TableCell>
-                          <TableCell>{item.nombre}</TableCell>
+                            <TableCell sx={{ maxWidth: 220, whiteSpace: 'normal', wordBreak: 'break-word' }}>{item.nombre}</TableCell>
                           <TableCell align="right">{item.cantidad}</TableCell>
                           <TableCell>{Object.entries(item.selecciones || {}).map(([k, v]) => `${k}: ${v}`).join('; ')}</TableCell>
                           <TableCell align="right">${item.precio.toLocaleString('es-CL')}</TableCell>
