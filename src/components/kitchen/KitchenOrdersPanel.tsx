@@ -217,9 +217,9 @@ export default function KitchenOrdersPanel({
                       <TableRow>
                         <TableCell sx={{ fontWeight: 'bold' }}>Cliente</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Creado</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Aceptado</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Entregado/Cancelado</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 110 }}>Creado</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 110 }}>Aceptado</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 150 }}>Entregado/Cancel.</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Plato</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Selecciones</TableCell>
@@ -232,9 +232,9 @@ export default function KitchenOrdersPanel({
                         <TableRow key={order._id + '-' + item.platoId + '-' + idx}>
                           <TableCell>{order.cliente}</TableCell>
                           <TableCell>{order.estado}</TableCell>
-                          <TableCell>{formatDate(order.createdAt)}</TableCell>
-                          <TableCell>{formatDate(order.aceptadoEn)}</TableCell>
-                          <TableCell>{formatDate(order.entregadoEn || order.canceladoEn || order.updatedAt)}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.createdAt)}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.aceptadoEn)}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.entregadoEn || order.canceladoEn || order.updatedAt)}</TableCell>
                           <TableCell>{item.nombre}</TableCell>
                           <TableCell align="right">{item.cantidad}</TableCell>
                           <TableCell>{Object.entries(item.selecciones || {}).map(([k, v]) => `${k}: ${v}`).join('; ')}</TableCell>
