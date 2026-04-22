@@ -4,7 +4,10 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 import type { Order } from "../types/order";
 import { fetchKitchenOrders } from "../data/services/kitchenApi.service";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+// Vite may set missing env variables to undefined or the string 'undefined' in some setups.
+// Normalize to actual undefined when not provided.
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL as unknown;
+const BASE_URL = typeof RAW_BASE === 'string' && RAW_BASE !== 'undefined' ? RAW_BASE : undefined;
 
 interface UseKitchenOrdersStreamResult {
   orders: Order[];
@@ -40,7 +43,7 @@ export function useKitchenOrdersStream(
     }
 
     fetchKitchenOrders(token)
-      .then((snapshot) => setOrders(snapshot))
+      .then((snapshot) => setOrders(Array.isArray(snapshot) ? snapshot : []))
       .catch(() => { /* si falla, el SSE compensará con eventos nuevos */ });
   }, [token]);
 
