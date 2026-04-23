@@ -4,6 +4,11 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import "./index.css";
 import App from "./App.tsx";
+import axios from 'axios';
+import { installRequestLogger } from './lib/requestLogger';
+
+// Install request logger if enabled via VITE_ENABLE_REQUEST_LOGS
+installRequestLogger(axios);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
