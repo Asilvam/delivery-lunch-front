@@ -25,6 +25,13 @@ export function installRequestLogger(axiosInstance: AxiosInstance) {
   const enabled = import.meta.env.VITE_ENABLE_REQUEST_LOGS === 'true';
   if (!enabled) return;
 
+  // Inform that logger is active (use info so it's visible even if debug is filtered)
+  try {
+    console.info('[API LOGGING] request logger enabled (VITE_ENABLE_REQUEST_LOGS=true)');
+  } catch {
+    /* ignore */
+  }
+
   axiosInstance.interceptors.request.use((config: AxiosRequestConfig) => {
     const now = Date.now();
     (config as any).__reqStart = now;
