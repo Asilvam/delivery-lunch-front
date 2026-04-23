@@ -13,7 +13,7 @@ function authHeaders(token: string) {
  * todos los estados relevantes del día (excluyendo PENDIENTE que aún no fue validado).
  */
 export async function fetchKitchenOrders(token: string): Promise<Order[]> {
-  const res = await axios.get<Order[]>(`${BASE_URL}/orders`, {
+  const res = await axios.get<Order[]>(`${BASE_URL}/orders/ByAdminTrue`, {
     headers: authHeaders(token),
     timeout: 10000,
   });
