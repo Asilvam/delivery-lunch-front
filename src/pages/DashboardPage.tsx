@@ -89,10 +89,6 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      // Log the requested date range to help diagnose missing "today" data
-      // (uses Chile continental dates by default)
-      // eslint-disable-next-line no-console
-      console.debug('Dashboard loadData: startDate=', startDate, 'endDate=', endDate);
       const [summaryRes, topDishesRes, peakHoursRes, revenueRes, cancellationsRes] =
         await Promise.all([
           fetchDashboardSummary(token, startDate, endDate),
@@ -101,7 +97,6 @@ export default function DashboardPage() {
           fetchRevenue(token, startDate, endDate),
           fetchCancellations(token, startDate, endDate),
         ]);
-      console.debug('Dashboard responses:', { summaryRes, revenueRes });
       setSummary(summaryRes);
       setTopDishes(topDishesRes);
       setPeakHours(peakHoursRes);
