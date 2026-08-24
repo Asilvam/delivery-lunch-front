@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -18,7 +18,6 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 export default function LoginPage() {
   const { login, role } = useAuth();
-  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -36,13 +35,6 @@ export default function LoginPage() {
         { timeout: 10000 },
       );
       login(res.data.access_token);
-
-      // Decode role from the new token and redirect accordingly
-      const payload = res.data.access_token.split(".")[1];
-      const decoded = JSON.parse(
-        atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
-      ) as { role?: string };
-      navigate(decoded.role === "kitchen" ? "/cocina" : "/admin");
     } catch {
       setError("Usuario o contraseña incorrectos");
     } finally {
@@ -50,10 +42,9 @@ export default function LoginPage() {
     }
   }
 
-  // If already authenticated, redirect immediately
+  // Redirect declaratively after AuthProvider resolves the authenticated role.
   if (role) {
-    navigate(role === "kitchen" ? "/cocina" : "/admin", { replace: true });
-    return null;
+    return <Navigate to={role === "kitchen" ? "/cocina" : "/admin"} replace />;
   }
 
   return (
