@@ -2,8 +2,6 @@
 import { useEffect, useState } from 'react';
 import {
   Container,
-  CssBaseline,
-  ThemeProvider,
   Typography,
   Box,
   Grid,
@@ -235,9 +233,7 @@ export default function CustomerApp() {
   const totalPrice = cartItems.reduce((acc, i) => acc + i.dish.price * i.quantity, 0);
 
   return (
-    <ThemeProvider theme={appTheme}>
-      <CssBaseline />
-
+    <>
       {/* ─── APP BAR ──────────────────────────────────────────────────────────── */}
       <AppBar
         position="sticky"
@@ -462,6 +458,6 @@ export default function CustomerApp() {
           onSubmit={handleSubmitOrder}
         />
       )}
-    </ThemeProvider>
+    </>
   );
 }

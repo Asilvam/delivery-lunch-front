@@ -1,9 +1,5 @@
 // src/pages/AdminPage.tsx
-import { AppBar, Button, Container, Toolbar, Typography } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import { useNavigate } from "react-router-dom";
+import { Container, Typography } from "@mui/material";
 import { useAuth } from "../hooks/useAuth";
 import { useAdminOrdersStream } from "../hooks/useAdminOrdersStream";
 import {
@@ -11,10 +7,10 @@ import {
   cancelOrder,
 } from "../data/services/adminApi.service";
 import AdminOrdersPanel from "../components/admin/AdminOrdersPanel";
+import AdminNavigation from "../components/admin/AdminNavigation";
 
 export default function AdminPage() {
-  const { token, logout } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
   const { orders, removeOrder, connected, error } = useAdminOrdersStream(token);
 
   const handleValidate = async (id: string) => {
@@ -31,39 +27,9 @@ export default function AdminPage() {
     removeOrder(id);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
     <>
-      <AppBar position="sticky" color="default" elevation={1}>
-        <Toolbar>
-          <AdminPanelSettingsIcon sx={{ mr: 1, color: "primary.main" }} />
-          <Typography variant="h6" fontWeight={700} flexGrow={1}>
-            Panel Administrador
-          </Typography>
-          <Button
-            startIcon={<BarChartIcon />}
-            onClick={() => navigate("/dashboard")}
-            color="inherit"
-            size="small"
-            sx={{ fontWeight: 600, mr: 1 }}
-          >
-            Dashboard
-          </Button>
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            color="inherit"
-            size="small"
-            sx={{ fontWeight: 600 }}
-          >
-            Salir
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <AdminNavigation />
 
       <Container maxWidth="sm" sx={{ mt: 4, mb: 8 }}>
         <Typography variant="h5" fontWeight={800} mb={1}>

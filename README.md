@@ -19,6 +19,8 @@ Construido con React, TypeScript y Vite. Consume la API de `delivery-lunch-back`
 - Autenticación mediante JWT con rol `admin`.
 - Recepción de pedidos nuevos en tiempo real mediante SSE.
 - Aprobación, cancelación y actualización del estado de pedidos.
+- Gestión semanal de menús con borradores, edición, duplicación, publicación y archivado.
+- Creación de platos con precio, stock, imagen, opciones y vista previa.
 - Dashboard con indicadores, ingresos, platos más vendidos, horas punta y cancelaciones.
 
 ### Cocina
@@ -93,6 +95,7 @@ Vite muestra en la terminal la URL local, normalmente `http://localhost:5173`.
 | `/` | Público | Menú diario, carrito y creación del pedido. |
 | `/login` | Público | Inicio de sesión para administración y cocina. |
 | `/admin` | `admin` | Validación y gestión de pedidos. |
+| `/admin/menus` | `admin` | Creación, edición y publicación de menús. |
 | `/dashboard` | `admin` | Estadísticas del negocio. |
 | `/cocina` | `admin`, `kitchen` | Gestión de preparación y entrega. |
 
@@ -108,6 +111,7 @@ El frontend utiliza estos endpoints de `VITE_API_BASE_URL`:
 | Menú | `GET /menu/today` |
 | Cliente | `POST /orders` |
 | Administración | `GET /orders`, `PATCH /orders/:id/admin-validate`, `PATCH /orders/:id/cancel`, `PATCH /orders/:id/status` |
+| Gestión de menús | `GET /menu/admin/list`, `POST /menu`, `PATCH /menu/:id`, `POST /menu/:id/copy`, `PATCH /menu/:id/publish`, `PATCH /menu/:id/archive`, `DELETE /menu/:id`, `POST /upload/image` |
 | Cocina | `GET /orders/ByAdminTrue`, `PATCH /orders/:id/status` |
 | Tiempo real | `GET /orders/stream/admin`, `GET /orders/stream/kitchen` |
 | Estadísticas | `GET /statistics/summary`, `/top-dishes`, `/peak-hours`, `/revenue`, `/cancellations` |

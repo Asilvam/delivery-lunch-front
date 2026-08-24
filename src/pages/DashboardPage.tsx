@@ -1,24 +1,19 @@
 // src/pages/DashboardPage.tsx
 import { useState, useEffect, useCallback } from "react";
 import {
-  AppBar,
-  Button,
   Container,
-  Toolbar,
-  Typography,
   Box,
   Grid,
   CircularProgress,
   Alert,
+  Typography,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import DashboardIcon from "@mui/icons-material/Dashboard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReceiptIcon from "@mui/icons-material/Receipt";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import AdminNavigation from "../components/admin/AdminNavigation";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import KpiCard from "../components/dashboard/KpiCard";
 import RevenueChart from "../components/dashboard/RevenueChart";
@@ -67,8 +62,7 @@ import {
 } from "../data/services/statisticsApi.service";
 
 export default function DashboardPage() {
-  const { token, logout } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
 
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Santiago" });
   const [startDate, setStartDate] = useState(today);
@@ -119,32 +113,19 @@ export default function DashboardPage() {
     setEndDate(end);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
     <>
-      <AppBar position="sticky" color="default" elevation={1}>
-        <Toolbar>
-          <DashboardIcon sx={{ mr: 1, color: "primary.main" }} />
-          <Typography variant="h6" fontWeight={700} flexGrow={1}>
-            Dashboard de Métricas
-          </Typography>
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            color="inherit"
-            size="small"
-            sx={{ fontWeight: 600 }}
-          >
-            Salir
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <AdminNavigation />
 
       <Container maxWidth="xl" sx={{ mt: 2, mb: 1.5 }}>
+        <Box mb={3}>
+          <Typography variant="h4" fontWeight={800}>
+            Métricas
+          </Typography>
+          <Typography color="text.secondary">
+            Revisa ventas, demanda y desempeño del servicio.
+          </Typography>
+        </Box>
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}

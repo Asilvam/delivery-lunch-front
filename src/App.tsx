@@ -9,6 +9,7 @@ import CustomerApp from "./CustomerApp";
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const KitchenPage = lazy(() => import("./pages/KitchenPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const AdminMenusPage = lazy(() => import("./pages/AdminMenusPage"));
 
 const Spinner = () => (
   <Box display="flex" justifyContent="center" mt={8}>
@@ -37,6 +38,14 @@ export default function App() {
           element={
             <Suspense fallback={<Spinner />}>
               <DashboardPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/admin/menus"
+          element={
+            <Suspense fallback={<Spinner />}>
+              <AdminMenusPage />
             </Suspense>
           }
         />

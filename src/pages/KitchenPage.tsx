@@ -15,6 +15,7 @@ import { updateOrderStatus } from "../data/services/kitchenApi.service";
 import { cancelOrder } from "../data/services/adminApi.service";
 import KitchenOrdersPanel from "../components/kitchen/KitchenOrdersPanel";
 import type { OrderStatus } from "../types/order";
+import AdminNavigation from "../components/admin/AdminNavigation";
 
 export default function KitchenPage() {
   const { token, logout, role } = useAuth();
@@ -41,25 +42,29 @@ export default function KitchenPage() {
 
   return (
     <>
-      <AppBar position="sticky" color="default" elevation={1}>
-        <Toolbar>
-          <RestaurantIcon sx={{ mr: 1, color: "primary.main" }} />
-          <Typography variant="h6" fontWeight={700} flexGrow={1}>
-            Panel Cocina
-          </Typography>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Button
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
-              color="inherit"
-              size="small"
-              sx={{ fontWeight: 600 }}
-            >
-              Salir
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      {role === "admin" ? (
+        <AdminNavigation />
+      ) : (
+        <AppBar position="sticky" color="inherit" elevation={1}>
+          <Toolbar>
+            <RestaurantIcon sx={{ mr: 1, color: "primary.main" }} />
+            <Typography variant="h6" fontWeight={700} flexGrow={1}>
+              Panel Cocina
+            </Typography>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Button
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                color="inherit"
+                size="small"
+                sx={{ fontWeight: 600 }}
+              >
+                Salir
+              </Button>
+            </Box>
+          </Toolbar>
+        </AppBar>
+      )}
 
       {/* Use full width container for the kitchen panel to allow full-bleed table */}
       <Container maxWidth={false} sx={{ mt: 4, mb: 8, px: 0 }}>
