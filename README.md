@@ -65,7 +65,6 @@ Variables disponibles:
 | Variable | Requerida | Descripción |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | Sí | URL base del backend, sin slash final. Ejemplo: `http://localhost:3500`. |
-| `VITE_ENABLE_REQUEST_LOGS` | No | Usa `true` para mostrar en la consola del navegador el detalle de solicitudes y respuestas HTTP. |
 
 Las variables `VITE_*` se incorporan durante la compilación. Después de modificarlas es necesario reiniciar el servidor de desarrollo o generar un build nuevo.
 
