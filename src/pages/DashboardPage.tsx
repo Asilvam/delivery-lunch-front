@@ -18,7 +18,7 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import KpiCard from "../components/dashboard/KpiCard";
 import RevenueChart from "../components/dashboard/RevenueChart";

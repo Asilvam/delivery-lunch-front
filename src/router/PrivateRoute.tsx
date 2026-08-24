@@ -1,6 +1,7 @@
 // src/router/PrivateRoute.tsx
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth, type UserRole } from "../context/AuthContext";
+import type { UserRole } from "../context/auth-context";
+import { useAuth } from "../hooks/useAuth";
 
 interface PrivateRouteProps {
   allowedRoles?: UserRole[];

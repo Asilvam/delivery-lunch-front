@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;

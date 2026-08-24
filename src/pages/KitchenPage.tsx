@@ -9,7 +9,7 @@ import {
 import LogoutIcon from "@mui/icons-material/Logout";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useKitchenOrdersStream } from "../hooks/useKitchenOrdersStream";
 import { updateOrderStatus } from "../data/services/kitchenApi.service";
 import { cancelOrder } from "../data/services/adminApi.service";

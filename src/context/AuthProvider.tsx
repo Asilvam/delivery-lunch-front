@@ -1,28 +1,17 @@
-// src/context/AuthContext.tsx
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-
-export type UserRole = "admin" | "kitchen";
-
-interface AuthContextValue {
-  token: string | null;
-  role: UserRole | null;
-  login: (token: string) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import {
+  AuthContext,
+  type AuthContextValue,
+  type UserRole,
+} from "./auth-context";
 
 const TOKEN_KEY = "admin_token";
 
-/** Decode the JWT payload (base64url) and extract the role claim. */
 function decodeRole(token: string): UserRole | null {
   try {
     const payload = token.split(".")[1];
@@ -61,10 +50,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
 }
