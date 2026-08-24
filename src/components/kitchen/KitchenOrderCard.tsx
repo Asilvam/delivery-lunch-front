@@ -35,12 +35,14 @@ const STATUS_COLOR: Record<
 interface Props {
   order: Order;
   onStatusChange: (id: string, estado: OrderStatus) => Promise<void>;
+  onCancel: (id: string) => Promise<void>;
   isAdmin: boolean;
 }
 
 export default function KitchenOrderCard({
   order,
   onStatusChange,
+  onCancel,
   isAdmin,
 }: Props) {
   const [loading, setLoading] = useState(false);
@@ -93,7 +95,7 @@ export default function KitchenOrderCard({
 
     setLoadingCancel(true);
     try {
-      await onStatusChange(order._id, OrderStatus.CANCELADO);
+      await onCancel(order._id);
     } finally {
       setLoadingCancel(false);
     }

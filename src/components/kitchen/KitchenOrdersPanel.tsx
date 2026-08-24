@@ -14,6 +14,7 @@ interface Props {
   connected: boolean;
   error: string | null;
   onStatusChange: (id: string, estado: OrderStatus) => Promise<void>;
+  onCancel: (id: string) => Promise<void>;
   isAdmin: boolean;
 }
 
@@ -22,6 +23,7 @@ export default function KitchenOrdersPanel({
   connected,
   error,
   onStatusChange,
+  onCancel,
   isAdmin,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
@@ -156,6 +158,7 @@ export default function KitchenOrdersPanel({
                     <KitchenOrderCard
                       order={order}
                       onStatusChange={onStatusChange}
+                      onCancel={onCancel}
                       isAdmin={isAdmin}
                     />
                   </Box>

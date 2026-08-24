@@ -1,94 +1,174 @@
-# React + TypeScript + Vite
+# Delivery Lunch Front
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web de **Sabores Angelicales** para gestionar el flujo completo de pedidos de almuerzo: compra del cliente, validación administrativa, preparación en cocina y estadísticas.
 
-Currently, two official plugins are available:
+Construido con React, TypeScript y Vite. Consume la API de `delivery-lunch-back`; no utiliza datos mock como respaldo.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Funcionalidades
 
-## React Compiler
+### Cliente
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Consulta el menú diario desde el backend.
+- Selecciona platos, acompañamientos y opciones disponibles.
+- Administra cantidades respetando el stock compartido de cada plato.
+- Confirma y envía el pedido a la API.
+- Recibe mensajes visuales de éxito, error y límites de stock.
 
-## Expanding the ESLint configuration
+### Administración
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Autenticación mediante JWT con rol `admin`.
+- Recepción de pedidos nuevos en tiempo real mediante SSE.
+- Aprobación, cancelación y actualización del estado de pedidos.
+- Dashboard con indicadores, ingresos, platos más vendidos, horas punta y cancelaciones.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Cocina
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Acceso con rol `kitchen` o `admin`.
+- Carga inicial de pedidos aprobados.
+- Recepción de pedidos y cambios de estado en tiempo real mediante SSE.
+- Gestión de pedidos pendientes, en preparación y finalizados.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Stack
+
+- React 19
+- TypeScript 5
+- Vite 8
+- React Router 7
+- Material UI 7
+- Axios
+- Microsoft Fetch Event Source
+- Recharts
+- SweetAlert2
+- Day.js
+
+## Requisitos
+
+- Node.js 22, según `.nvmrc`
+- npm
+- Una instancia disponible de `delivery-lunch-back`
+
+## Configuración local
+
+```bash
+# Usar la versión de Node del proyecto, si tienes nvm
+nvm use
+
+# Instalar dependencias
+npm install
+
+# Crear la configuración local
+cp .env.example .env
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-## Backend real para menus
-
-La app usa este flujo:
-
-- Si existe `VITE_API_BASE_URL`, intenta consultar backend real.
-- Si falla el backend o no existe esa variable, cae automaticamente al mock local.
 
 Variables disponibles:
 
-- `VITE_API_BASE_URL`: URL base del backend.
-- `VITE_MENUS_PATH`: path del endpoint de menus (default: `/menus`).
+| Variable | Requerida | Descripción |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | Sí | URL base del backend, sin slash final. Ejemplo: `http://localhost:3500`. |
+| `VITE_ENABLE_REQUEST_LOGS` | No | Usa `true` para mostrar en la consola del navegador el detalle de solicitudes y respuestas HTTP. |
 
-Ejemplo rapido:
+Las variables `VITE_*` se incorporan durante la compilación. Después de modificarlas es necesario reiniciar el servidor de desarrollo o generar un build nuevo.
+
+## Ejecución
 
 ```bash
-cp .env.example .env
+# Servidor de desarrollo
 npm run dev
+
+# Compilación de producción
+npm run build
+
+# Vista previa del build
+npm run preview
+
+# Análisis estático
+npm run lint
 ```
 
+Vite muestra en la terminal la URL local, normalmente `http://localhost:5173`.
 
+## Rutas de la aplicación
+
+| Ruta | Acceso | Descripción |
+| --- | --- | --- |
+| `/` | Público | Menú diario, carrito y creación del pedido. |
+| `/login` | Público | Inicio de sesión para administración y cocina. |
+| `/admin` | `admin` | Validación y gestión de pedidos. |
+| `/dashboard` | `admin` | Estadísticas del negocio. |
+| `/cocina` | `admin`, `kitchen` | Gestión de preparación y entrega. |
+
+Las rutas privadas esperan un JWT emitido por el backend. El token debe incluir el claim `role` con valor `admin` o `kitchen`.
+
+## Integración con la API
+
+El frontend utiliza estos endpoints de `VITE_API_BASE_URL`:
+
+| Área | Endpoints |
+| --- | --- |
+| Autenticación | `POST /auth/login` |
+| Menú | `GET /menu/today` |
+| Cliente | `POST /orders` |
+| Administración | `GET /orders`, `PATCH /orders/:id/admin-validate`, `PATCH /orders/:id/cancel`, `PATCH /orders/:id/status` |
+| Cocina | `GET /orders/ByAdminTrue`, `PATCH /orders/:id/status` |
+| Tiempo real | `GET /orders/stream/admin`, `GET /orders/stream/kitchen` |
+| Estadísticas | `GET /statistics/summary`, `/top-dishes`, `/peak-hours`, `/revenue`, `/cancellations` |
+
+Las conexiones SSE también envían el JWT en el encabezado `Authorization`.
+
+## Deploy en Cloudflare Pages
+
+El frontend se publica como sitio **completamente estático** en Cloudflare Pages. No utiliza Pages Functions, Workers ni Containers y no necesita ejecutar un servidor Node.js en producción.
+
+La API permanece desplegada en Heroku. La variable `VITE_API_BASE_URL` debe contener la URL pública de esa aplicación.
+
+### Integración con Git
+
+1. En Cloudflare, abre **Workers & Pages** y crea una aplicación de Pages.
+2. Conecta el repositorio `delivery-lunch-front`.
+3. Configura el build:
+
+   | Opción | Valor |
+   | --- | --- |
+   | Framework preset | `Vite` |
+   | Build command | `npm run build` |
+   | Build output directory | `dist` |
+   | Node.js | `22` |
+
+4. Agrega `VITE_API_BASE_URL` como variable de producción con la URL pública del backend en Heroku.
+5. Guarda la configuración y despliega. Cada push a la rama de producción generará un nuevo build.
+
+El sitio quedará disponible en un dominio `*.pages.dev` y puede asociarse posteriormente a un dominio personalizado.
+
+> No habilitar Pages Functions, Workers, Containers ni planes pagados de Cloudflare sin autorización explícita del propietario.
+
+Documentación oficial: [Cloudflare Pages para proyectos Vite](https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite3-project/) y [precios de Pages](https://developers.cloudflare.com/pages/functions/pricing/).
+
+## Estructura principal
+
+```text
+src/
+├── api/                 # Fachadas públicas de acceso a datos
+├── components/          # Componentes de cliente, administración, cocina y dashboard
+├── context/             # Estado de autenticación
+├── data/
+│   ├── mappers/         # Conversión de respuestas del backend
+│   └── services/        # Clientes HTTP por dominio
+├── domain/cart/         # Reglas y utilidades del carrito
+├── hooks/               # Streams SSE de administración y cocina
+├── pages/               # Páginas asociadas a las rutas
+├── router/              # Protección de rutas por rol
+├── shared/              # Logging y utilidades compartidas
+├── theme/               # Tema de Material UI
+├── types/               # Tipos de menú, carrito y pedidos
+├── App.tsx              # Definición de rutas
+└── main.tsx             # Punto de entrada
+```
+
+## Pruebas
+
+Actualmente el proyecto no tiene una suite de pruebas automatizadas configurada. Las verificaciones disponibles son:
+
+```bash
+npm run build
+npm run lint
+```

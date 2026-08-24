@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useKitchenOrdersStream } from "../hooks/useKitchenOrdersStream";
 import { updateOrderStatus } from "../data/services/kitchenApi.service";
+import { cancelOrder } from "../data/services/adminApi.service";
 import KitchenOrdersPanel from "../components/kitchen/KitchenOrdersPanel";
 import type { OrderStatus } from "../types/order";
 
@@ -24,6 +25,12 @@ export default function KitchenPage() {
   const handleStatusChange = async (id: string, estado: OrderStatus) => {
     if (!token) return;
     const updated = await updateOrderStatus(token, id, estado);
+    updateOrder(updated);
+  };
+
+  const handleCancel = async (id: string) => {
+    if (!token || role !== "admin") return;
+    const updated = await cancelOrder(token, id);
     updateOrder(updated);
   };
 
@@ -68,6 +75,7 @@ export default function KitchenPage() {
           connected={connected}
           error={error}
           onStatusChange={handleStatusChange}
+          onCancel={handleCancel}
           isAdmin={role === "admin"}
         />
       </Container>

@@ -23,10 +23,6 @@ export interface OrderPayload {
   items: OrderItem[];
 }
 
-export interface OrderResponse {
-  id: string;
-}
-
 // ─── Tipos para paneles admin / cocina ────────────────────────────────────────
 
 export const OrderStatus = {
@@ -55,3 +51,5 @@ export interface Order {
   entregadoEn?: string;
   canceladoEn?: string;
 }
+
+export type OrderResponse = Order;
