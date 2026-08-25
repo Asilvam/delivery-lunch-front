@@ -85,6 +85,29 @@ const mapDish = (dish: AdminMenu["platos"][number]): EditableDish => ({
   es_hipo: dish.es_hipo ?? false,
 });
 
+const serializeEditorState = (
+  fecha: string,
+  ensalada: string,
+  pan: string,
+  postre: string,
+  dishes: EditableDish[],
+) =>
+  JSON.stringify({
+    fecha,
+    ensalada: splitOptions(ensalada),
+    pan: pan.trim(),
+    postre: splitOptions(postre),
+    dishes: dishes.map((dish) => ({
+      id: dish.id ?? null,
+      nombre: dish.nombre.trim(),
+      precio: dish.precio.trim() === "" ? null : Number(dish.precio),
+      stock: dish.stock.trim() === "" ? null : Number(dish.stock),
+      imagen_url: dish.imagen_url.trim(),
+      opciones: splitOptions(dish.opciones),
+      es_hipo: dish.es_hipo,
+    })),
+  });
+
 export default function MenuEditorDialog({
   token,
   menu,
@@ -104,17 +127,31 @@ export default function MenuEditorDialog({
   const [saving, setSaving] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [dirty, setDirty] = useState(false);
 
   const saladOptions = useMemo(() => splitOptions(ensalada), [ensalada]);
   const dessertOptions = useMemo(() => splitOptions(postre), [postre]);
+  const initialSnapshot = useMemo(
+    () =>
+      serializeEditorState(
+        menu?.fecha ?? initialDate,
+        (menu?.ensalada ?? []).join(", "),
+        menu?.pan ?? "",
+        (menu?.postre ?? []).join(", "),
+        menu?.platos.length ? menu.platos.map(mapDish) : [createDish()],
+      ),
+    [initialDate, menu],
+  );
+  const currentSnapshot = useMemo(
+    () => serializeEditorState(fecha, ensalada, pan, postre, dishes),
+    [dishes, ensalada, fecha, pan, postre],
+  );
+  const hasChanges = currentSnapshot !== initialSnapshot;
 
   const updateDish = (
     index: number,
     field: keyof EditableDish,
     value: string | boolean,
   ) => {
-    setDirty(true);
     setDishes((current) =>
       current.map((dish, dishIndex) =>
         dishIndex === index ? { ...dish, [field]: value } : dish,
@@ -125,7 +162,6 @@ export default function MenuEditorDialog({
   const moveDish = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= dishes.length) return;
-    setDirty(true);
     setDishes((current) => {
       const copy = [...current];
       [copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]];
@@ -134,7 +170,6 @@ export default function MenuEditorDialog({
   };
 
   const removeDish = (index: number) => {
-    setDirty(true);
     setDishes((current) => current.filter((_, dishIndex) => dishIndex !== index));
   };
 
@@ -178,6 +213,8 @@ export default function MenuEditorDialog({
   };
 
   const handleSave = async () => {
+    if (!hasChanges) return;
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -205,7 +242,6 @@ export default function MenuEditorDialog({
         status: menu ? (menu.status ?? "published") : "draft",
         platos,
       });
-      setDirty(false);
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -218,7 +254,7 @@ export default function MenuEditorDialog({
   };
 
   const requestClose = async () => {
-    if (!dirty) {
+    if (!hasChanges) {
       onClose();
       return;
     }
@@ -275,7 +311,6 @@ export default function MenuEditorDialog({
                         value={fecha}
                         onChange={(event) => {
                           setFecha(event.target.value);
-                          setDirty(true);
                         }}
                         disabled={Boolean(menu)}
                         fullWidth
@@ -291,7 +326,6 @@ export default function MenuEditorDialog({
                         value={pan}
                         onChange={(event) => {
                           setPan(event.target.value);
-                          setDirty(true);
                         }}
                         placeholder="Ej. Pan amasado"
                         required
@@ -304,7 +338,6 @@ export default function MenuEditorDialog({
                         value={ensalada}
                         onChange={(event) => {
                           setEnsalada(event.target.value);
-                          setDirty(true);
                         }}
                         helperText="Separa las alternativas con comas"
                         placeholder="Chilena, surtida, repollo"
@@ -317,7 +350,6 @@ export default function MenuEditorDialog({
                         value={postre}
                         onChange={(event) => {
                           setPostre(event.target.value);
-                          setDirty(true);
                         }}
                         helperText="Separa las alternativas con comas"
                         placeholder="Flan, fruta, jalea"
@@ -343,7 +375,6 @@ export default function MenuEditorDialog({
                     variant="outlined"
                     onClick={() => {
                       setDishes((current) => [...current, createDish()]);
-                      setDirty(true);
                     }}
                   >
                     Agregar
@@ -552,7 +583,7 @@ export default function MenuEditorDialog({
           variant="contained"
           startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
           onClick={() => void handleSave()}
-          disabled={saving || uploadingId !== null}
+          disabled={!hasChanges || saving || uploadingId !== null}
         >
           {menu?.status === "published" ? "Guardar cambios" : "Guardar borrador"}
         </Button>
