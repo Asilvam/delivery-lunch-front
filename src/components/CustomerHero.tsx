@@ -1,6 +1,5 @@
 import { Box, Button, Skeleton, Typography } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import DeliveryDiningOutlinedIcon from "@mui/icons-material/DeliveryDiningOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import { Link as RouterLink } from "react-router-dom";
 import type { Dish } from "../types/menu";
@@ -136,24 +135,13 @@ export function CustomerHero({
         <Box
           sx={{
             display: { xs: "grid", sm: "flex" },
-            gridTemplateColumns: { xs: "1fr 1fr", sm: "none" },
+            gridTemplateColumns: { xs: "1fr", sm: "none" },
             flexWrap: "wrap",
             gap: { xs: 1.5, sm: 0.75, md: 1.5 },
             mt: 2,
             color: "text.secondary",
           }}
         >
-          <Typography
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.75,
-              fontSize: "0.75rem",
-            }}
-          >
-            <DeliveryDiningOutlinedIcon sx={{ fontSize: 18 }} />
-            Delivery dentro de Quintero
-          </Typography>
           <Typography
             sx={{
               display: "flex",

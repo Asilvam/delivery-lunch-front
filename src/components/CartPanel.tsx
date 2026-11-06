@@ -12,7 +12,8 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
-import { MENU_INCLUDES } from "../domain/menu/menuOffer";
+import CheckIcon from "@mui/icons-material/Check";
+import { MENU_SALAD, MENU_BREAD, MENU_DESSERT } from "../domain/menu/menuOffer";
 import type { CartItem } from "../types/cart";
 import { getRemainingDishStock } from "../domain/cart/stock.rules";
 
@@ -95,19 +96,6 @@ export function CartPanel({
       >
         {cartItems.length ? (
           <>
-            <Box
-              sx={{
-                mb: 2,
-                px: 1.5,
-                py: 1.25,
-                bgcolor: "background.default",
-                borderRadius: 2,
-              }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                Todos incluyen: {MENU_INCLUDES}.
-              </Typography>
-            </Box>
             <List
               disablePadding
               aria-label="Platos de tu pedido"
@@ -274,6 +262,54 @@ export function CartPanel({
                 );
               })}
             </List>
+            <Box
+              component="aside"
+              aria-label="Acompañamientos de cada menú"
+              sx={{
+                mt: 2,
+                px: 1.5,
+                py: 1.25,
+                bgcolor: "background.default",
+                borderRadius: 2,
+              }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", fontWeight: 600, mb: 0.75 }}
+              >
+                Cada menú incluye
+              </Typography>
+              <Box
+                component="ul"
+                sx={{
+                  m: 0,
+                  p: 0,
+                  listStyle: "none",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  columnGap: 1.5,
+                  rowGap: 0.5,
+                }}
+              >
+                {[MENU_SALAD, MENU_BREAD, MENU_DESSERT].map((item) => (
+                  <Box
+                    component="li"
+                    key={item}
+                    sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                  >
+                    <CheckIcon sx={{ fontSize: 14, color: "primary.main" }} />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ whiteSpace: "nowrap" }}
+                    >
+                      {item}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
           </>
         ) : (
           <Box sx={{ textAlign: "center", py: 4 }}>

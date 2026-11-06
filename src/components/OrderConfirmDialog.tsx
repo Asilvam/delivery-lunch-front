@@ -130,7 +130,7 @@ export const OrderConfirmDialog = ({
       open={open}
       onClose={handleClose}
       fullWidth
-      maxWidth="sm"
+      maxWidth="md"
       aria-labelledby={`${formId}-title`}
       aria-describedby={`${formId}-description`}
       PaperProps={{ className: styles.dialogPaper }}
@@ -176,7 +176,7 @@ export const OrderConfirmDialog = ({
         </Typography>
       </DialogTitle>
 
-      <DialogContent sx={{ px: { xs: 2.5, sm: 3 }, minHeight: 0 }}>
+      <DialogContent className={styles.content}>
         <Box
           component="form"
           id={formId}
@@ -188,105 +188,120 @@ export const OrderConfirmDialog = ({
           aria-busy={isSubmitting}
           className={styles.form}
         >
-          <GoogleCustomerAccess disabled={isSubmitting} />
-          {pendingPayload && (
-            <Alert severity="warning">
-              Hay un envío sin confirmar. Reinténtalo para recuperar su
-              resultado sin crear otro pedido.
-            </Alert>
-          )}
-          {session && (
-            <Box
-              component="section"
-              aria-label="Datos de contacto"
-              sx={{ display: "grid", gap: 2 }}
-            >
+          <Box className={styles.customerColumn}>
+            {!session && (
               <Typography component="h3" variant="subtitle2" fontWeight={800}>
-                Tus datos de contacto
+                Identificación
               </Typography>
-              <TextField
-                label="Nombre"
-                value={pendingPayload?.cliente ?? customerName}
-                onChange={(e) => {
-                  setCliente(e.target.value);
-                  setErrors((prev) => ({ ...prev, cliente: undefined }));
-                }}
-                onBlur={() => {
-                  if (!pendingPayload)
-                    setErrors((prev) => ({
-                      ...prev,
-                      cliente: customerName.trim()
-                        ? undefined
-                        : "El nombre es obligatorio",
-                    }));
-                }}
-                error={Boolean(errors.cliente)}
-                helperText={errors.cliente}
-                disabled={isSubmitting || Boolean(pendingPayload)}
-                fullWidth
-                size="small"
-                inputRef={nameRef}
-                autoComplete="name"
-                required
-              />
-              <TextField
-                label="Teléfono"
-                type="tel"
-                value={pendingPayload?.telefono ?? telefono}
-                placeholder="+56 9 1234 5678"
-                onChange={(e) => {
-                  setTelefono(e.target.value);
-                  setErrors((prev) => ({ ...prev, telefono: undefined }));
-                }}
-                onBlur={() => {
-                  if (!pendingPayload) {
-                    setTelefono(normalizePhone(telefono));
-                    setErrors((prev) => ({
-                      ...prev,
-                      telefono: phoneError(telefono),
-                    }));
+            )}
+            <GoogleCustomerAccess disabled={isSubmitting} />
+            {pendingPayload && (
+              <Alert severity="warning">
+                Hay un envío sin confirmar. Reinténtalo para recuperar su
+                resultado sin crear otro pedido.
+              </Alert>
+            )}
+            {session && (
+              <Box
+                component="section"
+                aria-label="Datos de contacto"
+                sx={{ display: "grid", gap: 2 }}
+              >
+                <Typography component="h3" variant="subtitle2" fontWeight={800}>
+                  Tus datos de contacto
+                </Typography>
+                <TextField
+                  label="Nombre"
+                  value={pendingPayload?.cliente ?? customerName}
+                  onChange={(e) => {
+                    setCliente(e.target.value);
+                    setErrors((prev) => ({ ...prev, cliente: undefined }));
+                  }}
+                  onBlur={() => {
+                    if (!pendingPayload)
+                      setErrors((prev) => ({
+                        ...prev,
+                        cliente: customerName.trim()
+                          ? undefined
+                          : "El nombre es obligatorio",
+                      }));
+                  }}
+                  error={Boolean(errors.cliente)}
+                  helperText={errors.cliente}
+                  disabled={isSubmitting || Boolean(pendingPayload)}
+                  fullWidth
+                  size="small"
+                  inputRef={nameRef}
+                  autoComplete="name"
+                  required
+                />
+                <TextField
+                  label="Teléfono"
+                  type="tel"
+                  value={pendingPayload?.telefono ?? telefono}
+                  placeholder="+56 9 1234 5678"
+                  onChange={(e) => {
+                    setTelefono(e.target.value);
+                    setErrors((prev) => ({ ...prev, telefono: undefined }));
+                  }}
+                  onBlur={() => {
+                    if (!pendingPayload) {
+                      setTelefono(normalizePhone(telefono));
+                      setErrors((prev) => ({
+                        ...prev,
+                        telefono: phoneError(telefono),
+                      }));
+                    }
+                  }}
+                  error={Boolean(errors.telefono)}
+                  helperText={
+                    errors.telefono ?? "Para contactarte sobre este pedido."
                   }
-                }}
-                error={Boolean(errors.telefono)}
-                helperText={
-                  errors.telefono ?? "Para contactarte sobre este pedido."
-                }
-                disabled={isSubmitting || Boolean(pendingPayload)}
-                fullWidth
-                size="small"
-                inputRef={phoneRef}
-                autoComplete="tel"
-                required
-                slotProps={{ htmlInput: { inputMode: "tel" } }}
-              />
-            </Box>
-          )}
+                  disabled={isSubmitting || Boolean(pendingPayload)}
+                  fullWidth
+                  size="small"
+                  inputRef={phoneRef}
+                  autoComplete="tel"
+                  required
+                  slotProps={{ htmlInput: { inputMode: "tel" } }}
+                />
+              </Box>
+            )}
 
-          {/* Resumen del pedido */}
-          <OrderSummary
-            items={
-              pendingPayload
-                ? pendingPayload.items.map((item, index) => ({
-                    key: `${item.platoId}-${index}`,
-                    name: item.nombre,
-                    quantity: item.cantidad,
-                    price: item.precio,
-                    protein: item.selecciones?.proteina,
-                  }))
-                : cartItems.map((item) => ({
-                    key: item.key,
-                    name: item.dish.isHipo
-                      ? "Menú hipocalórico"
-                      : item.dish.name,
-                    quantity: item.quantity,
-                    price: item.dish.price,
-                    protein: item.dish.isHipo
-                      ? item.selections.protein
-                      : undefined,
-                  }))
-            }
-            total={pendingPayload?.total ?? totalPrice}
-          />
+            {!session && (
+              <Typography variant="body2" color="text.secondary">
+                Al ingresar podrás revisar tu nombre y teléfono de contacto.
+              </Typography>
+            )}
+          </Box>
+
+          <Box className={styles.summaryColumn}>
+            {/* Resumen del pedido */}
+            <OrderSummary
+              items={
+                pendingPayload
+                  ? pendingPayload.items.map((item, index) => ({
+                      key: `${item.platoId}-${index}`,
+                      name: item.nombre,
+                      quantity: item.cantidad,
+                      price: item.precio,
+                      protein: item.selecciones?.proteina,
+                    }))
+                  : cartItems.map((item) => ({
+                      key: item.key,
+                      name: item.dish.isHipo
+                        ? "Menú hipocalórico"
+                        : item.dish.name,
+                      quantity: item.quantity,
+                      price: item.dish.price,
+                      protein: item.dish.isHipo
+                        ? item.selections.protein
+                        : undefined,
+                    }))
+              }
+              total={pendingPayload?.total ?? totalPrice}
+            />
+          </Box>
         </Box>
       </DialogContent>
 
@@ -302,7 +317,7 @@ export const OrderConfirmDialog = ({
           <Typography
             variant="caption"
             color="text.secondary"
-            sx={{ textAlign: "center", lineHeight: 1.5 }}
+            className={styles.actionHint}
           >
             {pendingPayload
               ? "Recuperaremos el resultado del mismo pedido."

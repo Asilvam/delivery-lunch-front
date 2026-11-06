@@ -585,9 +585,6 @@ export function CustomerMenuPage() {
         </Typography>
         {!isLoadingMenus && selectedMenu && (
           <Box sx={{ mb: 2 }}>
-            <Typography color="primary.dark" sx={{ fontWeight: 800, fontSize: "1.2rem" }}>
-              Menú general ${basePrice.toLocaleString("es-CL")}
-            </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Ensalada surtida · Pan fresco del día · Postre del día
             </Typography>

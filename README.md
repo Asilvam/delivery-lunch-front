@@ -173,6 +173,12 @@ Dominio del frontend: `sabores.serviciosasm.cl`. En Google Cloud hay que autoriz
 `https://sabores.serviciosasm.cl` como origen JavaScript del cliente OAuth.
 Los secretos de MongoDB, JWT, Cloudinary y CallMeBot pertenecen únicamente a Heroku.
 
+El footer compartido muestra la versión de `package.json` y los primeros siete
+caracteres del commit compilado. En Cloudflare se toma `CF_PAGES_COMMIT_SHA`;
+fuera de Cloudflare se usa `git rev-parse HEAD`. Estos valores se incorporan al
+compilar y no cambian al reiniciar el servidor. Desarrollo y compilaciones con
+cambios locales se distinguen con `local`; no se incrementa la versión automáticamente.
+
 
 ## Exportación de cocina a Excel
 

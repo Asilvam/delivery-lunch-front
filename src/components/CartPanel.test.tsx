@@ -41,7 +41,7 @@ describe("Cart review", () => {
       "$16.500",
     );
     expect(screen.getByText("3 menús completos")).toBeDefined();
-    expect(screen.getAllByText(/Todos incluyen:/)).toHaveLength(1);
+    expect(screen.getAllByText("Cada menú incluye")).toHaveLength(1);
   });
   it("updates the correct protein variant and continues to the contact step", () => {
     const update = vi.fn(),

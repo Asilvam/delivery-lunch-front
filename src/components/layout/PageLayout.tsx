@@ -60,6 +60,9 @@ export function BrandHeader({
 export function BrandFooter() {
   const { pathname } = useLocation();
   const customerPage = pathname === "/" || pathname === "/menu";
+  const version = import.meta.env.APP_VERSION ?? "local";
+  const commit = import.meta.env.BUILD_COMMIT ?? "local";
+  const localBuild = import.meta.env.BUILD_LOCAL === true;
   return (
     <Box
       component="footer"
@@ -73,15 +76,27 @@ export function BrandFooter() {
         maxWidth="lg"
         sx={{
           py: 1.5,
-          display: "flex",
-          flexWrap: "wrap",
+          display: "grid",
+          gridTemplateColumns: { xs: "minmax(0, 1fr) auto", sm: "minmax(0, 1fr) auto auto" },
+          gridTemplateAreas: {
+            xs: '"copyright access" "metadata metadata"',
+            sm: '"copyright metadata access"',
+          },
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: 1,
+          columnGap: { xs: 1, sm: 3 },
+          rowGap: 0.5,
         }}
       >
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="text.secondary" sx={{ gridArea: "copyright" }}>
           © {new Date().getFullYear()} Sabores Angelicales
+        </Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ gridArea: "metadata", fontSize: "0.7rem" }}
+          title={`Commit: ${commit}`}
+        >
+          v{version} · Compilación {commit.slice(0, 7)}{localBuild ? " · local" : ""}
         </Typography>
         <Link
           component={RouterLink}
@@ -89,6 +104,7 @@ export function BrandFooter() {
           underline="hover"
           color="primary.dark"
           sx={{
+            gridArea: "access",
             minHeight: 44,
             display: "inline-flex",
             alignItems: "center",
