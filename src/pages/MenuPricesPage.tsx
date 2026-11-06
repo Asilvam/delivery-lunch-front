@@ -1,3 +1,4 @@
+import { useMountedRef } from "../hooks/useMountedRef";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import {
@@ -9,7 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import Swal from "sweetalert2";
+import { appAlert, staffToast } from "../utils/notifications";
 import StaffNavigation from "../components/admin/StaffNavigation";
 import { PageLayout } from "../components/layout/PageLayout";
 import MenuPricesEditor from "../components/admin/MenuPricesEditor";
@@ -23,6 +24,7 @@ import type { BackendDailyMenuDto } from "../types/menu";
 
 export default function MenuPricesPage() {
   const { token, logout } = useAuth();
+  const mounted = useMountedRef();
   const [date, setDate] = useState(() =>
     new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago" }).format(
       new Date(),
@@ -47,6 +49,11 @@ export default function MenuPricesPage() {
       .catch((error) => {
         if (!controller.signal.aborted) {
           setMenu(null);
+          void staffToast.fire({
+            icon: "error",
+            title: "No pudimos cargar el menú",
+            text: "Revisa la conexión y pulsa Recargar.",
+          });
           setError(
             axios.isAxiosError(error)
               ? "No pudimos cargar el menú. Intenta nuevamente."
@@ -69,7 +76,7 @@ export default function MenuPricesPage() {
   const changeDate = async (value: string) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value === date) return;
     if (dirty.current) {
-      const answer = await Swal.fire({
+      const answer = await appAlert.fire({
         icon: "question",
         title: "Hay cambios sin guardar",
         text: "Si cambias de fecha se perderán los cambios de precios.",
@@ -89,15 +96,16 @@ export default function MenuPricesPage() {
     setError(null);
     try {
       const updated = await saveMenuPrices(menu._id, input, token);
+      if (!mounted.current) return;
       setMenu(updated);
       dirty.current = false;
-      await Swal.fire({
+      void staffToast.fire({
         icon: "success",
         title: "Precios guardados",
         text: "El inicio y los nuevos pedidos usarán estos valores.",
-        confirmButtonText: "Listo",
       });
     } catch (error) {
+      if (!mounted.current) return;
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         logout();
         return;
@@ -105,13 +113,16 @@ export default function MenuPricesPage() {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.message
         : null;
-      setError(
-        typeof message === "string"
-          ? message
-          : "No pudimos confirmar el guardado. Conservamos tus cambios; recarga para comprobar los precios antes de intentar de nuevo.",
-      );
+      void staffToast.fire({
+        icon: "error",
+        title: "No pudimos guardar los precios",
+        text:
+          typeof message === "string"
+            ? message
+            : "Conservamos tus cambios. Recarga para comprobar los precios antes de intentar de nuevo.",
+      });
     } finally {
-      setSaving(false);
+      if (mounted.current) setSaving(false);
     }
   };
   return (
@@ -135,7 +146,7 @@ export default function MenuPricesPage() {
           disabled={saving || loading}
           onClick={async () => {
             if (dirty.current) {
-              const answer = await Swal.fire({
+              const answer = await appAlert.fire({
                 title: "¿Recargar precios?",
                 text: "Se perderán los cambios sin guardar.",
                 showCancelButton: true,

@@ -1,3 +1,5 @@
+import { useMountedRef } from "../hooks/useMountedRef";
+import { staffToast } from "../utils/notifications";
 import { PageLayout, BrandHeader } from "../components/layout/PageLayout";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
@@ -8,7 +10,7 @@ import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined
 import loginPhoto from "../assets/dishes/pollo-asado-arroz-papas.png";
 import { brandColors as colors } from "../theme/brandColors";
 // src/pages/LoginPage.tsx
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import {
   useNavigate,
   useLocation,
@@ -16,7 +18,6 @@ import {
   Link as RouterLink,
 } from "react-router-dom";
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
@@ -35,13 +36,22 @@ export default function LoginPage() {
   const { login, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [expired, setExpired] = useState(
-    () => sessionStorage.getItem("staff-session-expired") === "1",
-  );
+  useEffect(() => {
+    if (!role && sessionStorage.getItem("staff-session-expired") === "1") {
+      sessionStorage.removeItem("staff-session-expired");
+      void staffToast.fire({
+        icon: "info",
+        title: "Tu sesión venció",
+        text: "Ingresa nuevamente para continuar.",
+      });
+    }
+  }, [role]);
   const destination = (userRole: string) => {
     const from = location.state?.from as string | undefined;
     const allowed =
-      userRole === "admin" ? ["/admin", "/admin/menus", "/dashboard", "/cocina"] : ["/cocina"];
+      userRole === "admin"
+        ? ["/admin", "/admin/menus", "/dashboard", "/cocina"]
+        : ["/cocina"];
     return from && allowed.includes(from.split("?")[0])
       ? from
       : userRole === "kitchen"
@@ -50,28 +60,39 @@ export default function LoginPage() {
   };
 
   const submitting = useRef(false);
+  const mounted = useMountedRef();
+  const loginRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => loginRequest.current?.abort(), []);
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    username?: string;
+    password?: string;
+  }>({});
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (submitting.current) return;
     if (!username.trim() || !password) {
-      setError("Completa tu usuario y contraseña.");
+      setFieldErrors({
+        username: !username.trim() ? "Ingresa tu usuario." : undefined,
+        password: !password ? "Ingresa tu contraseña." : undefined,
+      });
       return;
     }
     submitting.current = true;
-    setError(null);
+    setFieldErrors({});
     setLoading(true);
+    loginRequest.current = new AbortController();
     try {
       const res = await axios.post<{ access_token: string }>(
         `${BASE_URL}/auth/login`,
         { username: username.trim(), password },
-        { timeout: 10000 },
+        { timeout: 10000, signal: loginRequest.current.signal },
       );
+      if (!mounted.current) return;
       login(res.data.access_token);
 
       // Decode role from the new token and redirect accordingly
@@ -82,14 +103,17 @@ export default function LoginPage() {
       sessionStorage.removeItem("staff-session-expired");
       navigate(destination(decoded.role || "admin"), { replace: true });
     } catch (error) {
-      setError(
-        axios.isAxiosError(error) && error.response?.status === 401
-          ? "Usuario o contraseña incorrectos"
-          : "No pudimos conectar con el servidor. Intenta nuevamente.",
-      );
+      if (!mounted.current) return;
+      void staffToast.fire({
+        icon: "error",
+        title:
+          axios.isAxiosError(error) && error.response?.status === 401
+            ? "Usuario o contraseña incorrectos"
+            : "No pudimos conectar con el servidor. Intenta nuevamente.",
+      });
     } finally {
       submitting.current = false;
-      setLoading(false);
+      if (mounted.current) setLoading(false);
     }
   }
 
@@ -249,37 +273,24 @@ export default function LoginPage() {
               Ingresa para gestionar los pedidos o continuar en cocina.
             </Typography>
 
-            {expired && (
-              <Alert
-                severity="info"
-                closeText="Cerrar aviso"
-                onClose={() => {
-                  sessionStorage.removeItem("staff-session-expired");
-                  setExpired(false);
-                }}
-                sx={{ mb: 2 }}
-              >
-                Tu sesión venció. Ingresa nuevamente para continuar.
-              </Alert>
-            )}
-            {error && (
-              <Alert severity="error" role="alert" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
             <Box
               component="form"
+              noValidate
               onSubmit={handleSubmit}
               aria-busy={loading}
               sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
             >
               <TextField
                 label="Usuario"
+                error={Boolean(fieldErrors.username)}
+                helperText={fieldErrors.username}
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
-                  setError(null);
+                  setFieldErrors((current) => ({
+                    ...current,
+                    username: undefined,
+                  }));
                 }}
                 autoComplete="username"
                 required
@@ -301,11 +312,16 @@ export default function LoginPage() {
               />
               <TextField
                 label="Contraseña"
+                error={Boolean(fieldErrors.password)}
+                helperText={fieldErrors.password}
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setError(null);
+                  setFieldErrors((current) => ({
+                    ...current,
+                    password: undefined,
+                  }));
                 }}
                 autoComplete="current-password"
                 required

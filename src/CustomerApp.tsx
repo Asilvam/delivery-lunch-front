@@ -2,7 +2,7 @@ import axios from "axios";
 import { MENU_PRICE } from "./domain/menu/menuOffer";
 import { useCustomerSession } from "./hooks/useCustomerSession";
 // src/CustomerApp.tsx
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Alert,
   Typography,
@@ -19,7 +19,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import TodayIcon from "@mui/icons-material/Today";
-import Swal from "sweetalert2";
+import { appAlert } from "./utils/notifications";
 
 import { appTheme } from "./theme/appTheme";
 import { buildCartItemKey, normalizeMenuCart } from "./domain/cart/cartHelpers";
@@ -66,7 +66,7 @@ export default function CustomerApp() {
     order: OrderResponse;
     payload: OrderPayload;
   } | null>(null);
-  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const closeReceipt = useCallback(() => setReceipt(null), []);
   const [pendingOrder, setPendingOrder] = useState(() => getPendingOrder());
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
@@ -133,7 +133,7 @@ export default function CustomerApp() {
     void loadMenus();
     return () => {
       mounted = false;
-      Swal.close();
+      appAlert.close();
     };
   }, []);
 
@@ -290,7 +290,6 @@ export default function CustomerApp() {
       sessionStorage.removeItem("checkout_contact");
       triggerCompletionFeedback();
       setReceipt({ order, payload });
-      setIsReceiptOpen(true);
       try {
         setMenus(await fetchDailyMenus());
       } catch {
@@ -309,14 +308,13 @@ export default function CustomerApp() {
           const fresh = await fetchDailyMenus();
           setMenus(fresh);
           setCartItems((items) => refreshCartPrices(items, fresh));
-          await Swal.fire({
+          void userToast.fire({
             icon: "info",
             title: "El precio cambió",
             text: "Actualizamos tu resumen. Revisa el nuevo total antes de continuar.",
-            confirmButtonText: "Revisar resumen",
           });
         } catch {
-          await Swal.fire({
+          void userToast.fire({
             icon: "error",
             title: "No pudimos actualizar los precios",
             text: "Conservamos tus platos. Recarga el menú antes de volver a enviar.",
@@ -329,7 +327,7 @@ export default function CustomerApp() {
       const serverMessage = axios.isAxiosError(error)
         ? error.response?.data?.message
         : null;
-      await Swal.fire({
+      void userToast.fire({
         icon: pending ? "warning" : "error",
         title: pending
           ? "El envío sigue sin confirmar"
@@ -342,7 +340,6 @@ export default function CustomerApp() {
               : typeof serverMessage === "string"
                 ? serverMessage
                 : "Conservamos tus platos y tus datos. Revisa el pedido e intenta nuevamente.",
-        confirmButtonText: "Revisar pedido",
       });
     } finally {
       sending.current = false;
@@ -386,20 +383,6 @@ export default function CustomerApp() {
           />
         }
       >
-        {receipt && (
-          <Alert
-            severity="success"
-            sx={{ mb: 2 }}
-            action={
-              <Button onClick={() => setIsReceiptOpen(true)}>
-                Ver comprobante
-              </Button>
-            }
-          >
-            Conservamos el comprobante de tu último pedido mientras sigas en
-            esta página.
-          </Alert>
-        )}
         {pendingOrder && (
           <Alert
             severity="warning"
@@ -446,8 +429,7 @@ export default function CustomerApp() {
                 color: "primary.main",
               }}
             >
-              {hasSpecialPrices ? "Precio general: " : "Por solo "}$
-              {basePrice.toLocaleString("es-CL")}
+              Por solo ${basePrice.toLocaleString("es-CL")}
             </Box>
           </Typography>
           {hasSpecialPrices && (
@@ -657,10 +639,10 @@ export default function CustomerApp() {
 
       {receipt && (
         <OrderReceiptDialog
-          open={isReceiptOpen}
+          open
           order={receipt.order}
           payload={receipt.payload}
-          onClose={() => setIsReceiptOpen(false)}
+          onClose={closeReceipt}
         />
       )}
 

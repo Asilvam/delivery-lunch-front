@@ -37,17 +37,6 @@ body {
   background: var(--bg);
 }
 
-/* SweetAlert2 — success icon in brand color */
-.swal-icon-primary.swal2-icon {
-  border-color: rgba(216, 27, 96, 0.3) !important;
-  color: #d81b60 !important;
-}
-.swal-icon-primary .swal2-success-ring {
-  border-color: rgba(216, 27, 96, 0.3) !important;
-}
-.swal-icon-primary [class^="swal2-success-line"] {
-  background-color: #d81b60 !important;
-}
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

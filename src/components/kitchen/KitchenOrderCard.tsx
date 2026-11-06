@@ -1,4 +1,4 @@
-import { showActionError, showActionSuccess } from '../../utils/actionFeedback';
+import { showActionError, showActionSuccess } from "../../utils/actionFeedback";
 // src/components/kitchen/KitchenOrderCard.tsx
 import { useState } from "react";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import Swal from "sweetalert2";
+import { appAlert } from "../../utils/notifications";
 import { OrderStatus, type Order } from "../../types/order";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -73,7 +73,11 @@ export default function KitchenOrderCard({
     setLoading(true);
     try {
       await onStatusChange(order._id, next);
-      void showActionSuccess(next === OrderStatus.ENTREGADO ? "Pedido entregado" : "Preparación iniciada");
+      void showActionSuccess(
+        next === OrderStatus.ENTREGADO
+          ? "Pedido entregado"
+          : "Preparación iniciada",
+      );
     } catch (error) {
       await showActionError(error);
     } finally {
@@ -82,13 +86,11 @@ export default function KitchenOrderCard({
   };
 
   const handleCancel = async () => {
-    const result = await Swal.fire({
+    const result = await appAlert.fire({
       title: "¿Cancelar pedido?",
       text: `Se cancelará el pedido de ${order.cliente}. Esta acción no se puede deshacer.`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d32f2f",
-      cancelButtonColor: "#757575",
       confirmButtonText: "Sí, cancelar",
       cancelButtonText: "No, volver",
     });
@@ -145,21 +147,65 @@ export default function KitchenOrderCard({
         {/* Fechas relevantes */}
         <Box mb={1.5}>
           <Typography variant="caption" color="text.secondary" display="block">
-            <b>Creado:</b> {new Date(order.createdAt).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.createdAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            <b>Creado:</b>{" "}
+            {new Date(order.createdAt).toLocaleDateString("es-CL", {
+              day: "2-digit",
+              month: "2-digit",
+            })}{" "}
+            {new Date(order.createdAt).toLocaleTimeString("es-CL", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Typography>
           {order.aceptadoEn && (
-            <Typography variant="caption" color="text.secondary" display="block">
-              <b>Aceptado:</b> {new Date(order.aceptadoEn).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.aceptadoEn).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
+              <b>Aceptado:</b>{" "}
+              {new Date(order.aceptadoEn).toLocaleDateString("es-CL", {
+                day: "2-digit",
+                month: "2-digit",
+              })}{" "}
+              {new Date(order.aceptadoEn).toLocaleTimeString("es-CL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </Typography>
           )}
           {order.entregadoEn && (
-            <Typography variant="caption" color="text.secondary" display="block">
-              <b>Entregado:</b> {new Date(order.entregadoEn).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.entregadoEn).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
+              <b>Entregado:</b>{" "}
+              {new Date(order.entregadoEn).toLocaleDateString("es-CL", {
+                day: "2-digit",
+                month: "2-digit",
+              })}{" "}
+              {new Date(order.entregadoEn).toLocaleTimeString("es-CL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </Typography>
           )}
           {order.canceladoEn && (
-            <Typography variant="caption" color="text.secondary" display="block">
-              <b>Cancelado:</b> {new Date(order.canceladoEn).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })} {new Date(order.canceladoEn).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
+              <b>Cancelado:</b>{" "}
+              {new Date(order.canceladoEn).toLocaleDateString("es-CL", {
+                day: "2-digit",
+                month: "2-digit",
+              })}{" "}
+              {new Date(order.canceladoEn).toLocaleTimeString("es-CL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </Typography>
           )}
         </Box>

@@ -153,8 +153,8 @@ El botón de envío incluye el total y las acciones permanecen visibles mientras
 contenido se desplaza en móvil. Durante el envío se bloquean cierre y nuevos envíos.
 
 El comprobante muestra número de pedido, resumen, total y estado recibido de la API.
-Puede abrirse de nuevo desde el home mientras la página siga cargada. Es un
-comprobante del envío, sin seguimiento automático de cambios posteriores. Los
+Se muestra al confirmar el envío y se descarta al cerrarlo, sin añadir accesos
+al encabezado. Es un comprobante del envío, sin seguimiento automático de cambios posteriores. Los
 pedidos nuevos quedan pendientes de aprobación del local; un reintento recuperado
 muestra el estado devuelto por el servidor.
 
@@ -172,3 +172,41 @@ Variables de compilación públicas:
 Dominio del frontend: `sabores.serviciosasm.cl`. En Google Cloud hay que autorizar
 `https://sabores.serviciosasm.cl` como origen JavaScript del cliente OAuth.
 Los secretos de MongoDB, JWT, Cloudinary y CallMeBot pertenecen únicamente a Heroku.
+
+
+## Exportación de cocina a Excel
+
+En **Cocina → Completados → Exportar a Excel** se descarga `Report-day-DDMMAA.xlsx`.
+Reemplaza la exportación CSV y usa los mismos pedidos entregados o cancelados
+actualizados hoy en Chile que se muestran en esa sección, para admin y cocina.
+No agrega una exportación al panel de pedidos pendientes ni hace consultas extra.
+
+Incluye **Pedidos** (una fila por pedido) y **Detalle** (una fila por plato), con
+cliente, estado, creación, aceptación, entrega/cancelación, cantidades, selecciones
+y precios reales. Los importes son numéricos en CLP y los teléfonos se conservan
+como texto. Los totales usan `SUBTOTAL` y los horarios, `America/Santiago`.
+El generador se carga al pulsar el botón, bloquea descargas repetidas durante la
+preparación y permite reintentar si falla.
+
+El aviso de exportación confirma únicamente que se solicitó la descarga al navegador.
+No confirma que el archivo se guardó: si se cancela el diálogo de descarga, se
+puede pulsar Exportar a Excel nuevamente.
+
+
+## Mensajes y confirmaciones
+
+`src/utils/notifications.ts` centraliza SweetAlert2 con los colores de la marca.
+Los avisos transitorios aparecen arriba a la derecha con opción de cerrar:
+hasta 3 segundos para clientes, 2 segundos para personal y 1 segundo para
+acciones completadas como aprobar un pedido. Las confirmaciones y los errores
+que requieren revisión usan un diálogo con respuesta explícita.
+
+Los avisos de exportación indican solicitud de descarga, sin confirmar el guardado.
+Las validaciones permanecen junto al campo correspondiente. Los estados duraderos
+(comprobante, envío pendiente, configuración ausente o datos no disponibles)
+permanecen dentro de la pantalla para que sigan accesibles.
+
+El comprobante del cliente se muestra directamente en SweetAlert2 al recibir la
+respuesta del pedido, con estado, número, selección y total. No agrega botones
+al encabezado. El comprobante y las
+confirmaciones que requieren una decisión no expiran automáticamente.

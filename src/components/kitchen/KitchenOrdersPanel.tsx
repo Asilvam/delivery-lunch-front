@@ -1,13 +1,33 @@
+import { staffToast } from "../../utils/notifications";
 // src/components/kitchen/KitchenOrdersPanel.tsx
-import { useState } from "react";
-import { Box, Chip, Collapse, IconButton, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  Chip,
+  Collapse,
+  IconButton,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  CircularProgress,
+} from "@mui/material";
 import WifiOffIcon from "@mui/icons-material/WifiOff";
 import WifiIcon from "@mui/icons-material/Wifi";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import KitchenOrderCard from "./KitchenOrderCard";
 import { OrderStatus, type Order } from "../../types/order";
-import DownloadIcon from '@mui/icons-material/Download';
+import DownloadIcon from "@mui/icons-material/Download";
+import {
+  getChileDate,
+  getKitchenCompletedOrders,
+} from "../../domain/orders/kitchenReport";
 
 interface Props {
   orders: Order[];
@@ -25,6 +45,15 @@ export default function KitchenOrdersPanel({
   isAdmin,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportInProgress = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const active = orders.filter(
     (o) =>
@@ -32,76 +61,56 @@ export default function KitchenOrdersPanel({
   );
   // Utilidad para formatear fechas como dd/MM HH:mm en hora Chile continental
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '';
+    if (!dateStr) return "";
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
+    if (isNaN(d.getTime())) return "";
     // Usar toLocaleString con zona horaria de Chile continental
     const opts: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
-      timeZone: 'America/Santiago',
+      timeZone: "America/Santiago",
     };
     // El formato es 22/04, 10:45
-    const str = d.toLocaleString('es-CL', opts);
+    const str = d.toLocaleString("es-CL", opts);
     // Reemplazar coma por espacio para obtener '22/04 10:45'
-    return str.replace(',', '');
+    return str.replace(",", "");
   };
 
-  // Solo mostrar completados/cancelados del día actual (Chile continental)
-  // Obtener fecha de hoy en Chile continental en formato YYYY-MM-DD
-  const nowChile = new Date().toLocaleString('en-CA', { timeZone: 'America/Santiago' });
-  const todayChile = nowChile.split(' ')[0];
-  const isTodayChile = (dateStr: string) => {
-    if (!dateStr) return false;
-    // Obtener fecha en Chile continental del dateStr
-    const d = new Date(dateStr);
-    const dChile = d.toLocaleString('en-CA', { timeZone: 'America/Santiago' }).split(' ')[0];
-    return dChile === todayChile;
-  };
-  const done = orders.filter(
-    (o) =>
-      (o.estado === OrderStatus.ENTREGADO || o.estado === OrderStatus.CANCELADO) &&
-      isTodayChile(o.updatedAt)
-  );
+  const done = getKitchenCompletedOrders(orders);
 
   // Generar filas: una por cada plato
   const doneRows = done.flatMap((order) =>
-    order.items.map((item) => ({ order, item }))
+    order.items.map((item) => ({ order, item })),
   );
 
-  // CSV export
-  const handleExportCSV = () => {
-    const header = [
-      'Cliente', 'Estado', 'Creado', 'Aceptado', 'Entregado/Cancelado', 'Plato', 'Cantidad', 'Selecciones', 'Precio Unitario', 'Total Item'
-    ];
-    const rows = doneRows.map(({ order, item }) => [
-      order.cliente,
-      order.estado,
-      formatDate(order.createdAt),
-      formatDate(order.aceptadoEn),
-      formatDate(order.entregadoEn || order.canceladoEn || order.updatedAt),
-      item.nombre,
-      item.cantidad,
-      Object.entries(item.selecciones || {}).map(([k, v]) => `${k}: ${v}`).join('; '),
-      item.precio,
-      item.precio * item.cantidad
-    ]);
-    const csv = [header, ...rows]
-      .map((r) => r.map((v) => `"${v}"`).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    // Nombre: Report-day-DDMMAA.csv usando fecha Chile continental
-    const nowChile = new Date().toLocaleString('en-CA', { timeZone: 'America/Santiago' });
-    const [yyyy, mm, dd] = nowChile.split(' ')[0].split('-');
-    a.download = `Report-day-${dd}${mm}${yyyy.slice(-2)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportExcel = async () => {
+    if (exportInProgress.current || done.length === 0) return;
+    exportInProgress.current = true;
+    setExporting(true);
+    try {
+      const { createOrdersExcel, downloadOrdersExcel } =
+        await import("../../utils/ordersExcel");
+      const file = await createOrdersExcel(done, getChileDate());
+      if (!mounted.current) return;
+      downloadOrdersExcel(file);
+      void staffToast.fire({
+        icon: "info",
+        title: `Descarga solicitada para ${done.length} ${done.length === 1 ? "pedido" : "pedidos"}. Si la cancelaste, puedes volver a exportar.`,
+      });
+    } catch {
+      if (mounted.current)
+        void staffToast.fire({
+          icon: "error",
+          title:
+            "No pudimos generar el Excel. Intenta nuevamente; los pedidos siguen disponibles.",
+        });
+    } finally {
+      exportInProgress.current = false;
+      if (mounted.current) setExporting(false);
+    }
   };
 
   return (
@@ -150,9 +159,14 @@ export default function KitchenOrdersPanel({
               >
                 En curso ({active.length})
               </Typography>
-              <Box display="flex" flexDirection="column" gap={2} alignItems="flex-start">
+              <Box
+                display="flex"
+                flexDirection="column"
+                gap={2}
+                alignItems="flex-start"
+              >
                 {active.map((order) => (
-                  <Box key={order._id} sx={{ width: '100%', maxWidth: 480 }}>
+                  <Box key={order._id} sx={{ width: "100%", maxWidth: 480 }}>
                     <KitchenOrderCard
                       order={order}
                       onStatusChange={onStatusChange}
@@ -198,53 +212,119 @@ export default function KitchenOrdersPanel({
                   <Button
                     variant="outlined"
                     size="small"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleExportCSV}
-                    disabled={doneRows.length === 0}
+                    startIcon={
+                      exporting ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <DownloadIcon />
+                      )
+                    }
+                    onClick={() => void handleExportExcel()}
+                    disabled={exporting || doneRows.length === 0}
                   >
-                    Exportar CSV
+                    {exporting ? "Preparando Excel…" : "Exportar a Excel"}
                   </Button>
                 </Box>
                 <TableContainer
                   component={Paper}
                   sx={{
-                    width: '100%',
-                    overflowX: 'auto',
-                    WebkitOverflowScrolling: 'touch',
+                    width: "100%",
+                    overflowX: "auto",
+                    WebkitOverflowScrolling: "touch",
                   }}
                 >
                   <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Cliente</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 110 }}>Creado</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: 110 }}>Aceptado</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', width: 150 }}>
-                            <Box component="span" sx={{ display: 'inline-block', lineHeight: 1 }}>
-                              Entregado/
-                              <br />
-                              Cancel.
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', width: 220, maxWidth: 220 }}>Plato</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>Precio Unitario</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Item</TableCell>
+                        <TableCell sx={{ fontWeight: "bold" }}>
+                          Cliente
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: "bold" }}>
+                          Estado
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: "bold",
+                            whiteSpace: "nowrap",
+                            width: 110,
+                          }}
+                        >
+                          Creado
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: "bold",
+                            whiteSpace: "nowrap",
+                            width: 110,
+                          }}
+                        >
+                          Aceptado
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                          <Box
+                            component="span"
+                            sx={{ display: "inline-block", lineHeight: 1 }}
+                          >
+                            Entregado/
+                            <br />
+                            Cancel.
+                          </Box>
+                        </TableCell>
+                        <TableCell
+                          sx={{ fontWeight: "bold", width: 220, maxWidth: 220 }}
+                        >
+                          Plato
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                          Cantidad
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                          Precio Unitario
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                          Total Item
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {doneRows.map(({ order, item }, idx) => (
-                        <TableRow key={order._id + '-' + item.platoId + '-' + idx}>
+                        <TableRow
+                          key={order._id + "-" + item.platoId + "-" + idx}
+                        >
                           <TableCell>{order.cliente}</TableCell>
                           <TableCell>{order.estado}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.createdAt)}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.aceptadoEn)}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(order.entregadoEn || order.canceladoEn || order.updatedAt)}</TableCell>
-                            <TableCell sx={{ maxWidth: 220, whiteSpace: 'normal', wordBreak: 'break-word' }}>{item.nombre}</TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {formatDate(order.createdAt)}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {formatDate(order.aceptadoEn)}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {formatDate(
+                              order.entregadoEn ||
+                                order.canceladoEn ||
+                                order.updatedAt,
+                            )}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              maxWidth: 220,
+                              whiteSpace: "normal",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {item.nombre}
+                          </TableCell>
                           <TableCell align="right">{item.cantidad}</TableCell>
-                            <TableCell align="right">${item.precio.toLocaleString('es-CL')}</TableCell>
-                          <TableCell align="right">${(item.precio * item.cantidad).toLocaleString('es-CL')}</TableCell>
+                          <TableCell align="right">
+                            ${item.precio.toLocaleString("es-CL")}
+                          </TableCell>
+                          <TableCell align="right">
+                            $
+                            {(item.precio * item.cantidad).toLocaleString(
+                              "es-CL",
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

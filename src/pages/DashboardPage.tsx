@@ -1,3 +1,4 @@
+import { staffToast } from "../utils/notifications";
 import { PageLayout } from "../components/layout/PageLayout";
 import StaffNavigation from "../components/admin/StaffNavigation";
 // src/pages/DashboardPage.tsx
@@ -120,8 +121,14 @@ export default function DashboardPage() {
         },
       )
       .catch(() => {
-        if (version === requestVersion.current)
+        if (version === requestVersion.current) {
           setError("No pudimos actualizar las métricas. Intenta nuevamente.");
+          void staffToast.fire({
+            icon: "error",
+            title: "No pudimos actualizar las métricas",
+            text: "Revisa la conexión y vuelve a intentarlo.",
+          });
+        }
       })
       .finally(() => {
         if (version === requestVersion.current) setLoading(false);
@@ -129,7 +136,10 @@ export default function DashboardPage() {
   }, [token, startDate, endDate]);
 
   useEffect(() => {
-    loadData();
+    void loadData();
+    return () => {
+      requestVersion.current += 1;
+    };
   }, [loadData]);
 
   const handleRangeChange = useCallback((start: string, end: string) => {

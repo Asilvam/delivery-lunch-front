@@ -1,0 +1,30 @@
+.brand-alert-container {
+  z-index: 2000 !important;
+}
+.brand-alert-popup {
+  font-family: var(--sans, system-ui, sans-serif);
+  border: 1px solid #eedce5;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(88, 25, 53, 0.12);
+}
+.brand-alert-popup.swal2-toast .swal2-title {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.brand-alert-popup .swal2-html-container {
+  line-height: 1.6;
+  max-height: 65dvh;
+  overflow-y: auto;
+}
+.brand-alert-popup .swal2-timer-progress-bar {
+  background: #d81b60;
+}
+.brand-alert-button.swal2-styled {
+  min-height: 44px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.brand-alert-close {
+  min-width: 44px;
+  min-height: 44px;
+}

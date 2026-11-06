@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useMountedRef } from "../hooks/useMountedRef";
+import { userToast } from "../utils/notifications";
+import { useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -17,7 +19,11 @@ export function GoogleCustomerAccess({
 }) {
   const { session, signIn, signOut } = useCustomerSession();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const mounted = useMountedRef();
+  const verifying = useRef(false);
+  const reportError = (title: string) => {
+    if (mounted.current) void userToast.fire({ icon: "error", title });
+  };
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
   if (session)
     return (
@@ -51,7 +57,6 @@ export function GoogleCustomerAccess({
           size="small"
           disabled={disabled}
           onClick={() => {
-            setError("");
             signOut();
           }}
         >
@@ -61,11 +66,6 @@ export function GoogleCustomerAccess({
     );
   return (
     <Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 1 }}>
-          {error}
-        </Alert>
-      )}
       {!clientId ? (
         <Alert severity="warning">
           El acceso con Google no está configurado. Contacta al local.
@@ -74,7 +74,7 @@ export function GoogleCustomerAccess({
         <GoogleOAuthProvider
           clientId={clientId}
           onScriptLoadError={() =>
-            setError(
+            reportError(
               "No pudimos cargar Google. Revisa tu conexión y vuelve a abrir este paso.",
             )
           }
@@ -92,28 +92,29 @@ export function GoogleCustomerAccess({
               text="continue_with"
               size="large"
               onError={() =>
-                setError(
+                reportError(
                   "No pudimos iniciar sesión. Puedes reintentarlo sin perder tu pedido.",
                 )
               }
               onSuccess={async (response) => {
-                if (disabled) return;
+                if (disabled || !mounted.current || verifying.current) return;
                 if (!response.credential) {
-                  setError(
+                  reportError(
                     "Google no devolvió una credencial. Intenta nuevamente.",
                   );
                   return;
                 }
+                verifying.current = true;
                 setLoading(true);
-                setError("");
                 try {
                   await signIn(response.credential);
                 } catch {
-                  setError(
+                  reportError(
                     "No pudimos verificar tu cuenta. Intenta nuevamente; tu pedido sigue guardado.",
                   );
                 } finally {
-                  setLoading(false);
+                  verifying.current = false;
+                  if (mounted.current) setLoading(false);
                 }
               }}
             />

@@ -22,6 +22,7 @@
     "@react-oauth/google": "^0.13.5",
     "axios": "^1.13.6",
     "dayjs": "^1.11.20",
+    "exceljs": "^4.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.1",
