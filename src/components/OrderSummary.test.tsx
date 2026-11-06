@@ -24,5 +24,5 @@ it("explains quantities and protein without repeating accompaniments in each row
   expect(screen.getByText("Proteína: Atún")).toBeDefined();
   expect(screen.getByText("$11.000")).toBeDefined();
   expect(screen.getByText("$16.500")).toBeDefined();
-  expect(screen.getAllByText(/Incluye por menú:/)).toHaveLength(1);
+  expect(screen.queryByText(/Incluye por menú:/)).toBeNull();
 });

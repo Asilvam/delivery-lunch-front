@@ -1,5 +1,4 @@
 import { Box, Divider, Typography } from "@mui/material";
-import { MENU_INCLUDES } from "../domain/menu/menuOffer";
 
 export interface SummaryItem {
   key: string;
@@ -77,16 +76,12 @@ export function OrderSummary({
         ))}
       </Box>
       <Divider sx={{ my: 1.5 }} />
-      <Typography variant="caption" color="text.secondary">
-        Incluye por menú: {MENU_INCLUDES}.
-      </Typography>
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           gap: 2,
-          mt: 1.5,
         }}
       >
         <Typography fontWeight={700}>Total</Typography>
