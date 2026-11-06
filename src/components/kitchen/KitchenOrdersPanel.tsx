@@ -1,33 +1,8 @@
-import { staffToast } from "../../utils/notifications";
-// src/components/kitchen/KitchenOrdersPanel.tsx
-import { useEffect, useRef, useState } from "react";
-import {
-  Box,
-  Chip,
-  Collapse,
-  IconButton,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Chip, Typography } from "@mui/material";
 import WifiOffIcon from "@mui/icons-material/WifiOff";
 import WifiIcon from "@mui/icons-material/Wifi";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import KitchenOrderCard from "./KitchenOrderCard";
 import { OrderStatus, type Order } from "../../types/order";
-import DownloadIcon from "@mui/icons-material/Download";
-import {
-  getChileDate,
-  getKitchenCompletedOrders,
-} from "../../domain/orders/kitchenReport";
 
 interface Props {
   orders: Order[];
@@ -44,296 +19,84 @@ export default function KitchenOrdersPanel({
   onStatusChange,
   isAdmin,
 }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const exportInProgress = useRef(false);
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  const active = orders.filter(
-    (o) =>
-      o.estado !== OrderStatus.ENTREGADO && o.estado !== OrderStatus.CANCELADO,
-  );
-  // Utilidad para formatear fechas como dd/MM HH:mm en hora Chile continental
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "";
-    // Usar toLocaleString con zona horaria de Chile continental
-    const opts: Intl.DateTimeFormatOptions = {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "America/Santiago",
-    };
-    // El formato es 22/04, 10:45
-    const str = d.toLocaleString("es-CL", opts);
-    // Reemplazar coma por espacio para obtener '22/04 10:45'
-    return str.replace(",", "");
-  };
-
-  const done = getKitchenCompletedOrders(orders);
-
-  // Generar filas: una por cada plato
-  const doneRows = done.flatMap((order) =>
-    order.items.map((item) => ({ order, item })),
-  );
-
-  const handleExportExcel = async () => {
-    if (exportInProgress.current || done.length === 0) return;
-    exportInProgress.current = true;
-    setExporting(true);
-    try {
-      const { createOrdersExcel, downloadOrdersExcel } =
-        await import("../../utils/ordersExcel");
-      const file = await createOrdersExcel(done, getChileDate());
-      if (!mounted.current) return;
-      downloadOrdersExcel(file);
-      void staffToast.fire({
-        icon: "info",
-        title: `Descarga solicitada para ${done.length} ${done.length === 1 ? "pedido" : "pedidos"}. Si la cancelaste, puedes volver a exportar.`,
-      });
-    } catch {
-      if (mounted.current)
-        void staffToast.fire({
-          icon: "error",
-          title:
-            "No pudimos generar el Excel. Intenta nuevamente; los pedidos siguen disponibles.",
-        });
-    } finally {
-      exportInProgress.current = false;
-      if (mounted.current) setExporting(false);
-    }
-  };
+  const active = orders
+    .filter(
+      (order) =>
+        order.validadoPorAdmin &&
+        (order.estado === OrderStatus.PENDIENTE ||
+          order.estado === OrderStatus.EN_PREPARACION),
+    )
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+  const preparing = active.filter(
+    (order) => order.estado === OrderStatus.EN_PREPARACION,
+  ).length;
 
   return (
     <Box>
-      {/* Connection status */}
-      <Box display="flex" alignItems="center" gap={1} mb={3}>
-        {connected ? (
-          <Chip
-            icon={<WifiIcon />}
-            label="Conectado"
-            color="success"
-            size="small"
-          />
-        ) : (
-          <Chip
-            icon={<WifiOffIcon />}
-            label="Reconectando…"
-            color="default"
-            size="small"
-          />
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
+        <Typography component="h2" variant="subtitle1" fontWeight={700}>
+          En curso ({active.length})
+        </Typography>
+        {active.length > 0 && (
+          <Typography variant="body2" color="text.secondary">
+            {active.length - preparing} por preparar · {preparing} en
+            preparación
+          </Typography>
         )}
+        <Chip
+          icon={connected ? <WifiIcon /> : <WifiOffIcon />}
+          label={connected ? "Conectado" : "Reconectando…"}
+          color={connected ? "success" : "default"}
+          size="small"
+          sx={{ ml: { sm: "auto" } }}
+        />
         {error && (
-          <Typography variant="caption" color="error">
+          <Typography
+            role="status"
+            variant="caption"
+            color="error"
+            sx={{ width: "100%" }}
+          >
             {error}
           </Typography>
         )}
       </Box>
-
-      {active.length === 0 && done.length === 0 ? (
+      {active.length === 0 ? (
         <Box textAlign="center" py={8}>
           <Typography color="text.secondary" fontWeight={500}>
             Sin comandas activas
           </Typography>
         </Box>
       ) : (
-        <>
-          {active.length > 0 && (
-            <Box mb={4}>
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                color="text.secondary"
-                mb={1.5}
-                textTransform="uppercase"
-                letterSpacing={1}
-              >
-                En curso ({active.length})
-              </Typography>
-              <Box
-                display="flex"
-                flexDirection="column"
-                gap={2}
-                alignItems="flex-start"
-              >
-                {active.map((order) => (
-                  <Box key={order._id} sx={{ width: "100%", maxWidth: 480 }}>
-                    <KitchenOrderCard
-                      order={order}
-                      onStatusChange={onStatusChange}
-                      isAdmin={isAdmin}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          {doneRows.length > 0 && (
-            <Box>
-              {/* Collapsible header */}
-              <Box
-                display="flex"
-                alignItems="center"
-                sx={{ cursor: "pointer", userSelect: "none" }}
-                onClick={() => setCollapsed((c) => !c)}
-                mb={collapsed ? 0 : 1.5}
-              >
-                <Typography
-                  variant="subtitle2"
-                  fontWeight={700}
-                  color="text.secondary"
-                  textTransform="uppercase"
-                  letterSpacing={1}
-                  flexGrow={1}
-                >
-                  Completados ({doneRows.length})
-                </Typography>
-                <IconButton size="small" tabIndex={-1}>
-                  {collapsed ? (
-                    <ExpandMoreIcon fontSize="small" />
-                  ) : (
-                    <ExpandLessIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </Box>
-
-              <Collapse in={!collapsed}>
-                <Box mb={2}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={
-                      exporting ? (
-                        <CircularProgress size={16} color="inherit" />
-                      ) : (
-                        <DownloadIcon />
-                      )
-                    }
-                    onClick={() => void handleExportExcel()}
-                    disabled={exporting || doneRows.length === 0}
-                  >
-                    {exporting ? "Preparando Excel…" : "Exportar a Excel"}
-                  </Button>
-                </Box>
-                <TableContainer
-                  component={Paper}
-                  sx={{
-                    width: "100%",
-                    overflowX: "auto",
-                    WebkitOverflowScrolling: "touch",
-                  }}
-                >
-                  <Table size="small" stickyHeader sx={{ minWidth: 900 }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          Cliente
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          Estado
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            fontWeight: "bold",
-                            whiteSpace: "nowrap",
-                            width: 110,
-                          }}
-                        >
-                          Creado
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            fontWeight: "bold",
-                            whiteSpace: "nowrap",
-                            width: 110,
-                          }}
-                        >
-                          Aceptado
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "bold", width: 150 }}>
-                          <Box
-                            component="span"
-                            sx={{ display: "inline-block", lineHeight: 1 }}
-                          >
-                            Entregado/
-                            <br />
-                            Cancel.
-                          </Box>
-                        </TableCell>
-                        <TableCell
-                          sx={{ fontWeight: "bold", width: 220, maxWidth: 220 }}
-                        >
-                          Plato
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                          Cantidad
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                          Precio Unitario
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                          Total Item
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {doneRows.map(({ order, item }, idx) => (
-                        <TableRow
-                          key={order._id + "-" + item.platoId + "-" + idx}
-                        >
-                          <TableCell>{order.cliente}</TableCell>
-                          <TableCell>{order.estado}</TableCell>
-                          <TableCell sx={{ whiteSpace: "nowrap" }}>
-                            {formatDate(order.createdAt)}
-                          </TableCell>
-                          <TableCell sx={{ whiteSpace: "nowrap" }}>
-                            {formatDate(order.aceptadoEn)}
-                          </TableCell>
-                          <TableCell sx={{ whiteSpace: "nowrap" }}>
-                            {formatDate(
-                              order.entregadoEn ||
-                                order.canceladoEn ||
-                                order.updatedAt,
-                            )}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              maxWidth: 220,
-                              whiteSpace: "normal",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {item.nombre}
-                          </TableCell>
-                          <TableCell align="right">{item.cantidad}</TableCell>
-                          <TableCell align="right">
-                            ${item.precio.toLocaleString("es-CL")}
-                          </TableCell>
-                          <TableCell align="right">
-                            $
-                            {(item.precio * item.cantidad).toLocaleString(
-                              "es-CL",
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Collapse>
-            </Box>
-          )}
-        </>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              md: "repeat(2, minmax(0, 1fr))",
+              lg: "repeat(3, minmax(0, 1fr))",
+            },
+            gap: 2,
+            alignItems: "stretch",
+          }}
+        >
+          {active.map((order) => (
+            <KitchenOrderCard
+              key={order._id}
+              order={order}
+              onStatusChange={onStatusChange}
+              isAdmin={isAdmin}
+            />
+          ))}
+        </Box>
       )}
     </Box>
   );

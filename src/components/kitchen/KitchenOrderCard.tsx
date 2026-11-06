@@ -118,18 +118,33 @@ export default function KitchenOrderCard({
         opacity: isDone ? 0.55 : 1,
         bgcolor: isDone ? "grey.50" : "background.paper",
         transition: "opacity 0.3s ease",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <CardContent sx={{ pb: "12px !important" }}>
+      <CardContent
+        sx={{
+          pb: "12px !important",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+        }}
+      >
         {/* Header */}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="flex-start"
+          gap={1}
           mb={1}
         >
-          <Box>
-            <Typography fontWeight={700} fontSize="1rem">
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              fontWeight={700}
+              fontSize="1rem"
+              sx={{ overflowWrap: "anywhere" }}
+            >
               {order.cliente}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -213,7 +228,13 @@ export default function KitchenOrderCard({
         <Divider sx={{ mb: 1.5 }} />
 
         {/* Items */}
-        <Box display="flex" flexDirection="column" gap={0.5} mb={1.5}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={0.5}
+          mb={1.5}
+          sx={{ flex: 1, overflowWrap: "anywhere" }}
+        >
           {order.items.map((item, i) => (
             <Box key={i}>
               <Typography variant="body2" fontWeight={600}>

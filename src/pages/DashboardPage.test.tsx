@@ -21,6 +21,7 @@ vi.mock("../data/services/statisticsApi.service", () => ({
   fetchPeakHours: vi.fn().mockResolvedValue([]),
   fetchRevenue: vi.fn().mockResolvedValue([]),
   fetchCancellations: vi.fn().mockResolvedValue([]),
+  fetchCompletedOrders: vi.fn().mockResolvedValue([]),
 }));
 afterEach(() => {
   cleanup();

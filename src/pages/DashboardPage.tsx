@@ -24,12 +24,15 @@ import TopDishesChart from "../components/dashboard/TopDishesChart";
 
 import PeakHoursHeatmap from "../components/dashboard/PeakHoursHeatmap";
 import CancellationsChart from "../components/dashboard/CancellationsChart";
+import CompletedOrdersReport from "../components/dashboard/CompletedOrdersReport";
+import type { Order } from "../types/order";
 import {
   fetchDashboardSummary,
   fetchTopDishes,
   fetchPeakHours,
   fetchRevenue,
   fetchCancellations,
+  fetchCompletedOrders,
   type DashboardSummary,
   type TopDish,
   type PeakHour,
@@ -60,6 +63,7 @@ export default function DashboardPage() {
   const [peakHours, setPeakHours] = useState<PeakHour[]>([]);
   const [revenue, setRevenue] = useState<RevenueByDay[]>([]);
   const [cancellations, setCancellations] = useState<CancellationStats[]>([]);
+  const [completedOrders, setCompletedOrders] = useState<Order[]>([]);
 
   const loadData = useCallback(() => {
     if (!token) return Promise.resolve();
@@ -70,6 +74,7 @@ export default function DashboardPage() {
       fetchPeakHours(token, startDate, endDate),
       fetchRevenue(token, startDate, endDate),
       fetchCancellations(token, startDate, endDate),
+      fetchCompletedOrders(token, startDate, endDate),
     ])
       .then(
         ([
@@ -78,6 +83,7 @@ export default function DashboardPage() {
           peakHoursRes,
           revenueRes,
           cancellationsRes,
+          completedOrdersRes,
         ]) => {
           if (version !== requestVersion.current) return;
           setError(null);
@@ -86,6 +92,7 @@ export default function DashboardPage() {
           setPeakHours(peakHoursRes);
           setRevenue(revenueRes);
           setCancellations(cancellationsRes);
+          setCompletedOrders(completedOrdersRes);
           setUpdatedAt(new Date());
         },
       )
@@ -252,6 +259,13 @@ export default function DashboardPage() {
               <CancellationsChart data={cancellations} />
             </Grid>
           </Grid>
+          <CompletedOrdersReport
+            key={`${startDate}:${endDate}`}
+            orders={completedOrders}
+            startDate={startDate}
+            endDate={endDate}
+            loading={loading}
+          />
         </>
       ) : null}
     </PageLayout>

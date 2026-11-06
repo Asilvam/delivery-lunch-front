@@ -20,7 +20,13 @@ export default function KitchenPage() {
 
   return (
     <PageLayout header={<StaffNavigation />}>
-      <Typography variant="h5" fontWeight={800} mb={1}>
+      <Typography
+        component="h1"
+        variant="h4"
+        fontWeight={800}
+        mb={1}
+        sx={{ fontSize: { xs: "1.65rem", sm: "2.125rem" } }}
+      >
         Comandas
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>

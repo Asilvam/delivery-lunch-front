@@ -91,3 +91,12 @@ it("labels cancellation explicitly and does not count the order total once per d
 });
 it("does not produce an empty export", () =>
   expect(() => buildOrdersWorkbook([], date)).toThrow("No hay pedidos"));
+
+it("identifies the metrics date range in both workbook sheets", () => {
+  const workbook = buildOrdersWorkbook([order], "2026-11-01", date);
+  for (const sheet of workbook.worksheets) {
+    expect(sheet.getCell("A2").text).toContain("del 01/11/2026 al 06/11/2026");
+    expect(sheet.getCell("A2").text).toContain("Métricas");
+    expect(sheet.getCell("A2").text).not.toContain("Cocina");
+  }
+});

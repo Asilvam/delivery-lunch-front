@@ -22,7 +22,7 @@ const menuDate = (iso: string) => iso.split("-").reverse().join("/");
 function createSheet(
   workbook: ExcelJS.Workbook,
   name: string,
-  date: string,
+  period: string,
   headers: string[],
   widths: number[],
 ) {
@@ -49,7 +49,7 @@ function createSheet(
   sheet.getRow(1).height = 32;
   sheet.mergeCells(2, 1, 2, headers.length);
   sheet.getCell(2, 1).value =
-    `Completados y cancelados del ${menuDate(date)} · Cocina`;
+    `Entregados y cancelados · Pedidos recibidos ${period} · Métricas`;
   sheet.mergeCells(3, 1, 3, headers.length);
   sheet.getCell(3, 1).value =
     "Importes en CLP. Los totales incluyen cancelados si están presentes. Horarios de Chile.";
@@ -139,16 +139,21 @@ function finishSheet(
 export function buildOrdersWorkbook(
   orders: Order[],
   date: string,
+  endDate = date,
 ): ExcelJS.Workbook {
   if (!orders.length) throw new Error("No hay pedidos para exportar.");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Sabores Angelicales";
   workbook.created = new Date();
   workbook.calcProperties.fullCalcOnLoad = true;
+  const period =
+    date === endDate
+      ? `el ${menuDate(date)}`
+      : `del ${menuDate(date)} al ${menuDate(endDate)}`;
   const pedidos = createSheet(
     workbook,
     "Pedidos",
-    date,
+    period,
     [
       "Número de pedido",
       "Fecha del menú",
@@ -166,7 +171,7 @@ export function buildOrdersWorkbook(
   const detalle = createSheet(
     workbook,
     "Detalle",
-    date,
+    period,
     [
       "Número de pedido",
       "Fecha del menú",
@@ -263,15 +268,23 @@ export function buildOrdersWorkbook(
 export async function createOrdersExcel(
   orders: Order[],
   date: string,
+  endDate = date,
 ): Promise<{ blob: Blob; filename: string }> {
-  const buffer = await buildOrdersWorkbook(orders, date).xlsx.writeBuffer();
+  const buffer = await buildOrdersWorkbook(
+    orders,
+    date,
+    endDate,
+  ).xlsx.writeBuffer();
   const bytes = new Uint8Array(buffer.byteLength);
   bytes.set(new Uint8Array(buffer));
   return {
     blob: new Blob([bytes.buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     }),
-    filename: `Report-day-${date.slice(8, 10)}${date.slice(5, 7)}${date.slice(2, 4)}.xlsx`,
+    filename:
+      date === endDate
+        ? `Report-day-${date.slice(8, 10)}${date.slice(5, 7)}${date.slice(2, 4)}.xlsx`
+        : `Report-period-${date}_${endDate}.xlsx`,
   };
 }
 export function downloadOrdersExcel(file: {

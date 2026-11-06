@@ -1,10 +1,27 @@
 // src/data/services/statisticsApi.service.ts
 import axios from "axios";
+import type { Order } from "../../types/order";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 function authHeaders(token: string) {
   return { Authorization: `Bearer ${token}` };
+}
+
+export async function fetchCompletedOrders(
+  token: string,
+  startDate: string,
+  endDate: string,
+): Promise<Order[]> {
+  const res = await axios.get<Order[]>(
+    `${BASE_URL}/statistics/completed-orders`,
+    {
+      headers: authHeaders(token),
+      params: { startDate, endDate },
+      timeout: 10000,
+    },
+  );
+  return res.data;
 }
 
 export interface DashboardSummary {
