@@ -1,4 +1,11 @@
-import { act, cleanup, render } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import DashboardPage from "./DashboardPage";
@@ -39,4 +46,32 @@ it("ignores a metrics request failure after navigating away", async () => {
     reject(new Error("late metrics failure"));
   });
   expect(staffToast.fire).not.toHaveBeenCalled();
+});
+
+it("refreshes the selected period without leaving loading stuck and replaces ticket with menu units", async () => {
+  vi.mocked(fetchDashboardSummary).mockResolvedValue({
+    pedidosTotales: 3,
+    pedidosCompletados: 1,
+    pedidosCancelados: 1,
+    pedidosPendientes: 1,
+    pedidosEnPreparacion: 0,
+    menusVendidos: 2,
+    ingresosTotales: 11000,
+    tasaCompletacion: 33.33,
+    periodo: { startDate: "2026-11-06", endDate: "2026-11-06" },
+  });
+  render(
+    <MemoryRouter>
+      <DashboardPage />
+    </MemoryRouter>,
+  );
+  await screen.findByText("Menús vendidos");
+  expect(screen.queryByText(/ticket promedio/i)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Hoy" }));
+  await waitFor(() => expect(fetchDashboardSummary).toHaveBeenCalledTimes(2));
+  await waitFor(() =>
+    expect(screen.queryByLabelText("Actualizando métricas")).toBeNull(),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
+  await waitFor(() => expect(fetchDashboardSummary).toHaveBeenCalledTimes(3));
 });

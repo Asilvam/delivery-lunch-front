@@ -15,8 +15,6 @@ interface CancellationsChartProps {
   title?: string;
 }
 
-// COLORS eliminado porque no se usa
-
 // Asegura que el color verde sea para entregados y rojo para cancelados
 function getColorByName(name: string) {
   if (name === "Entregados") return "#4caf50";
@@ -26,7 +24,7 @@ function getColorByName(name: string) {
 
 export default function CancellationsChart({
   data,
-  title = "Tasa de completación",
+  title = "Resultado de pedidos cerrados",
 }: CancellationsChartProps) {
   const chartData = data.map((item) => ({
     name: item.estado === "entregado" ? "Entregados" : "Cancelados",
@@ -92,7 +90,9 @@ export default function CancellationsChart({
               verticalAlign="bottom"
               height={36}
               formatter={(value) => (
-                <span style={{ color: "#333", fontSize: "0.85rem" }}>{value}</span>
+                <span style={{ color: "#333", fontSize: "0.85rem" }}>
+                  {value}
+                </span>
               )}
             />
           </PieChart>
@@ -102,7 +102,10 @@ export default function CancellationsChart({
       {total > 0 && (
         <Box textAlign="center" mt={1}>
           <Typography variant="h6" fontWeight={700}>
-            Entregados: {chartData.find(d => d.name === "Entregados")?.value ?? 0}  |  Cancelados: {chartData.find(d => d.name === "Cancelados")?.value ?? 0}
+            Entregados:{" "}
+            {chartData.find((d) => d.name === "Entregados")?.value ?? 0} |
+            Cancelados:{" "}
+            {chartData.find((d) => d.name === "Cancelados")?.value ?? 0}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             pedidos terminados

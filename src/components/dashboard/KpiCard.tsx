@@ -47,7 +47,7 @@ export default function KpiCard({
     <Paper
       elevation={0}
       sx={{
-        p: 2.5,
+        p: { xs: 2, sm: 2.5 },
         borderRadius: 2,
         border: "1px solid",
         borderColor: "divider",
@@ -56,36 +56,42 @@ export default function KpiCard({
         flexDirection: "column",
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="flex-start"
+      >
         <Typography
           variant="body2"
           color="text.secondary"
           fontWeight={500}
           textTransform="uppercase"
-          fontSize="0.75rem"
+          sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
           letterSpacing={0.5}
         >
           {title}
         </Typography>
         {icon && (
-          <Box sx={{ color: `${color}.main`, opacity: 0.8 }}>
-            {icon}
-          </Box>
+          <Box sx={{ color: `${color}.main`, opacity: 0.8 }}>{icon}</Box>
         )}
       </Box>
 
       <Typography
         variant="h4"
         fontWeight={800}
-        sx={{ mt: 1, mb: 0.5, color: colorMap[color] }}
+        sx={{
+          mt: 1,
+          mb: 0.5,
+          color: colorMap[color],
+          fontSize: { xs: "1.6rem", sm: "2rem", md: "2.125rem" },
+          overflowWrap: "anywhere",
+        }}
       >
         {value}
       </Typography>
 
       <Box display="flex" alignItems="center" gap={0.5} mt="auto">
-        {trend && (
-          <TrendIcon sx={{ fontSize: 16, color: trendColor }} />
-        )}
+        {trend && <TrendIcon sx={{ fontSize: 16, color: trendColor }} />}
         {trendLabel && (
           <Typography variant="caption" sx={{ color: trendColor }}>
             {trendLabel}

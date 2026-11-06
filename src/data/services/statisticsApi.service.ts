@@ -11,9 +11,11 @@ export interface DashboardSummary {
   pedidosTotales: number;
   pedidosCompletados: number;
   pedidosCancelados: number;
+  pedidosPendientes: number;
+  pedidosEnPreparacion: number;
+  menusVendidos: number;
   tasaCompletacion: number;
   ingresosTotales: number;
-  ticketPromedio: number;
   periodo: {
     startDate: string;
     endDate: string;
@@ -53,16 +55,14 @@ export async function fetchDashboardSummary(
   startDate?: string,
   endDate?: string,
 ): Promise<DashboardSummary> {
-  console.info('[Statistics API] INPUT DATES', { startDate, endDate });
   const params: Record<string, string> = {};
-  if (startDate) params.startDate = `${startDate}T00:00:00`;
-  if (endDate) params.endDate = `${endDate}T23:59:59`;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
 
   const res = await axios.get<DashboardSummary>(
     `${BASE_URL}/statistics/summary`,
     { headers: authHeaders(token), params, timeout: 10000 },
   );
-  console.info('[Statistics API] SUMMARY-->',res.data);
   return res.data;
 }
 
@@ -73,8 +73,8 @@ export async function fetchTopDishes(
   limit?: number,
 ): Promise<TopDish[]> {
   const params: Record<string, string> = {};
-  if (startDate) params.startDate = `${startDate}T00:00:00`;
-  if (endDate) params.endDate = `${endDate}T23:59:59`;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
   if (limit) params.limit = String(limit);
 
   const res = await axios.get<TopDish[]>(`${BASE_URL}/statistics/top-dishes`, {
@@ -91,8 +91,8 @@ export async function fetchPeakHours(
   endDate?: string,
 ): Promise<PeakHour[]> {
   const params: Record<string, string> = {};
-  if (startDate) params.startDate = `${startDate}T00:00:00`;
-  if (endDate) params.endDate = `${endDate}T23:59:59`;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
 
   const res = await axios.get<PeakHour[]>(`${BASE_URL}/statistics/peak-hours`, {
     headers: authHeaders(token),
@@ -108,14 +108,17 @@ export async function fetchRevenue(
   endDate?: string,
 ): Promise<RevenueByDay[]> {
   const params: Record<string, string> = {};
-  if (startDate) params.startDate = `${startDate}T00:00:00`;
-  if (endDate) params.endDate = `${endDate}T23:59:59`;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
 
-  const res = await axios.get<RevenueByDay[]>(`${BASE_URL}/statistics/revenue`, {
-    headers: authHeaders(token),
-    params,
-    timeout: 10000,
-  });
+  const res = await axios.get<RevenueByDay[]>(
+    `${BASE_URL}/statistics/revenue`,
+    {
+      headers: authHeaders(token),
+      params,
+      timeout: 10000,
+    },
+  );
   return res.data;
 }
 
@@ -125,8 +128,8 @@ export async function fetchCancellations(
   endDate?: string,
 ): Promise<CancellationStats[]> {
   const params: Record<string, string> = {};
-  if (startDate) params.startDate = `${startDate}T00:00:00`;
-  if (endDate) params.endDate = `${endDate}T23:59:59`;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
 
   const res = await axios.get<CancellationStats[]>(
     `${BASE_URL}/statistics/cancellations`,

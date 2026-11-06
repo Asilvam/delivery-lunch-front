@@ -10,51 +10,19 @@ import {
   LinearProgress,
   Button,
   Alert,
+  Typography,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ReceiptIcon from "@mui/icons-material/Receipt";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useAuth } from "../hooks/useAuth";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import KpiCard from "../components/dashboard/KpiCard";
 import RevenueChart from "../components/dashboard/RevenueChart";
 import TopDishesChart from "../components/dashboard/TopDishesChart";
 
-// Utilidad para obtener el nombre base del plato (sin variaciones)
-function getBaseDishName(nombre: string): string {
-  // Puedes ajustar este regex según tus variaciones reales
-  return nombre
-    .replace(
-      /\s*(con|sin)\s+(ensalada|postre|bebida|jugos?|salsas?|guarnici[oó]n|extra.*)$/i,
-      "",
-    )
-    .trim();
-}
-
-// Agrupa y suma los platos por nombre base
-function groupTopDishesByBaseName(topDishes: TopDish[]): TopDish[] {
-  const grouped: Record<string, TopDish> = {};
-  for (const dish of topDishes) {
-    const baseName = getBaseDishName(dish.nombre);
-    if (!grouped[baseName]) {
-      grouped[baseName] = {
-        ...dish,
-        nombre: baseName,
-        cantidadVendida: 0,
-        ingresosTotales: 0,
-        porcentajeVentas: 0,
-      };
-    }
-    grouped[baseName].cantidadVendida += dish.cantidadVendida;
-    grouped[baseName].ingresosTotales += dish.ingresosTotales;
-    grouped[baseName].porcentajeVentas += dish.porcentajeVentas;
-  }
-  // Ordena por cantidad vendida descendente
-  return Object.values(grouped).sort(
-    (a, b) => b.cantidadVendida - a.cantidadVendida,
-  );
-}
 import PeakHoursHeatmap from "../components/dashboard/PeakHoursHeatmap";
 import CancellationsChart from "../components/dashboard/CancellationsChart";
 import {
@@ -86,6 +54,7 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [topDishes, setTopDishes] = useState<TopDish[]>([]);
@@ -118,6 +87,7 @@ export default function DashboardPage() {
           setPeakHours(peakHoursRes);
           setRevenue(revenueRes);
           setCancellations(cancellationsRes);
+          setUpdatedAt(new Date());
         },
       )
       .catch(() => {
@@ -142,16 +112,57 @@ export default function DashboardPage() {
     };
   }, [loadData]);
 
-  const handleRangeChange = useCallback((start: string, end: string) => {
-    setLoading(true);
-    setStartDate(start);
-    setEndDate(end);
-    sessionStorage.setItem("metrics-from", start);
-    sessionStorage.setItem("metrics-to", end);
-  }, []);
+  const handleRangeChange = useCallback(
+    (start: string, end: string) => {
+      setLoading(true);
+      if (start === startDate && end === endDate) {
+        void loadData();
+        return;
+      }
+      setStartDate(start);
+      setEndDate(end);
+      sessionStorage.setItem("metrics-from", start);
+      sessionStorage.setItem("metrics-to", end);
+    },
+    [startDate, endDate, loadData],
+  );
 
   return (
     <PageLayout header={<StaffNavigation />}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <Box>
+          <Typography
+            component="h1"
+            variant="h4"
+            fontWeight={800}
+            sx={{ fontSize: { xs: "1.65rem", sm: "2.125rem" } }}
+          >
+            Cómo va tu negocio
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Pedidos recibidos en el período · Horario de Chile
+          </Typography>
+        </Box>
+        <Button
+          startIcon={<RefreshIcon />}
+          onClick={() => {
+            setLoading(true);
+            void loadData();
+          }}
+          disabled={loading}
+          sx={{ flexShrink: 0 }}
+        >
+          Actualizar
+        </Button>
+      </Box>
       <DateRangeFilter
         startDate={startDate}
         endDate={endDate}
@@ -172,6 +183,21 @@ export default function DashboardPage() {
         </Alert>
       )}
 
+      {updatedAt && !error && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+          sx={{ mb: 2 }}
+        >
+          Actualizado a las{" "}
+          {updatedAt.toLocaleTimeString("es-CL", {
+            timeZone: "America/Santiago",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Typography>
+      )}
       {loading && summary && (
         <LinearProgress aria-label="Actualizando métricas" />
       )}
@@ -184,55 +210,43 @@ export default function DashboardPage() {
         <Box display="flex" justifyContent="center" py={8}>
           <CircularProgress />
         </Box>
-      ) : (
+      ) : summary && !error ? (
         <>
           {/* KPIs */}
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid
-              size={{ xs: 12, sm: 6, md: 3 }}
-              sx={{ mb: { xs: 2.5, sm: 0 } }}
-            >
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} sx={{ minWidth: 0 }}>
               <KpiCard
-                title="Pedidos"
+                title="Pedidos recibidos"
                 value={summary?.pedidosTotales ?? 0}
-                subtitle="total en el período"
+                subtitle="incluye todos los estados"
                 icon={<ShoppingCartIcon />}
                 color="primary"
               />
             </Grid>
-            <Grid
-              size={{ xs: 12, sm: 6, md: 3 }}
-              sx={{ mb: { xs: 2.5, sm: 0 } }}
-            >
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} sx={{ minWidth: 0 }}>
               <KpiCard
-                title="Ingresos"
+                title="Ventas entregadas"
                 value={`$${(summary?.ingresosTotales ?? 0).toLocaleString("es-CL")}`}
-                subtitle="total en el período"
+                subtitle={`${summary.pedidosCompletados} pedidos entregados`}
                 icon={<AttachMoneyIcon />}
                 color="success"
               />
             </Grid>
-            <Grid
-              size={{ xs: 12, sm: 6, md: 3 }}
-              sx={{ mb: { xs: 2.5, sm: 0 } }}
-            >
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} sx={{ minWidth: 0 }}>
               <KpiCard
-                title="Completación"
-                value={`${summary?.tasaCompletacion ?? 0}%`}
-                subtitle={`${summary?.pedidosCompletados ?? 0} de ${summary?.pedidosTotales ?? 0}`}
-                icon={<CheckCircleIcon />}
+                title="Menús vendidos"
+                value={summary.menusVendidos}
+                subtitle="porciones de pedidos entregados"
+                icon={<RestaurantIcon />}
                 color="primary"
               />
             </Grid>
-            <Grid
-              size={{ xs: 12, sm: 6, md: 3 }}
-              sx={{ mb: { xs: 2.5, sm: 0 } }}
-            >
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} sx={{ minWidth: 0 }}>
               <KpiCard
-                title="Ticket Promedio"
-                value={`$${(summary?.ticketPromedio ?? 0).toLocaleString("es-CL")}`}
-                subtitle="por pedido"
-                icon={<ReceiptIcon />}
+                title="Pedidos por atender"
+                value={summary.pedidosPendientes + summary.pedidosEnPreparacion}
+                subtitle={`${summary.pedidosPendientes} pendientes · ${summary.pedidosEnPreparacion} en preparación`}
+                icon={<PendingActionsIcon />}
                 color="warning"
               />
             </Grid>
@@ -244,7 +258,7 @@ export default function DashboardPage() {
               <RevenueChart data={revenue} />
             </Grid>
             <Grid size={{ xs: 12, md: 5 }} sx={{ mt: { xs: 1.5, md: 0 } }}>
-              <TopDishesChart data={groupTopDishesByBaseName(topDishes)} />
+              <TopDishesChart data={topDishes} />
             </Grid>
           </Grid>
 
@@ -261,7 +275,7 @@ export default function DashboardPage() {
             </Grid>
           </Grid>
         </>
-      )}
+      ) : null}
     </PageLayout>
   );
 }
