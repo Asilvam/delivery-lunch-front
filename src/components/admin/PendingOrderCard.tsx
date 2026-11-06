@@ -1,3 +1,4 @@
+import { showActionError, showActionSuccess } from '../../utils/actionFeedback';
 // src/components/admin/PendingOrderCard.tsx
 import { useState } from "react";
 import {
@@ -33,6 +34,9 @@ export default function PendingOrderCard({
     setLoadingValidate(true);
     try {
       await onValidate(order._id);
+      void showActionSuccess("Pedido enviado a cocina");
+    } catch (error) {
+      await showActionError(error);
     } finally {
       setLoadingValidate(false);
     }
@@ -41,7 +45,7 @@ export default function PendingOrderCard({
   const handleCancel = async () => {
     const result = await Swal.fire({
       title: "¿Cancelar pedido?",
-      html: `<span style="font-size:0.95rem">Se cancelará el pedido de <strong>${order.cliente}</strong> y se restaurará el stock de los platos.</span>`,
+      text: `Se cancelará el pedido de ${order.cliente} y se restaurará el stock de los platos.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sí, cancelar",

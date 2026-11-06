@@ -1,15 +1,17 @@
 // src/router/PrivateRoute.tsx
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth, type UserRole } from "../context/AuthContext";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import type { UserRole } from "../context/auth-context";
 
 interface PrivateRouteProps {
   allowedRoles?: UserRole[];
 }
 
 export default function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
+  const location = useLocation();
   const { isAuthenticated, role } = useAuth();
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
 
   if (
     allowedRoles &&

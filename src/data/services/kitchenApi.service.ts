@@ -1,6 +1,6 @@
 // src/data/services/kitchenApi.service.ts
 import axios from "axios";
-import type { Order, OrderStatus } from "../../types/order";
+import { OrderStatus, type Order } from "../../types/order";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -26,6 +26,10 @@ export async function updateOrderStatus(
   id: string,
   estado: OrderStatus,
 ): Promise<Order> {
+  if (estado === OrderStatus.CANCELADO) {
+    const { cancelOrder } = await import("./adminApi.service");
+    return cancelOrder(token, id);
+  }
   const res = await axios.patch<Order>(
     `${BASE_URL}/orders/${id}/status`,
     { estado },

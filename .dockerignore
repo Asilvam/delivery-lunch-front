@@ -1,8 +1,9 @@
-fly.toml
 node_modules
 dist
 .git
 .idea
 .DS_Store
 *.log
-.env.local
+.env
+.env.*
+!.env.example

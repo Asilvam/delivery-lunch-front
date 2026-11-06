@@ -1,3 +1,5 @@
+import { MENU_PRICE } from '../../domain/menu/menuOffer';
+import { getLocalDishImage } from './dishImages';
 import type {
   BackendDailyMenuDto,
   BackendDishDto,
@@ -52,7 +54,7 @@ export const mapBackendDishToDish = (dto: BackendDishDto): Dish => ({
   id: dto._id,
   name: dto.nombre,
   price: dto.precio,
-  imageUrl: dto.imagen_url ?? undefined,
+  imageUrl: getLocalDishImage(dto.nombre) ?? dto.imagen_url ?? undefined,
   isHipo: dto.es_hipo ?? false,
   proteinOptions: dto.opciones && dto.opciones.length > 0 ? dto.opciones : undefined,
   stock: normalizeStock(dto.stock),
@@ -69,6 +71,7 @@ export const mapBackendMenuToDailyMenu = (dto: BackendDailyMenuDto): DailyMenu |
     id: dto._id,
     date: formatUiDate(parsedDate),
     isoDate: dto.fecha,
+    basePrice: dto.precioBase ?? MENU_PRICE,
     includes: {
       salad: toSelectableMenuOption(dto.ensalada, BASE_INCLUDES.ensalada),
       bread: dto.pan,

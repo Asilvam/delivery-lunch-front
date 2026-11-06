@@ -1,21 +1,20 @@
 import {
   Box,
+  Button,
+  IconButton,
   List,
   ListItem,
-  Divider,
   Typography,
-  IconButton,
-  Button,
-  Tooltip,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CloseIcon from '@mui/icons-material/Close';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import type { CartItem } from '../types/cart';
-import { getRemainingDishStock } from '../domain/cart/stock.rules';
-import styles from './CartPanel.module.css';
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CloseIcon from "@mui/icons-material/Close";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
+import { MENU_INCLUDES } from "../domain/menu/menuOffer";
+import type { CartItem } from "../types/cart";
+import { getRemainingDishStock } from "../domain/cart/stock.rules";
 
 interface CartPanelProps {
   cartItems: CartItem[];
@@ -23,8 +22,8 @@ interface CartPanelProps {
   totalPrice: number;
   isMobile: boolean;
   onClose: () => void;
-  onUpdateQuantity: (cartItemKey: string, delta: number) => void;
-  onRemove: (cartItemKey: string) => void;
+  onUpdateQuantity: (key: string, delta: number) => void;
+  onRemove: (key: string) => void;
   onConfirmOrder: () => void;
 }
 
@@ -40,226 +39,310 @@ export function CartPanel({
 }: CartPanelProps) {
   return (
     <Box
+      component="section"
+      aria-label="Resumen del pedido"
       sx={{
-        width: isMobile ? '100%' : 400,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        maxHeight: isMobile ? '85vh' : '100%',
+        width: isMobile ? "100%" : 440,
+        maxWidth: "100vw",
+        height: isMobile ? "auto" : "100dvh",
+        maxHeight: isMobile ? "88dvh" : "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
       }}
     >
-      {/* Header */}
       <Box
         sx={{
-          p: 3,
-          pb: 2,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottom: '1px solid',
-          borderColor: 'secondary.light',
+          px: 2.5,
+          py: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          flexShrink: 0,
         }}
       >
-        <Box>
-          <Typography variant="h6" fontWeight={800} color="primary.dark">
-            Tu Pedido - paso 1 de 2
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            sx={{ letterSpacing: "0.08em", lineHeight: 1.6 }}
+          >
+            Paso 1 de 2 · Revisa tu selección
           </Typography>
-          {totalItems > 0 && (
-            <Typography variant="caption" color="text.secondary">
-              {totalItems} {totalItems === 1 ? 'plato' : 'platos'}
-            </Typography>
-          )}
+          <Typography component="h2" variant="h6" fontWeight={800}>
+            Tu pedido
+          </Typography>
         </Box>
         <IconButton
+          aria-label="Cerrar resumen del pedido"
           onClick={onClose}
-          sx={{
-            bgcolor: 'secondary.light',
-            '&:hover': { bgcolor: 'secondary.main' },
-          }}
+          sx={{ bgcolor: "secondary.light", width: 44, height: 44 }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
 
-      {/* Items */}
-      <List sx={{ flexGrow: 1, overflowY: 'auto', px: 2, py: 1 }}>
-        {cartItems.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 6 }}>
-            <RestaurantMenuIcon
-              sx={{ fontSize: 56, color: 'secondary.main', mb: 1 }}
-            />
-            <Typography color="text.secondary" fontWeight={500}>
-              Aún no has agregado platos.
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Explora el menú y agrega tus favoritos
-            </Typography>
-          </Box>
-        ) : (
-          cartItems.map((item) => {
-            const remainingStock = getRemainingDishStock(cartItems, item.dish);
-            const isAtStockLimit =
-              typeof remainingStock === 'number' && remainingStock === 0;
-            return (
-              <ListItem
-                key={item.key}
-                disablePadding
-                sx={{
-                  py: 1.5,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'stretch',
-                }}
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    mb: 0.75,
-                  }}
-                >
-                  <Box sx={{ pr: 1, flex: 1 }}>
-                    <Typography
-                      fontWeight={600}
-                      sx={{ fontSize: '0.9rem', color: 'text.primary' }}
-                    >
-                      {item.dish.name}
-                    </Typography>
-                    <Box sx={{ display: 'grid', gap: 0.35, mt: 0.5 }}>
-                      {item.visibility.protein && item.selections.protein && (
-                        <Typography variant="caption" color="text.secondary">
-                          Proteína: {item.selections.protein}
-                        </Typography>
-                      )}
-                      {item.visibility.salad && item.selections.salad && (
-                        <Typography variant="caption" color="text.secondary">
-                          Ensalada: {item.selections.salad}
-                        </Typography>
-                      )}
-                      {item.visibility.dessert && (
-                        <Typography variant="caption" color="text.secondary">
-                          Postre: {item.selections.dessert}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                  <Typography
-                    fontWeight={800}
-                    color="primary.main"
-                    sx={{ whiteSpace: 'nowrap', fontSize: '0.95rem' }}
-                  >
-                    ${(item.dish.price * item.quantity).toLocaleString('es-CL')}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Box
+      <Box
+        sx={{
+          minHeight: 0,
+          flex: "1 1 auto",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          p: 2.5,
+        }}
+      >
+        {cartItems.length ? (
+          <>
+            <Box
+              sx={{
+                mb: 2,
+                px: 1.5,
+                py: 1.25,
+                bgcolor: "background.default",
+                borderRadius: 2,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Todos incluyen: {MENU_INCLUDES}.
+              </Typography>
+            </Box>
+            <List
+              disablePadding
+              aria-label="Platos de tu pedido"
+              sx={{ display: "grid", gap: 1.5 }}
+            >
+              {cartItems.map((item) => {
+                const name = item.dish.isHipo
+                  ? "Menú hipocalórico"
+                  : item.dish.name;
+                const atLimit =
+                  getRemainingDishStock(cartItems, item.dish) === 0;
+                return (
+                  <ListItem
+                    key={item.key}
+                    disablePadding
                     sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      bgcolor: 'secondary.light',
-                      borderRadius: 99,
-                      px: 0.5,
-                      py: 0.3,
+                      display: "block",
+                      p: 1.5,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 2,
                     }}
                   >
-                    <IconButton
-                      size="small"
-                      onClick={() => onUpdateQuantity(item.key, -1)}
-                      color="primary"
-                      sx={{ p: 0.4 }}
-                    >
-                      <RemoveIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                    <Typography
-                      fontWeight={700}
+                    <Box
                       sx={{
-                        minWidth: 22,
-                        textAlign: 'center',
-                        fontSize: '0.9rem',
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 1.5,
                       }}
                     >
-                      {item.quantity}
-                    </Typography>
-                    <Tooltip
-                      title={isAtStockLimit ? 'Stock máximo alcanzado' : ''}
-                      placement="top"
-                    >
-                      <span>
-                        <IconButton
-                          size="small"
-                          onClick={() => onUpdateQuantity(item.key, 1)}
-                          color="primary"
-                          disabled={isAtStockLimit}
-                          sx={{ p: 0.4 }}
+                      {item.dish.imageUrl ? (
+                        <Box
+                          component="img"
+                          src={item.dish.imageUrl}
+                          alt=""
+                          sx={{
+                            width: 64,
+                            height: 64,
+                            flexShrink: 0,
+                            objectFit: "cover",
+                            borderRadius: 1.5,
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 64,
+                            height: 64,
+                            flexShrink: 0,
+                            display: "grid",
+                            placeItems: "center",
+                            bgcolor: "secondary.light",
+                            borderRadius: 1.5,
+                          }}
                         >
-                          <AddIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </Box>
-                  <Tooltip title="Eliminar plato">
-                    <IconButton
-                      onClick={() => onRemove(item.key)}
-                      size="small"
+                          <RestaurantMenuIcon color="primary" />
+                        </Box>
+                      )}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          fontWeight={700}
+                          variant="body2"
+                          sx={{ lineHeight: 1.45 }}
+                        >
+                          {name}
+                        </Typography>
+                        {item.dish.isHipo && item.selections.protein && (
+                          <Typography
+                            variant="caption"
+                            color="primary.dark"
+                            sx={{ display: "block", mt: 0.4 }}
+                          >
+                            Proteína: {item.selections.protein}
+                          </Typography>
+                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          ${item.dish.price.toLocaleString("es-CL")} por menú
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        aria-label={`Eliminar ${name}`}
+                        onClick={() => onRemove(item.key)}
+                        size="small"
+                        sx={{
+                          color: "text.secondary",
+                          width: 44,
+                          height: 44,
+                          "&:hover": {
+                            color: "error.main",
+                            bgcolor: "background.default",
+                          },
+                        }}
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    <Box
                       sx={{
-                        color: 'error.main',
-                        bgcolor: 'rgba(211,47,47,0.06)',
-                        '&:hover': { bgcolor: 'rgba(211,47,47,0.14)' },
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        mt: 1.5,
                       }}
                     >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Divider sx={{ mt: 1.5 }} />
-              </ListItem>
-            );
-          })
+                      <Box
+                        role="group"
+                        aria-label={`Cantidad de ${name}`}
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <IconButton
+                          aria-label={`Quitar una porción de ${name}`}
+                          onClick={() => onUpdateQuantity(item.key, -1)}
+                          sx={{ width: 44, height: 44 }}
+                        >
+                          <RemoveIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                        <Typography
+                          aria-live="polite"
+                          sx={{
+                            minWidth: 24,
+                            textAlign: "center",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item.quantity}
+                        </Typography>
+                        <IconButton
+                          aria-label={`Agregar una porción de ${name}`}
+                          onClick={() => onUpdateQuantity(item.key, 1)}
+                          disabled={atLimit}
+                          sx={{ width: 44, height: 44 }}
+                        >
+                          <AddIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Box>
+                      <Typography
+                        fontWeight={800}
+                        color="primary.main"
+                        aria-label={`Subtotal de ${name}`}
+                      >
+                        $
+                        {(item.dish.price * item.quantity).toLocaleString(
+                          "es-CL",
+                        )}
+                      </Typography>
+                    </Box>
+                    {atLimit && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mt: 0.75 }}
+                      >
+                        Ya agregaste todas las porciones disponibles.
+                      </Typography>
+                    )}
+                  </ListItem>
+                );
+              })}
+            </List>
+          </>
+        ) : (
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <RestaurantMenuIcon
+              sx={{ fontSize: 42, color: "primary.light", mb: 1 }}
+            />
+            <Typography fontWeight={700}>Tu pedido está vacío</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Elige un plato del menú para comenzar.
+            </Typography>
+            <Button onClick={onClose} sx={{ mt: 2 }}>
+              Ver menú
+            </Button>
+          </Box>
         )}
-      </List>
+      </Box>
 
-      {/* Footer / Total */}
       {cartItems.length > 0 && (
         <Box
           sx={{
-            p: 3,
+            flexShrink: 0,
+            px: 2.5,
             pt: 2,
-            borderTop: '1px solid',
-            borderColor: 'secondary.light',
-            bgcolor: 'white',
+            pb: "max(16px, env(safe-area-inset-bottom))",
+            borderTop: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
           }}
         >
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
               mb: 2,
             }}
           >
-            <Typography fontWeight={600} color="text.secondary" fontSize="0.9rem">
-              Total
-            </Typography>
-            <Typography variant="h5" fontWeight={800} color="primary.main">
-              ${totalPrice.toLocaleString('es-CL')}
+            <Box>
+              <Typography fontWeight={700}>Total del pedido</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {totalItems}{" "}
+                {totalItems === 1 ? "menú completo" : "menús completos"}
+              </Typography>
+            </Box>
+            <Typography
+              variant="h5"
+              fontWeight={800}
+              color="primary.main"
+              aria-label="Total del pedido"
+            >
+              ${totalPrice.toLocaleString("es-CL")}
             </Typography>
           </Box>
           <Button
             variant="contained"
             fullWidth
             size="large"
+            endIcon={<ArrowForwardRoundedIcon />}
             onClick={onConfirmOrder}
-            className={styles.cartConfirmButton}
           >
-            Confirmar pedido
+            Continuar con mis datos
+          </Button>
+          <Button
+            fullWidth
+            onClick={onClose}
+            color="inherit"
+            sx={{ color: "text.secondary", mt: 0.5 }}
+          >
+            Seguir eligiendo
           </Button>
         </Box>
       )}

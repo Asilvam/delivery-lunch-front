@@ -1,23 +1,14 @@
-import {
-  AppBar,
-  Box,
-  Button,
-  Container,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import RestaurantIcon from "@mui/icons-material/Restaurant";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { PageLayout } from "../components/layout/PageLayout";
+import StaffNavigation from "../components/admin/StaffNavigation";
+import { Typography } from "@mui/material";
+import { useAuth } from "../hooks/useAuth";
 import { useKitchenOrdersStream } from "../hooks/useKitchenOrdersStream";
 import { updateOrderStatus } from "../data/services/kitchenApi.service";
 import KitchenOrdersPanel from "../components/kitchen/KitchenOrdersPanel";
 import type { OrderStatus } from "../types/order";
 
 export default function KitchenPage() {
-  const { token, logout, role } = useAuth();
-  const navigate = useNavigate();
+  const { token, role } = useAuth();
   const { orders, updateOrder, connected, error } =
     useKitchenOrdersStream(token);
 
@@ -27,50 +18,22 @@ export default function KitchenPage() {
     updateOrder(updated);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
-    <>
-      <AppBar position="sticky" color="default" elevation={1}>
-        <Toolbar>
-          <RestaurantIcon sx={{ mr: 1, color: "primary.main" }} />
-          <Typography variant="h6" fontWeight={700} flexGrow={1}>
-            Panel Cocina
-          </Typography>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Button
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
-              color="inherit"
-              size="small"
-              sx={{ fontWeight: 600 }}
-            >
-              Salir
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <PageLayout header={<StaffNavigation />}>
+      <Typography variant="h5" fontWeight={800} mb={1}>
+        Comandas
+      </Typography>
+      <Typography variant="body2" color="text.secondary" mb={3}>
+        Pedidos aprobados listos para preparar.
+      </Typography>
 
-      {/* Use full width container for the kitchen panel to allow full-bleed table */}
-      <Container maxWidth={false} sx={{ mt: 4, mb: 8, px: 0 }}>
-        <Typography variant="h5" fontWeight={800} mb={1}>
-          Comandas
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Pedidos aprobados listos para preparar.
-        </Typography>
-
-        <KitchenOrdersPanel
-          orders={orders}
-          connected={connected}
-          error={error}
-          onStatusChange={handleStatusChange}
-          isAdmin={role === "admin"}
-        />
-      </Container>
-    </>
+      <KitchenOrdersPanel
+        orders={orders}
+        connected={connected}
+        error={error}
+        onStatusChange={handleStatusChange}
+        isAdmin={role === "admin"}
+      />
+    </PageLayout>
   );
 }

@@ -1,24 +1,14 @@
+import axios from 'axios';
 // src/context/AuthContext.tsx
 import {
-  createContext,
   useCallback,
-  useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 
-export type UserRole = "admin" | "kitchen";
-
-interface AuthContextValue {
-  token: string | null;
-  role: UserRole | null;
-  login: (token: string) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext, type UserRole } from './auth-context';
 
 const TOKEN_KEY = "admin_token";
 
@@ -28,7 +18,9 @@ function decodeRole(token: string): UserRole | null {
     const payload = token.split(".")[1];
     const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
     const parsed = JSON.parse(json) as { role?: UserRole };
-    return parsed.role ?? null;
+    const exp = (JSON.parse(json) as { exp?: number }).exp;
+    if (!exp || exp * 1000 <= Date.now()) return null;
+    return parsed.role === 'admin' || parsed.role === 'kitchen' ? parsed.role : null;
   } catch {
     return null;
   }
@@ -36,7 +28,7 @@ function decodeRole(token: string): UserRole | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(TOKEN_KEY),
+    (() => { const stored = localStorage.getItem(TOKEN_KEY); return stored && decodeRole(stored) ? stored : null; })(),
   );
   const [role, setRole] = useState<UserRole | null>(() => {
     const stored = localStorage.getItem(TOKEN_KEY);
@@ -44,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = useCallback((newToken: string) => {
+    if (!decodeRole(newToken)) throw new Error('Sesión de personal inválida');
     localStorage.setItem(TOKEN_KEY, newToken);
     setToken(newToken);
     setRole(decodeRole(newToken));
@@ -55,16 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
   }, []);
 
-  const value = useMemo<AuthContextValue>(
+  useEffect(() => {
+    if (!token) return;
+    const expire = () => { sessionStorage.setItem('staff-session-expired', '1'); logout(); };
+    const exp = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp as number;
+    const timer = window.setTimeout(expire, Math.min(exp * 1000 - Date.now(), 2147483647));
+    const interceptor = axios.interceptors.response.use(r => r, error => {
+      if (error.response?.status === 401 && error.config?.headers?.Authorization === `Bearer ${token}`) expire();
+      return Promise.reject(error);
+    });
+    window.addEventListener('staff-session-expired', expire);
+    return () => { window.clearTimeout(timer); axios.interceptors.response.eject(interceptor); window.removeEventListener('staff-session-expired', expire); };
+  }, [token, logout]);
+
+  const value = useMemo(
     () => ({ token, role, login, logout, isAuthenticated: token !== null }),
     [token, role, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
 }

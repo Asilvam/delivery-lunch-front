@@ -6,6 +6,7 @@ import PrivateRoute from "./router/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
 import CustomerApp from "./CustomerApp";
 
+const MenuPricesPage = lazy(() => import("./pages/MenuPricesPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const KitchenPage = lazy(() => import("./pages/KitchenPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -32,6 +33,7 @@ export default function App() {
             </Suspense>
           }
         />
+        <Route path="/admin/menus" element={<Suspense fallback={<Spinner />}><MenuPricesPage /></Suspense>} />
         <Route
           path="/dashboard"
           element={

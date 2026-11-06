@@ -46,11 +46,18 @@ export function useAdminOrdersStream(
           setConnected(true);
           setError(null);
         } else {
-          setError(`SSE error ${res.status}`);
+          if (res.status === 401) { window.dispatchEvent(new Event('staff-session-expired')); ctrl.abort(); }
+          setConnected(false);
+          setError('No pudimos actualizar los pedidos. Revisando conexión…');
+          throw new Error('No se pudo establecer la conexión');
         }
       },
 
       onmessage: (ev) => {
+        if (ev.event === 'order_cancelled' || ev.event === 'order_validated') {
+          try { const order = JSON.parse(ev.data) as Order; setOrders(prev => prev.filter(o => o._id !== order._id)); } catch { /* mensaje inválido */ }
+          return;
+        }
         if (ev.event === "new_order") {
           try {
             const order = JSON.parse(ev.data) as Order;
@@ -65,14 +72,15 @@ export function useAdminOrdersStream(
         }
       },
 
-      onerror: (err) => {
+      onerror: () => {
         setConnected(false);
-        setError(err instanceof Error ? err.message : "Error en stream SSE");
+        setError("Conexión interrumpida. Estamos intentando recuperar los pedidos.");
         // fetchEventSource reintenta automáticamente; no relanzamos
       },
 
       onclose: () => {
         setConnected(false);
+        if (!ctrl.signal.aborted) throw new Error('Conexión cerrada; reintentando');
       },
     });
 

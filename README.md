@@ -1,5 +1,16 @@
 # React + TypeScript + Vite
 
+## Local setup
+
+Use Node.js **24.22.2 LTS**, pinned in `.nvmrc` and the Docker build.
+
+```bash
+nvm install
+nvm use
+npm install
+npm run dev
+```
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
@@ -92,3 +103,46 @@ npm run dev
 ```
 
 
+
+## Deploy en Heroku
+
+El frontend se despliega en una aplicación distinta de la API usando `heroku/nodejs`.
+`heroku-postbuild` genera `dist`; el `Procfile` ejecuta `npm start` para servirlo
+con `serve`, fallback de SPA y el puerto asignado por Heroku.
+
+1. Instala Heroku CLI e inicia sesión con `heroku login`.
+2. Desde este repositorio crea la aplicación (reemplaza el nombre de ejemplo):
+
+   ```bash
+   heroku create tu-app-frontend --buildpack heroku/nodejs
+   ```
+
+3. En **Settings → Config Vars**, define `VITE_API_BASE_URL` con la URL HTTPS
+   real del backend (obtenida con `heroku info` en el repositorio de la API).
+   Las variables `VITE_*` son públicas: no colocar contraseñas ni secretos.
+   No configures `PORT`; Heroku lo asigna automáticamente.
+4. Guarda los cambios en Git, incluyendo `package-lock.json`, y despliega:
+
+   ```bash
+   git push heroku main
+   heroku ps:scale web=1
+   heroku open
+   ```
+
+Vite incorpora la URL de la API al compilar. Si cambia `VITE_API_BASE_URL`,
+vuelve a ejecutar un despliegue con build; reiniciar el dyno no actualiza el bundle.
+Para probar el servidor localmente: `npm run build` y `npm start` (puerto 8080).
+El `Dockerfile` es opcional y usa el mismo servidor de producción.
+
+Referencia: [builds de Node.js en Heroku](https://devcenter.heroku.com/articles/nodejs-classic-buildpack-builds).
+
+## Navegación y checkout local
+
+El personal usa `/login`, `/admin`, `/cocina` y `/dashboard`, con navegación compartida
+según su rol. Para clientes, el menú es público; enviar un pedido requiere Google.
+Configura `VITE_GOOGLE_CLIENT_ID` con el mismo client ID del backend y autoriza
+`http://localhost:5173` en Google Cloud. No colocar el client secret en variables VITE.
+El carrito y los datos del formulario se conservan durante esta sesión del navegador.
+Un envío incierto se reintenta con la misma key; mientras tanto, el pedido queda
+bloqueado para evitar que un cambio accidental produzca un segundo pedido.
+El comprobante indica que el pedido está pendiente de aprobación del local.

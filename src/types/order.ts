@@ -24,7 +24,8 @@ export interface OrderPayload {
 }
 
 export interface OrderResponse {
-  id: string;
+  _id: string;
+  total: number;
 }
 
 // ─── Tipos para paneles admin / cocina ────────────────────────────────────────

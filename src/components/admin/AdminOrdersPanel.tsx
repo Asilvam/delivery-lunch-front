@@ -1,5 +1,5 @@
 // src/components/admin/AdminOrdersPanel.tsx
-import { Box, Chip, Typography } from "@mui/material";
+import { Box, Chip, Typography, CircularProgress } from "@mui/material";
 import WifiOffIcon from "@mui/icons-material/WifiOff";
 import WifiIcon from "@mui/icons-material/Wifi";
 import PendingOrderCard from "./PendingOrderCard";
@@ -46,7 +46,7 @@ export default function AdminOrdersPanel({
         )}
       </Box>
 
-      {orders.length === 0 ? (
+      {orders.length === 0 && !connected ? <Box role="status" textAlign="center" py={6}><CircularProgress size={24} /><Typography>Cargando pedidos y comprobando conexión…</Typography></Box> : orders.length === 0 ? (
         <Box textAlign="center" py={8}>
           <Typography color="text.secondary" fontWeight={500}>
             Sin pedidos pendientes de aprobación

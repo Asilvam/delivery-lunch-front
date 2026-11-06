@@ -1,240 +1,213 @@
-// src/components/DishCard.tsx
-import { useMemo, useState } from 'react';
+import { useId, useState } from "react";
 import {
-    Card,
-    CardContent,
-    CardMedia,
-    Typography,
-    Button,
-    CardActions,
-    Chip,
-    Box,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-} from '@mui/material';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import type { DailyMenuIncludes, Dish, DishSelectionVisibility, DishSelections } from '../types/menu';
-import styles from './DishCard.module.css';
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Chip,
+  FormControl,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import type {
+  Dish,
+  DishSelectionVisibility,
+  DishSelections,
+} from "../types/menu";
+import { MENU_DESSERT, MENU_PRICE, MENU_SALAD } from "../domain/menu/menuOffer";
+import styles from "./DishCard.module.css";
 
-interface DishCardProps {
-    dish: Dish;
-    dailyIncludes: DailyMenuIncludes;
-    onAddToCart: (dish: Dish, selections: DishSelections, visibility: DishSelectionVisibility) => void;
-    remainingSharedStock?: number;
+interface Props {
+  dish: Dish;
+  basePrice?: number;
+  onAddToCart: (
+    dish: Dish,
+    selections: DishSelections,
+    visibility: DishSelectionVisibility,
+  ) => void;
+  remainingSharedStock?: number;
 }
 
-export const DishCard = ({ dish, dailyIncludes, onAddToCart, remainingSharedStock }: DishCardProps) => {
-    const defaultImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop';
-    const isHipo = dish.isHipo === true;
-    const isSoldOut = dish.stock === 0;
-    const isCartStockDepleted = typeof remainingSharedStock === 'number' && remainingSharedStock === 0 && !isSoldOut;
-    const effectiveStock = typeof remainingSharedStock === 'number' ? remainingSharedStock : dish.stock;
-    const isLowStock = typeof effectiveStock === 'number' && effectiveStock > 0 && effectiveStock <= 5;
-    const proteinOptions = useMemo(() => dish.proteinOptions ?? [], [dish.proteinOptions]);
-    const saladOptions = useMemo(() => dailyIncludes.salad.options, [dailyIncludes.salad.options]);
-    const dessertOptions = useMemo(() => dailyIncludes.dessert.options, [dailyIncludes.dessert.options]);
-
-    const [selectedProtein, setSelectedProtein] = useState(() => isHipo ? '' : (proteinOptions[0] ?? ''));
-    const [selectedSalad, setSelectedSalad] = useState(() => dailyIncludes.salad.options[0] ?? '');
-    const [selectedDessert, setSelectedDessert] = useState(() => dailyIncludes.dessert.options[0] ?? '');
-
-    const visibility: DishSelectionVisibility = {
-        protein: proteinOptions.length > 1,
-        salad: !isHipo && saladOptions.length > 1,
-        dessert: dessertOptions.length > 1,
-    };
-
-    const isHipoProteinMissing = isHipo && visibility.protein && !selectedProtein;
-    const isActionDisabled = isSoldOut || isCartStockDepleted || isHipoProteinMissing;
-    const actionLabel = isSoldOut
-        ? 'Agotado'
-        : isCartStockDepleted
-            ? 'Sin cupo en tu pedido'
-            : isHipoProteinMissing
-                ? 'Elige tu proteína'
-                : 'Agregar al pedido';
-
-    const hasCustomizations = visibility.protein || visibility.salad || visibility.dessert;
-    const selectionChips = [
-        selectedProtein ? `🍗 ${selectedProtein}` : null,
-        isHipo ? null : `🥗 ${selectedSalad}`,
-        `🥖 ${dailyIncludes.bread}`,
-        `🍮 ${selectedDessert}`,
-    ].filter((value): value is string => Boolean(value));
-
-    return (
-        <Card className={styles.card}>
-            {/* Image with gradient overlay */}
-            <Box className={styles.imageWrapper}>
-                <Box className={styles.badgeGroup}>
-                    {isHipo && (
-                        <Chip
-                            label="Hipocalórico"
-                            size="small"
-                            className={`${styles.badgeBase} ${styles.badgeHipo}`}
-                        />
-                    )}
-                    {isSoldOut && (
-                        <Chip
-                            label="Agotado"
-                            size="small"
-                            className={`${styles.badgeBase} ${styles.badgeSoldOut}`}
-                        />
-                    )}
-                    {!isSoldOut && isCartStockDepleted && (
-                        <Chip
-                            label="Sin cupo en tu pedido"
-                            size="small"
-                            className={`${styles.badgeBase} ${styles.badgeNoCupo}`}
-                        />
-                    )}
-                    {!isSoldOut && !isCartStockDepleted && isLowStock && (
-                        <Chip
-                            label={`Quedan pocos platos${effectiveStock ? ` (${effectiveStock})` : ''}`}
-                            size="small"
-                            className={`${styles.badgeBase} ${styles.badgeLowStock}`}
-                        />
-                    )}
-                </Box>
-
-                <CardMedia
-                    component="img"
-                    height="200"
-                    image={dish.imageUrl || defaultImage}
-                    alt={dish.name}
-                    className={styles.dishImage}
-                    onError={(event) => {
-                        const imageElement = event.currentTarget;
-                        if (imageElement.src !== defaultImage) {
-                            imageElement.onerror = null;
-                            imageElement.src = defaultImage;
-                        }
-                    }}
-                />
-
-                {/* Gradient overlay */}
-                <Box className={styles.imageGradient} />
-
-                {/* Price badge on image */}
-                <Box className={styles.priceBadge}>
-                    <Typography
-                        variant="body1"
-                        color="primary.main"
-                        className={styles.priceText}
-                    >
-                        ${dish.price.toLocaleString('es-CL')}
-                    </Typography>
-                </Box>
-            </Box>
-
-            <CardContent className={styles.cardContent}>
-                <Typography
-                    variant="h6"
-                    color="text.primary"
-                    className={styles.dishName}
-                >
-                    {dish.name}
-                </Typography>
-
-                <Box className={`${styles.chipsRow} ${hasCustomizations ? styles.chipsRowWithCustomizations : ''}`}>
-                    {selectionChips.map((label) => (
-                        <Chip
-                            key={label}
-                            label={label}
-                            size="small"
-                            className={styles.selectionChip}
-                        />
-                    ))}
-                </Box>
-
-                {hasCustomizations && (
-                    <Box className={styles.customizationBox}>
-                        <Typography variant="caption" color="primary.dark" className={styles.customizationLabel}>
-                            Personaliza tu menú
-                        </Typography>
-
-                        {visibility.protein && (
-                            <FormControl fullWidth size="small" disabled={isSoldOut}>
-                                <InputLabel id={`protein-label-${dish.id}`}>Proteína</InputLabel>
-                                <Select
-                                    labelId={`protein-label-${dish.id}`}
-                                    value={selectedProtein}
-                                    label="Proteína"
-                                    onChange={(event) => setSelectedProtein(event.target.value)}
-                                    className={styles.selectControl}
-                                >
-                                    {proteinOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        )}
-
-                        {visibility.salad && (
-                            <FormControl fullWidth size="small" disabled={isSoldOut}>
-                                <InputLabel id={`salad-label-${dish.id}`}>Ensalada</InputLabel>
-                                <Select
-                                    labelId={`salad-label-${dish.id}`}
-                                    value={selectedSalad}
-                                    label="Ensalada"
-                                    onChange={(event) => setSelectedSalad(event.target.value)}
-                                    className={styles.selectControl}
-                                >
-                                    {saladOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        )}
-
-                        {visibility.dessert && (
-                            <FormControl fullWidth size="small" disabled={isSoldOut}>
-                                <InputLabel id={`dessert-label-${dish.id}`}>Postre</InputLabel>
-                                <Select
-                                    labelId={`dessert-label-${dish.id}`}
-                                    value={selectedDessert}
-                                    label="Postre"
-                                    onChange={(event) => setSelectedDessert(event.target.value)}
-                                    className={styles.selectControl}
-                                >
-                                    {dessertOptions.map((option) => (
-                                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        )}
-                    </Box>
-                )}
-            </CardContent>
-
-            <CardActions className={styles.cardActions}>
-                <Button
-                    variant="contained"
-                    startIcon={<AddShoppingCartIcon />}
-                    color="primary"
-                    fullWidth
-                    disabled={isActionDisabled}
-                    onClick={() => onAddToCart(
-                        dish,
-                        isHipo
-                            ? {
-                                ...(selectedProtein ? { protein: selectedProtein } : {}),
-                                dessert: selectedDessert,
-                            }
-                            : {
-                                ...(selectedProtein ? { protein: selectedProtein } : {}),
-                                salad: selectedSalad,
-                                dessert: selectedDessert,
-                            },
-                        visibility,
-                    )}
-                    className={styles.addButton}
-                >
-                    {actionLabel}
-                </Button>
-            </CardActions>
-        </Card>
-    );
+const TITLES: Record<string, [string, string]> = {
+  "Pollo asado con arroz y papas fritas": [
+    "Pollo asado",
+    "Con arroz y papas fritas",
+  ],
+  "Pollo asado con fideos con salsa o crema": [
+    "Pollo asado con fideos",
+    "Salsa o crema del día",
+  ],
+  "Cerdo mongoliano con arroz": ["Cerdo mongoliano", "Acompañado de arroz"],
+  "Cerdo mongoliano con fideos": ["Cerdo mongoliano", "Acompañado de fideos"],
 };
+
+export function DishCard({
+  dish,
+  basePrice = MENU_PRICE,
+  onAddToCart,
+  remainingSharedStock,
+}: Props) {
+  const proteinId = useId();
+  const [protein, setProtein] = useState("");
+  const isHipo = dish.isHipo === true;
+  const options = dish.proteinOptions ?? [];
+  const stock = remainingSharedStock ?? dish.stock;
+  const soldOut = dish.stock === 0;
+  const cartLimit = !soldOut && stock === 0;
+  const needsProtein = isHipo && !options.includes(protein);
+  const disabled = soldOut || cartLimit || needsProtein;
+  const [title, subtitle] = isHipo
+    ? ["Menú hipocalórico", ""]
+    : (TITLES[dish.name] ?? [dish.name, ""]);
+  const imageFallback =
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop";
+
+  return (
+    <Card className={styles.card} component="article" aria-label={title}>
+      <Box className={styles.imageWrapper}>
+        <Box className={styles.badgeGroup}>
+          {isHipo && (
+            <Chip
+              label="Hipocalórico"
+              size="small"
+              className={`${styles.badgeBase} ${styles.badgeHipo}`}
+            />
+          )}
+          {soldOut ? (
+            <Chip
+              label="Agotado"
+              size="small"
+              className={`${styles.badgeBase} ${styles.badgeSoldOut}`}
+            />
+          ) : cartLimit ? (
+            <Chip
+              label="Todo el stock está en tu pedido"
+              size="small"
+              className={`${styles.badgeBase} ${styles.badgeNoCupo}`}
+            />
+          ) : (
+            typeof stock === "number" &&
+            stock > 0 &&
+            stock <= 5 && (
+              <Chip
+                label={`Últimas ${stock} ${stock === 1 ? "porción" : "porciones"}`}
+                size="small"
+                className={`${styles.badgeBase} ${styles.badgeLowStock}`}
+              />
+            )
+          )}
+        </Box>
+        <CardMedia
+          component="img"
+          height="180"
+          image={dish.imageUrl || imageFallback}
+          alt={dish.name}
+          loading="lazy"
+          className={styles.dishImage}
+          onError={(event) => {
+            const image = event.currentTarget;
+            if (image.src !== imageFallback) {
+              image.onerror = null;
+              image.src = imageFallback;
+            }
+          }}
+        />
+      </Box>
+      <CardContent className={styles.cardContent}>
+        <Box className={styles.dishHeading}>
+          <Typography component="h2" variant="h6" className={styles.dishName}>
+            {title}
+          </Typography>
+          {subtitle && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              className={styles.dishSubtitle}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+        {isHipo && (
+          <FormControl
+            fullWidth
+            sx={{ width: "100%", minWidth: 0 }}
+            size="small"
+            required
+            disabled={soldOut || cartLimit || options.length === 0}
+            className={styles.proteinControl}
+          >
+            <InputLabel shrink id={`${proteinId}-label`}>
+              Proteína
+            </InputLabel>
+            <Select
+              labelId={`${proteinId}-label`}
+              id={proteinId}
+              value={options.includes(protein) ? protein : ""}
+              label="Proteína"
+              fullWidth
+              displayEmpty
+              notched
+              renderValue={(value) => value || "Selecciona una proteína"}
+              onChange={(event) => setProtein(event.target.value)}
+            >
+              {options.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+            {options.length === 0 && (
+              <FormHelperText>
+                Sin proteínas disponibles por el momento.
+              </FormHelperText>
+            )}
+          </FormControl>
+        )}
+      </CardContent>
+      <CardActions disableSpacing className={styles.cardActions}>
+        {dish.price !== basePrice && (
+          <Typography
+            color="primary.main"
+            className={styles.priceText}
+            aria-label={`Precio especial: $${dish.price.toLocaleString("es-CL")}`}
+          >
+            ${dish.price.toLocaleString("es-CL")}
+          </Typography>
+        )}
+        <Button
+          variant="contained"
+          startIcon={<AddShoppingCartIcon />}
+          disabled={disabled}
+          aria-label={disabled ? undefined : `Agregar ${dish.name} al pedido`}
+          className={styles.addButton}
+          onClick={() =>
+            onAddToCart(
+              dish,
+              {
+                ...(isHipo ? { protein } : {}),
+                salad: MENU_SALAD,
+                dessert: MENU_DESSERT,
+              },
+              { protein: isHipo, salad: false, dessert: false },
+            )
+          }
+        >
+          {soldOut
+            ? "Agotado"
+            : cartLimit
+              ? "Stock máximo en tu pedido"
+              : needsProtein
+                ? "Elige tu proteína"
+                : "Agregar"}
+        </Button>
+      </CardActions>
+    </Card>
+  );
+}

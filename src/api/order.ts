@@ -1,1 +1,1 @@
-export { sendOrder } from '../data/services/orderApi.service';
+export { sendOrder, getPendingOrder } from '../data/services/orderApi.service';

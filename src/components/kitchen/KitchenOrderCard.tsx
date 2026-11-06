@@ -1,3 +1,4 @@
+import { showActionError, showActionSuccess } from '../../utils/actionFeedback';
 // src/components/kitchen/KitchenOrderCard.tsx
 import { useState } from "react";
 import {
@@ -72,6 +73,9 @@ export default function KitchenOrderCard({
     setLoading(true);
     try {
       await onStatusChange(order._id, next);
+      void showActionSuccess(next === OrderStatus.ENTREGADO ? "Pedido entregado" : "Preparación iniciada");
+    } catch (error) {
+      await showActionError(error);
     } finally {
       setLoading(false);
     }
@@ -94,6 +98,9 @@ export default function KitchenOrderCard({
     setLoadingCancel(true);
     try {
       await onStatusChange(order._id, OrderStatus.CANCELADO);
+      void showActionSuccess("Pedido cancelado y stock restaurado");
+    } catch (error) {
+      await showActionError(error);
     } finally {
       setLoadingCancel(false);
     }

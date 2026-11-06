@@ -1,68 +1,95 @@
+import axios from "axios";
+import { MENU_PRICE } from "./domain/menu/menuOffer";
+import { useCustomerSession } from "./hooks/useCustomerSession";
 // src/CustomerApp.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from "react";
 import {
-  Container,
-  CssBaseline,
-  ThemeProvider,
+  Alert,
   Typography,
   Box,
   Grid,
-  AppBar,
-  Toolbar,
   IconButton,
   Badge,
   Drawer,
   Dialog,
   Button,
   useMediaQuery,
-  alpha,
-} from '@mui/material';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import TodayIcon from '@mui/icons-material/Today';
-import Swal from 'sweetalert2';
+} from "@mui/material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import TodayIcon from "@mui/icons-material/Today";
+import Swal from "sweetalert2";
 
-import { appTheme } from './theme/appTheme';
-import { buildCartItemKey } from './domain/cart/cartHelpers';
+import { appTheme } from "./theme/appTheme";
+import { buildCartItemKey, normalizeMenuCart } from "./domain/cart/cartHelpers";
 import {
   userToast,
   showAddToCartFeedback,
   showStockLimitFeedback,
   triggerCompletionFeedback,
-} from './utils/feedback';
-import { CartPanel } from './components/CartPanel';
-import { DishCard } from './components/DishCard';
-import { MenuLoadingScreen } from './components/MenuLoadingScreen';
-import { OrderConfirmDialog } from './components/OrderConfirmDialog';
-import { fetchDailyMenus, getMenuDateTimestamp } from './api/menu';
-import { sendOrder } from './api/order';
+} from "./utils/feedback";
+import { PageLayout, BrandHeader } from "./components/layout/PageLayout";
+import { CartPanel } from "./components/CartPanel";
+import { DishCard } from "./components/DishCard";
+import { MenuLoadingScreen } from "./components/MenuLoadingScreen";
+import { OrderConfirmDialog } from "./components/OrderConfirmDialog";
+import { fetchDailyMenus, getMenuDateTimestamp } from "./api/menu";
+import { sendOrder, getPendingOrder } from "./api/order";
 import type {
   DailyMenu,
   Dish,
   DishSelectionVisibility,
   DishSelections,
-} from './types/menu';
-import type { CartItem } from './types/cart';
-import type { OrderPayload } from './types/order';
-import { canAddDish, getRemainingDishStock } from './domain/cart/stock.rules';
-import { logger } from './shared/utils/logger';
+} from "./types/menu";
+import type { CartItem } from "./types/cart";
+import type { OrderPayload } from "./types/order";
+import { canAddDish, getRemainingDishStock } from "./domain/cart/stock.rules";
+import { logger } from "./shared/utils/logger";
+
+function refreshCartPrices(items: CartItem[], menus: DailyMenu[]): CartItem[] {
+  const dishes = new Map(
+    menus.flatMap((menu) => menu.dishes).map((dish) => [dish.id, dish]),
+  );
+  return items.map((item) => ({
+    ...item,
+    dish: dishes.get(item.dish.id) ?? item.dish,
+  }));
+}
 
 export default function CustomerApp() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { session, signOut } = useCustomerSession();
+  const sending = useRef(false);
+  const [pendingOrder, setPendingOrder] = useState(() => getPendingOrder());
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const stored = JSON.parse(
+        sessionStorage.getItem("lunch_cart") || "[]",
+      ) as CartItem[];
+      return Array.isArray(stored)
+        ? getPendingOrder()
+          ? stored
+          : normalizeMenuCart(stored)
+        : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    sessionStorage.setItem("lunch_cart", JSON.stringify(cartItems));
+  }, [cartItems]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [menus, setMenus] = useState<DailyMenu[]>([]);
   const [isLoadingMenus, setIsLoadingMenus] = useState(true);
   const [menuLoadError, setMenuLoadError] = useState<string | null>(null);
   const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
-  const isMobile = useMediaQuery(appTheme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(appTheme.breakpoints.down("sm"));
 
   useEffect(() => {
     let mounted = true;
     const loadMenus = async () => {
-      logger.info('[App] Cargando menús...');
+      logger.info("[App] Cargando menús...");
       try {
         setIsLoadingMenus(true);
         const [data] = await Promise.all([
@@ -72,18 +99,26 @@ export default function CustomerApp() {
         if (!mounted) return;
         logger.info(`[App] Menús cargados: ${data.length} día(s)`, data);
         setMenus(data);
+        if (!getPendingOrder())
+          setCartItems((items) => refreshCartPrices(items, data));
         setMenuLoadError(null);
         setSelectedMenuIndex(0);
         if (data.length === 0) {
-          logger.warn('[App] El backend no retornó menús para hoy');
-          void userToast.fire({ icon: 'info', title: 'Sin menús disponibles para hoy.' });
+          logger.warn("[App] El backend no retornó menús para hoy");
+          void userToast.fire({
+            icon: "info",
+            title: "Sin menús disponibles para hoy.",
+          });
         }
       } catch (error) {
         if (!mounted) return;
-        logger.error('[App] Error al cargar menús', error);
-        setMenuLoadError('No se pudieron cargar los menús diarios.');
+        logger.error("[App] Error al cargar menús", error);
+        setMenuLoadError("No se pudieron cargar los menús diarios.");
         setMenus([]);
-        void userToast.fire({ icon: 'error', title: 'Error al cargar menús. Intenta nuevamente.' });
+        void userToast.fire({
+          icon: "error",
+          title: "Error al cargar menús. Intenta nuevamente.",
+        });
       } finally {
         if (mounted) setIsLoadingMenus(false);
       }
@@ -105,7 +140,12 @@ export default function CustomerApp() {
   });
 
   const menusForNavigation = availableMenus.length > 0 ? availableMenus : menus;
-  const selectedMenu = menusForNavigation[selectedMenuIndex] ?? menusForNavigation[0];
+  const selectedMenu =
+    menusForNavigation[selectedMenuIndex] ?? menusForNavigation[0];
+  const basePrice = selectedMenu?.basePrice ?? MENU_PRICE;
+  const hasSpecialPrices = selectedMenu?.dishes.some(
+    (dish) => dish.price !== basePrice,
+  );
   const canGoBack = selectedMenuIndex > 0;
   const canGoForward = selectedMenuIndex < menusForNavigation.length - 1;
 
@@ -114,6 +154,15 @@ export default function CustomerApp() {
     selections: DishSelections,
     visibility: DishSelectionVisibility,
   ) => {
+    if (getPendingOrder()) {
+      void userToast.fire({
+        icon: "info",
+        title:
+          "Confirma el resultado del envío pendiente antes de cambiar el pedido.",
+      });
+      setIsOrderDialogOpen(true);
+      return;
+    }
     const cartItemKey = buildCartItemKey(dishToAdd.id, selections);
     const remainingStock = getRemainingDishStock(cartItems, dishToAdd);
 
@@ -149,7 +198,13 @@ export default function CustomerApp() {
           )
         : [
             ...prev,
-            { key: cartItemKey, dish: dishToAdd, quantity: 1, selections, visibility },
+            {
+              key: cartItemKey,
+              dish: dishToAdd,
+              quantity: 1,
+              selections,
+              visibility,
+            },
           ];
     });
 
@@ -158,10 +213,16 @@ export default function CustomerApp() {
       return;
     }
     void showAddToCartFeedback(dishToAdd.name, nextQuantity, wasExisting);
-    logger.debug(`[App] Carrito actualizado — ${dishToAdd.name} x${nextQuantity}`);
+    logger.debug(
+      `[App] Carrito actualizado — ${dishToAdd.name} x${nextQuantity}`,
+    );
   };
 
   const handleUpdateQuantity = (cartItemKey: string, delta: number) => {
+    if (getPendingOrder()) {
+      setIsOrderDialogOpen(true);
+      return;
+    }
     const targetItem = cartItems.find((item) => item.key === cartItemKey);
     if (!targetItem) return;
     let wasBlocked = false;
@@ -179,150 +240,227 @@ export default function CustomerApp() {
       );
     });
     if (wasBlocked)
-      void showStockLimitFeedback(targetItem.dish.name, targetItem.dish.stock === 0, 0);
+      void showStockLimitFeedback(
+        targetItem.dish.name,
+        targetItem.dish.stock === 0,
+        0,
+      );
   };
 
   const handleRemoveFromCart = (cartItemKey: string) => {
+    if (getPendingOrder()) {
+      setIsOrderDialogOpen(true);
+      return;
+    }
     setCartItems((prev) => prev.filter((item) => item.key !== cartItemKey));
   };
 
   const handleConfirmOrder = () => {
     if (cartItems.length === 0) {
-      void userToast.fire({ icon: 'info', title: 'No hay platos en el carrito.' });
+      void userToast.fire({
+        icon: "info",
+        title: "No hay platos en el carrito.",
+      });
       return;
     }
-    logger.info('[App] Abriendo dialog de confirmación de pedido');
+    logger.info("[App] Abriendo dialog de confirmación de pedido");
     setIsCartOpen(false);
     setIsOrderDialogOpen(true);
   };
 
   const handleSubmitOrder = async (payload: OrderPayload) => {
-    const waitFrame = () => new Promise<void>((resolve) => setTimeout(resolve, 200));
+    if (!session || sending.current) return;
+    sending.current = true;
     try {
-      await sendOrder(payload);
+      const order = await sendOrder(
+        payload,
+        session.access_token,
+        session.customer.googleId,
+      );
+      setPendingOrder(null);
       setIsOrderDialogOpen(false);
+      setCartItems([]);
+      sessionStorage.removeItem("checkout_contact");
       triggerCompletionFeedback();
-      await waitFrame();
       await Swal.fire({
-        icon: 'success',
-        title: '¡Pedido confirmado!',
-        text: 'Tu pedido fue enviado correctamente.',
-        confirmButtonText: 'Cerrar',
-        confirmButtonColor: '#d81b60',
+        icon: "success",
+        title: "Pedido recibido, pendiente de aprobación",
+        text: `Número: ${order._id}. Total: $${order.total.toLocaleString("es-CL")}. El local revisará tu pedido antes de enviarlo a cocina.`,
+        confirmButtonText: "Volver al menú",
         allowOutsideClick: false,
-        allowEscapeKey: false,
-        customClass: { icon: 'swal-icon-primary' },
       });
+      try {
+        setMenus(await fetchDailyMenus());
+      } catch {
+        /* El comprobante ya confirmó el pedido. */
+      }
     } catch (error) {
-      logger.error('[App] Error al enviar pedido', error);
-      setIsOrderDialogOpen(false);
-      await waitFrame();
+      const pending = getPendingOrder();
+      setPendingOrder(pending);
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.data?.code === "PRICE_CHANGED"
+      ) {
+        setIsOrderDialogOpen(false);
+        setIsCartOpen(true);
+        try {
+          const fresh = await fetchDailyMenus();
+          setMenus(fresh);
+          setCartItems((items) => refreshCartPrices(items, fresh));
+          await Swal.fire({
+            icon: "info",
+            title: "El precio cambió",
+            text: "Actualizamos tu resumen. Revisa el nuevo total antes de continuar.",
+            confirmButtonText: "Revisar resumen",
+          });
+        } catch {
+          await Swal.fire({
+            icon: "error",
+            title: "No pudimos actualizar los precios",
+            text: "Conservamos tus platos. Recarga el menú antes de volver a enviar.",
+          });
+        }
+        return;
+      }
+      if (axios.isAxiosError(error) && error.response?.status === 401)
+        signOut();
+      const serverMessage = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : null;
       await Swal.fire({
-        icon: 'error',
-        title: 'Error al enviar el pedido',
-        text: 'Ocurrió un problema al procesar tu pedido. Intenta nuevamente.',
-        confirmButtonText: 'Cerrar',
-        confirmButtonColor: '#d81b60',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
+        icon: pending ? "warning" : "error",
+        title: pending
+          ? "El envío sigue sin confirmar"
+          : "No pudimos enviar el pedido",
+        text:
+          error instanceof Error && !axios.isAxiosError(error)
+            ? error.message
+            : pending
+              ? "Tu pedido está guardado. Reintenta el mismo envío para confirmar su resultado sin duplicarlo."
+              : typeof serverMessage === "string"
+                ? serverMessage
+                : "Conservamos tus platos y tus datos. Revisa el pedido e intenta nuevamente.",
+        confirmButtonText: "Revisar pedido",
       });
     } finally {
-      window.location.reload();
+      sending.current = false;
     }
   };
 
   const totalItems = cartItems.reduce((acc, i) => acc + i.quantity, 0);
-  const totalPrice = cartItems.reduce((acc, i) => acc + i.dish.price * i.quantity, 0);
+  const totalPrice = cartItems.reduce(
+    (acc, i) => acc + i.dish.price * i.quantity,
+    0,
+  );
 
   return (
-    <ThemeProvider theme={appTheme}>
-      <CssBaseline />
-
+    <>
       {/* ─── APP BAR ──────────────────────────────────────────────────────────── */}
-      <AppBar
-        position="sticky"
-        color="inherit"
-        elevation={0}
-        sx={{
-          bgcolor: alpha('#ffffff', 0.82),
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid',
-          borderColor: 'rgba(216,27,96,0.10)',
-        }}
+      <PageLayout
+        mainId="menu-del-dia"
+        header={
+          <BrandHeader
+            right={
+              <IconButton
+                aria-label="Abrir mi pedido"
+                color="primary"
+                onClick={() => setIsCartOpen(true)}
+                sx={{
+                  bgcolor:
+                    totalItems > 0 ? "rgba(216,27,96,0.08)" : "transparent",
+                  border:
+                    totalItems > 0
+                      ? "1.5px solid rgba(216,27,96,0.2)"
+                      : "1.5px solid transparent",
+                  transition: "all 0.2s ease",
+                  "&:hover": { bgcolor: "rgba(216,27,96,0.12)" },
+                }}
+              >
+                <Badge badgeContent={totalItems} color="secondary" max={99}>
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
+            }
+          />
+        }
       >
-        <Toolbar sx={{ px: { xs: 2, sm: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <RestaurantMenuIcon sx={{ color: 'primary.main', fontSize: 26 }} />
-            <Typography
-              variant="h6"
-              fontWeight={800}
-              sx={{
-                background: 'linear-gradient(135deg, #d81b60 20%, #f06292 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Sabores Angelicales
-            </Typography>
-          </Box>
-          <IconButton
-            color="primary"
-            onClick={() => setIsCartOpen(true)}
-            sx={{
-              bgcolor: totalItems > 0 ? 'rgba(216,27,96,0.08)' : 'transparent',
-              border: totalItems > 0 ? '1.5px solid rgba(216,27,96,0.2)' : '1.5px solid transparent',
-              transition: 'all 0.2s ease',
-              '&:hover': { bgcolor: 'rgba(216,27,96,0.12)' },
-            }}
+        {pendingOrder && (
+          <Alert
+            severity="warning"
+            action={
+              <Button onClick={() => setIsOrderDialogOpen(true)}>
+                Confirmar resultado
+              </Button>
+            }
           >
-            <Badge badgeContent={totalItems} color="secondary" max={99}>
-              <ShoppingCartIcon />
-            </Badge>
-          </IconButton>
-        </Toolbar>
-      </AppBar>
+            Hay un envío pendiente de confirmación. Conservamos tu pedido para
+            reintentarlo sin duplicados.
+          </Alert>
+        )}
 
-      {/* ─── MAIN ─────────────────────────────────────────────────────────────── */}
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 10, px: { xs: 2, sm: 3 } }}>
-        <Box sx={{ mb: 4 }}>
+        {/* ─── MAIN ─────────────────────────────────────────────────────────────── */}
+        <Box sx={{ mb: 2.5 }}>
           <Typography
-            variant="h5"
-            fontWeight={800}
-            sx={{ color: 'text.primary', letterSpacing: '-0.02em', mb: 0.5 }}
+            variant="overline"
+            color="text.secondary"
+            sx={{ letterSpacing: "0.08em" }}
           >
             {isLoadingMenus
-              ? 'Cargando menú…'
+              ? "Cargando menú…"
               : selectedMenu
-                ? `Menú del ${selectedMenu.date}`
-                : 'Menú diario'}
+                ? `Menú del día · ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${selectedMenu.isoDate}T12:00:00Z`))}`
+                : "Menú del día"}
           </Typography>
-          <Box
+          <Typography
+            component="h1"
             sx={{
-              width: 40,
-              height: 4,
-              borderRadius: 99,
-              background: 'linear-gradient(90deg, #d81b60, #f06292)',
-              mb: 2,
+              fontSize: { xs: "1.7rem", sm: "2.1rem" },
+              fontWeight: 800,
+              letterSpacing: "-0.035em",
+              lineHeight: 1.2,
+              mt: 0.5,
+              mb: 1.5,
             }}
-          />
-
+          >
+            Elige el que quieras.{" "}
+            <Box
+              component="span"
+              sx={{
+                display: { xs: "block", md: "inline" },
+                color: "primary.main",
+              }}
+            >
+              {hasSpecialPrices ? "Precio general: " : "Todos a "}$
+              {basePrice.toLocaleString("es-CL")}
+            </Box>
+          </Typography>
+          {hasSpecialPrices && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Los platos con precio especial lo muestran junto a Agregar.
+            </Typography>
+          )}
           {!isLoadingMenus && menusForNavigation.length > 1 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+              }}
+            >
               <IconButton
                 disabled={!canGoBack}
                 onClick={() => setSelectedMenuIndex((p) => Math.max(0, p - 1))}
                 size="small"
                 sx={{
-                  bgcolor: canGoBack ? 'rgba(216,27,96,0.08)' : 'transparent',
-                  border: '1px solid',
-                  borderColor: canGoBack ? 'rgba(216,27,96,0.2)' : 'divider',
+                  bgcolor: canGoBack ? "rgba(216,27,96,0.08)" : "transparent",
+                  border: "1px solid",
+                  borderColor: canGoBack ? "rgba(216,27,96,0.2)" : "divider",
                 }}
               >
                 <ChevronLeftIcon fontSize="small" />
               </IconButton>
-              <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
+              <Box sx={{ display: "flex", gap: 0.8, flexWrap: "wrap" }}>
                 {menusForNavigation.map((menu, idx) => (
                   <Box
                     key={menu.date}
@@ -331,20 +469,20 @@ export default function CustomerApp() {
                       px: 2,
                       py: 0.6,
                       borderRadius: 99,
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
+                      cursor: "pointer",
+                      fontSize: "0.8rem",
                       fontWeight: 600,
-                      transition: 'all 0.18s ease',
+                      transition: "all 0.18s ease",
                       ...(idx === selectedMenuIndex
                         ? {
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            boxShadow: '0 3px 10px rgba(216,27,96,0.3)',
+                            bgcolor: "primary.main",
+                            color: "white",
+                            boxShadow: "0 3px 10px rgba(216,27,96,0.3)",
                           }
                         : {
-                            bgcolor: 'rgba(216,27,96,0.07)',
-                            color: 'primary.dark',
-                            '&:hover': { bgcolor: 'rgba(216,27,96,0.14)' },
+                            bgcolor: "rgba(216,27,96,0.07)",
+                            color: "primary.dark",
+                            "&:hover": { bgcolor: "rgba(216,27,96,0.14)" },
                           }),
                     }}
                   >
@@ -355,13 +493,17 @@ export default function CustomerApp() {
               <IconButton
                 disabled={!canGoForward}
                 onClick={() =>
-                  setSelectedMenuIndex((p) => Math.min(menusForNavigation.length - 1, p + 1))
+                  setSelectedMenuIndex((p) =>
+                    Math.min(menusForNavigation.length - 1, p + 1),
+                  )
                 }
                 size="small"
                 sx={{
-                  bgcolor: canGoForward ? 'rgba(216,27,96,0.08)' : 'transparent',
-                  border: '1px solid',
-                  borderColor: canGoForward ? 'rgba(216,27,96,0.2)' : 'divider',
+                  bgcolor: canGoForward
+                    ? "rgba(216,27,96,0.08)"
+                    : "transparent",
+                  border: "1px solid",
+                  borderColor: canGoForward ? "rgba(216,27,96,0.2)" : "divider",
                 }}
               >
                 <ChevronRightIcon fontSize="small" />
@@ -375,10 +517,10 @@ export default function CustomerApp() {
                     borderRadius: 99,
                     px: 1.5,
                     py: 0.5,
-                    fontSize: '0.78rem',
-                    color: 'text.secondary',
-                    border: '1px solid',
-                    borderColor: 'divider',
+                    fontSize: "0.78rem",
+                    color: "text.secondary",
+                    border: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
                   Hoy
@@ -388,10 +530,39 @@ export default function CustomerApp() {
           )}
         </Box>
 
+        {!isLoadingMenus && selectedMenu && (
+          <Box
+            sx={{
+              mb: 2.5,
+              px: 2,
+              py: 1.5,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+              bgcolor: "background.paper",
+              display: "flex",
+              alignItems: { xs: "flex-start", sm: "center" },
+              flexDirection: { xs: "column", sm: "row" },
+              gap: { xs: 0.5, sm: 2 },
+            }}
+          >
+            <Typography
+              variant="body2"
+              fontWeight={800}
+              color="primary.dark"
+              sx={{ flexShrink: 0 }}
+            >
+              Todos incluyen
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Ensalada surtida · Pan fresco del día · Postre del día
+            </Typography>
+          </Box>
+        )}
         {isLoadingMenus && <MenuLoadingScreen />}
 
         {!isLoadingMenus && menuLoadError && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Box sx={{ textAlign: "center", py: 8 }}>
             <Typography color="error" fontWeight={600}>
               {menuLoadError}
             </Typography>
@@ -399,12 +570,17 @@ export default function CustomerApp() {
         )}
 
         {!isLoadingMenus && !menuLoadError && selectedMenu && (
-          <Grid container spacing={3} justifyContent="center">
+          <Grid
+            container
+            spacing={{ xs: 2, sm: 2.5 }}
+            alignItems="stretch"
+            justifyContent="flex-start"
+          >
             {selectedMenu.dishes.map((dish) => (
               <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
                 <DishCard
                   dish={dish}
-                  dailyIncludes={selectedMenu.includes}
+                  basePrice={basePrice}
                   onAddToCart={handleAddToCart}
                   remainingSharedStock={getRemainingDishStock(cartItems, dish)}
                 />
@@ -412,7 +588,7 @@ export default function CustomerApp() {
             ))}
           </Grid>
         )}
-      </Container>
+      </PageLayout>
 
       {/* ─── CARRITO ──────────────────────────────────────────────────────────── */}
       {isMobile ? (
@@ -422,7 +598,15 @@ export default function CustomerApp() {
           fullWidth
           maxWidth="sm"
           slotProps={{
-            paper: { sx: { borderRadius: 4, m: 2, maxHeight: '90vh' } },
+            paper: {
+              sx: {
+                borderRadius: 2,
+                m: 1.5,
+                width: "calc(100% - 24px)",
+                maxHeight: "90dvh",
+                overflow: "hidden",
+              },
+            },
           }}
         >
           <CartPanel
@@ -437,7 +621,11 @@ export default function CustomerApp() {
           />
         </Dialog>
       ) : (
-        <Drawer anchor="right" open={isCartOpen} onClose={() => setIsCartOpen(false)}>
+        <Drawer
+          anchor="right"
+          open={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+        >
           <CartPanel
             cartItems={cartItems}
             totalItems={totalItems}
@@ -452,16 +640,20 @@ export default function CustomerApp() {
       )}
 
       {/* ─── DIALOG CONFIRMACIÓN PEDIDO ───────────────────────────────────────── */}
-      {selectedMenu && (
+      {(selectedMenu || pendingOrder) && (
         <OrderConfirmDialog
           open={isOrderDialogOpen}
           menu={selectedMenu}
           cartItems={cartItems}
           totalPrice={totalPrice}
-          onClose={() => setIsOrderDialogOpen(false)}
+          pendingPayload={pendingOrder?.payload}
+          onClose={() => {
+            setIsOrderDialogOpen(false);
+            setIsCartOpen(true);
+          }}
           onSubmit={handleSubmitOrder}
         />
       )}
-    </ThemeProvider>
+    </>
   );
 }

@@ -32,8 +32,8 @@ export function useKitchenOrdersStream(
   useEffect(() => {
     if (!token) return;
     fetchKitchenOrders(token)
-      .then((snapshot) => setOrders(snapshot))
-      .catch(() => { /* si falla, el SSE compensará con eventos nuevos */ });
+      .then((snapshot) => setOrders(prev => [...new Map([...snapshot, ...prev].map(o => [o._id, o])).values()]))
+      .catch(() => setError("No pudimos cargar el historial inicial. Revisa la conexión."));
   }, [token]);
 
   // ── Stream SSE (actualizaciones en tiempo real) ────────────────────────────
@@ -52,7 +52,10 @@ export function useKitchenOrdersStream(
           setConnected(true);
           setError(null);
         } else {
-          setError(`SSE error ${res.status}`);
+          if (res.status === 401) { window.dispatchEvent(new Event('staff-session-expired')); ctrl.abort(); }
+          setConnected(false);
+          setError('No pudimos actualizar los pedidos. Revisando conexión…');
+          throw new Error('No se pudo establecer la conexión');
         }
       },
 
@@ -82,13 +85,14 @@ export function useKitchenOrdersStream(
         }
       },
 
-      onerror: (err) => {
+      onerror: () => {
         setConnected(false);
-        setError(err instanceof Error ? err.message : "Error en stream SSE");
+        setError("Conexión interrumpida. Estamos intentando recuperar los pedidos.");
       },
 
       onclose: () => {
         setConnected(false);
+        if (!ctrl.signal.aborted) throw new Error('Conexión cerrada; reintentando');
       },
     });
 
