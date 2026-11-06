@@ -1,6 +1,6 @@
 import { useMountedRef } from "../hooks/useMountedRef";
 import { userToast } from "../utils/notifications";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -21,6 +21,21 @@ export function GoogleCustomerAccess({
   const [loading, setLoading] = useState(false);
   const mounted = useMountedRef();
   const verifying = useRef(false);
+  const buttonContainer = useRef<HTMLDivElement>(null);
+  const [buttonWidth, setButtonWidth] = useState<number>();
+
+  useEffect(() => {
+    const container = buttonContainer.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.floor(entry.contentRect.width);
+      if (width > 0) setButtonWidth(Math.min(width, 400));
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [session]);
+
   const reportError = (title: string) => {
     if (mounted.current) void userToast.fire({ icon: "error", title });
   };
@@ -65,7 +80,7 @@ export function GoogleCustomerAccess({
       </Box>
     );
   return (
-    <Box>
+    <Box ref={buttonContainer} sx={{ width: "100%", minWidth: 0 }}>
       {!clientId ? (
         <Alert severity="warning">
           El acceso con Google no está configurado. Contacta al local.
@@ -91,6 +106,7 @@ export function GoogleCustomerAccess({
             <GoogleLogin
               text="continue_with"
               size="large"
+              width={buttonWidth}
               onError={() =>
                 reportError(
                   "No pudimos iniciar sesión. Puedes reintentarlo sin perder tu pedido.",
