@@ -8,9 +8,12 @@ export const fetchDailyMenusFromApi = async (): Promise<DailyMenu[]> => {
 
   const url = `${baseUrl}/menu/today`;
 
-  const response = await axios.get<BackendMenuResponseDto>(url, {
-    timeout: 10000,
-  });
-
-  return mapBackendResponseToDailyMenus(response.data);
+  try {
+    const response = await axios.get<BackendMenuResponseDto>(url, { timeout: 10000 });
+    return mapBackendResponseToDailyMenus(response.data);
+  } catch (error) {
+    // A day with only a draft has no public menu yet.
+    if (axios.isAxiosError(error) && error.response?.status === 404) return [];
+    throw error;
+  }
 };

@@ -1,3 +1,4 @@
+import { cloudinaryImage } from '../../shared/utils/images/cloudinary';
 import { MENU_PRICE } from '../../domain/menu/menuOffer';
 import { getLocalDishImage } from './dishImages';
 import type {
@@ -53,8 +54,11 @@ const normalizeStock = (stock: number | null | undefined): number | undefined =>
 export const mapBackendDishToDish = (dto: BackendDishDto): Dish => ({
   id: dto._id,
   name: dto.nombre,
+  description: dto.descripcion,
   price: dto.precio,
-  imageUrl: getLocalDishImage(dto.nombre) ?? dto.imagen_url ?? undefined,
+  imageUrl: dto.imagen_url?.startsWith('https://res.cloudinary.com/')
+    ? cloudinaryImage(dto.imagen_url)
+    : getLocalDishImage(dto.nombre) ?? dto.imagen_url ?? undefined,
   isHipo: dto.es_hipo ?? false,
   proteinOptions: dto.opciones && dto.opciones.length > 0 ? dto.opciones : undefined,
   stock: normalizeStock(dto.stock),

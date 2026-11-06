@@ -1,3 +1,4 @@
+import { cloudinaryImage } from "../../shared/utils/images/cloudinary";
 import original0 from "../../assets/dishes/pollo-asado-arroz-papas.png";
 import small0 from "../../assets/hero/almuerzo-quintero-640.jpg";
 import large0 from "../../assets/hero/almuerzo-quintero-1120.jpg";
@@ -28,5 +29,6 @@ const optimizedImages: Record<string, { small: string; large: string }> = {
 
 /** Mantiene las fotos remotas y optimiza las imágenes locales conocidas. */
 export function getHeroDishImage(source: string) {
+  if (source.startsWith('https://res.cloudinary.com/')) return { small: cloudinaryImage(source, 640), large: cloudinaryImage(source, 1120) };
   return optimizedImages[source];
 }

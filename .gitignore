@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Copias de preparación; las imágenes de la biblioteca se alojan en Cloudinary.
+/.tmp/biblioteca-platos/

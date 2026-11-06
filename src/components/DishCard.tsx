@@ -124,13 +124,13 @@ export function DishCard({
           <Typography component="h2" variant="h6" className={styles.dishName}>
             {title}
           </Typography>
-          {subtitle && (
+          {(dish.description || subtitle) && (
             <Typography
               variant="body2"
               color="text.secondary"
               className={styles.dishSubtitle}
             >
-              {subtitle}
+              {dish.description || subtitle}
             </Typography>
           )}
         </Box>

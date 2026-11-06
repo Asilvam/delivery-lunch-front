@@ -25,6 +25,7 @@ export interface DishSelectionVisibility {
 export interface Dish {
     id: string;
     name: string;
+    description?: string;
     price: number;
     imageUrl?: string;
     isHipo?: boolean;
@@ -46,6 +47,10 @@ export type BackendSelectableText = string | string[] | null | undefined;
 export interface BackendDishDto {
     _id: string;
     nombre: string;
+    descripcion?: string;
+    catalogoId?: string;
+    precioEspecial?: number | null;
+    stockInicial?: number;
     precio: number;
     imagen_url?: string | null;
     opciones?: string[] | null;
@@ -56,6 +61,7 @@ export interface BackendDishDto {
 export interface BackendDailyMenuDto {
     _id: string;
     fecha: string;
+    estado?: "borrador" | "publicado";
     precioBase?: number;
     updatedAt?: string;
     ensalada: BackendSelectableText;
