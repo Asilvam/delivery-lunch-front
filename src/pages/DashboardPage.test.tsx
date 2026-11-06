@@ -72,6 +72,7 @@ it("refreshes the selected period without leaving loading stuck and replaces tic
   await waitFor(() =>
     expect(screen.queryByLabelText("Actualizando métricas")).toBeNull(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
+  expect(screen.queryByRole("button", { name: "Actualizar" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Últimos 7 días" }));
   await waitFor(() => expect(fetchDashboardSummary).toHaveBeenCalledTimes(3));
 });

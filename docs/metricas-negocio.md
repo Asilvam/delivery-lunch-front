@@ -15,7 +15,7 @@ El objetivo es decidir cuántas porciones preparar, qué platos destacar y en qu
 | Horas de pedidos              | Pedidos recibidos por día de semana y hora de Chile.                                              | Planificar atención y estudiar cuándo publicar el menú.                                         |
 | Resultado de pedidos cerrados | Entregados y cancelados, excluyendo pedidos abiertos.                                             | Revisar el cierre de los pedidos. No es conversión de visitantes a clientes.                    |
 
-Todos los períodos se interpretan en America/Santiago, incluidos los cambios de horario. El botón Actualizar consulta nuevamente las cifras; no se muestran datos como si fueran en tiempo real. No hay pagos registrados en el modelo actual, por lo que las ventas entregadas no acreditan cobros.
+Todos los períodos se interpretan en America/Santiago, incluidos los cambios de horario. Las cifras se consultan al cargar el sitio y al seleccionar un período, incluido el ya activo. No hay pagos registrados en el modelo actual, por lo que las ventas entregadas no acreditan cobros.
 
 ## Próximas métricas, en orden de utilidad
 

@@ -58,20 +58,27 @@ export default function DateRangeFilter({
     >
       <Box
         sx={{
-          display: "flex",
+          display: { xs: "grid", sm: "flex" },
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
           flexWrap: "wrap",
           gap: 1,
           alignItems: "center",
           mb: 2,
         }}
       >
-        <Typography variant="subtitle2" fontWeight={600} mr={1}>
+        <Typography
+          variant="subtitle2"
+          fontWeight={600}
+          mr={1}
+          sx={{ gridColumn: "1 / -1" }}
+        >
           Período:
         </Typography>
         {presets.map((preset, index) => (
           <Button
             key={preset.label}
             size="small"
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
             variant={selected === index ? "contained" : "outlined"}
             aria-pressed={selected === index}
             onClick={() => {

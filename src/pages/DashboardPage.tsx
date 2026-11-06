@@ -16,7 +16,6 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import { useAuth } from "../hooks/useAuth";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import KpiCard from "../components/dashboard/KpiCard";
@@ -129,39 +128,18 @@ export default function DashboardPage() {
 
   return (
     <PageLayout header={<StaffNavigation />}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 2,
-          mb: 2,
-        }}
-      >
-        <Box>
-          <Typography
-            component="h1"
-            variant="h4"
-            fontWeight={800}
-            sx={{ fontSize: { xs: "1.65rem", sm: "2.125rem" } }}
-          >
-            Cómo va tu negocio
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Pedidos recibidos en el período · Horario de Chile
-          </Typography>
-        </Box>
-        <Button
-          startIcon={<RefreshIcon />}
-          onClick={() => {
-            setLoading(true);
-            void loadData();
-          }}
-          disabled={loading}
-          sx={{ flexShrink: 0 }}
+      <Box sx={{ mb: 2 }}>
+        <Typography
+          component="h1"
+          variant="h4"
+          fontWeight={800}
+          sx={{ fontSize: { xs: "1.65rem", sm: "2.125rem" } }}
         >
-          Actualizar
-        </Button>
+          Cómo va tu negocio
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Pedidos recibidos en el período
+        </Typography>
       </Box>
       <DateRangeFilter
         startDate={startDate}
