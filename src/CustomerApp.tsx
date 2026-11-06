@@ -43,6 +43,8 @@ import type {
   DishSelections,
 } from "./types/menu";
 import type { CartItem } from "./types/cart";
+import { OrderReceiptDialog } from "./components/OrderReceiptDialog";
+import type { OrderResponse } from "./types/order";
 import type { OrderPayload } from "./types/order";
 import { canAddDish, getRemainingDishStock } from "./domain/cart/stock.rules";
 import { logger } from "./shared/utils/logger";
@@ -60,6 +62,11 @@ function refreshCartPrices(items: CartItem[], menus: DailyMenu[]): CartItem[] {
 export default function CustomerApp() {
   const { session, signOut } = useCustomerSession();
   const sending = useRef(false);
+  const [receipt, setReceipt] = useState<{
+    order: OrderResponse;
+    payload: OrderPayload;
+  } | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(() => getPendingOrder());
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
@@ -282,13 +289,8 @@ export default function CustomerApp() {
       setCartItems([]);
       sessionStorage.removeItem("checkout_contact");
       triggerCompletionFeedback();
-      await Swal.fire({
-        icon: "success",
-        title: "Pedido recibido, pendiente de aprobación",
-        text: `Número: ${order._id}. Total: $${order.total.toLocaleString("es-CL")}. El local revisará tu pedido antes de enviarlo a cocina.`,
-        confirmButtonText: "Volver al menú",
-        allowOutsideClick: false,
-      });
+      setReceipt({ order, payload });
+      setIsReceiptOpen(true);
       try {
         setMenus(await fetchDailyMenus());
       } catch {
@@ -384,6 +386,20 @@ export default function CustomerApp() {
           />
         }
       >
+        {receipt && (
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+            action={
+              <Button onClick={() => setIsReceiptOpen(true)}>
+                Ver comprobante
+              </Button>
+            }
+          >
+            Conservamos el comprobante de tu último pedido mientras sigas en
+            esta página.
+          </Alert>
+        )}
         {pendingOrder && (
           <Alert
             severity="warning"
@@ -637,6 +653,15 @@ export default function CustomerApp() {
             onConfirmOrder={handleConfirmOrder}
           />
         </Drawer>
+      )}
+
+      {receipt && (
+        <OrderReceiptDialog
+          open={isReceiptOpen}
+          order={receipt.order}
+          payload={receipt.payload}
+          onClose={() => setIsReceiptOpen(false)}
+        />
       )}
 
       {/* ─── DIALOG CONFIRMACIÓN PEDIDO ───────────────────────────────────────── */}

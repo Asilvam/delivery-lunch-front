@@ -35,7 +35,7 @@ export function OrderSummary({
         fontWeight={800}
         sx={{ mb: 1.5 }}
       >
-        Tu selección · {quantity} {quantity === 1 ? "menú" : "menús"}
+        Tu pedido · {quantity} {quantity === 1 ? "menú" : "menús"}
       </Typography>
       <Box
         component="ul"
@@ -54,20 +54,17 @@ export function OrderSummary({
           >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="body2" fontWeight={700}>
-                {item.name}
+                {item.quantity} × {item.name}
               </Typography>
               {item.protein && (
                 <Typography
                   variant="caption"
                   color="primary.dark"
-                  sx={{ display: "block" }}
+                  sx={{ display: "block", mt: 0.25 }}
                 >
                   Proteína: {item.protein}
                 </Typography>
               )}
-              <Typography variant="caption" color="text.secondary">
-                {item.quantity} × ${item.price.toLocaleString("es-CL")}
-              </Typography>
             </Box>
             <Typography
               variant="body2"
@@ -89,7 +86,7 @@ export function OrderSummary({
           justifyContent: "space-between",
           alignItems: "center",
           gap: 2,
-          mt: 2,
+          mt: 1.5,
         }}
       >
         <Typography fontWeight={700}>Total</Typography>

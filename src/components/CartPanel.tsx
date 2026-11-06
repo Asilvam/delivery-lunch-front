@@ -334,7 +334,7 @@ export function CartPanel({
             endIcon={<ArrowForwardRoundedIcon />}
             onClick={onConfirmOrder}
           >
-            Continuar con mis datos
+            Continuar a confirmar
           </Button>
           <Button
             fullWidth

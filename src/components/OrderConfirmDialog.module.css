@@ -1,26 +1,40 @@
 .dialogPaper {
-  border-radius: 16px !important;
+  border-radius: 20px !important;
+  max-height: 92dvh !important;
+  overflow: hidden;
 }
 .title {
-  padding-bottom: 8px !important;
+  padding-bottom: 12px !important;
+  flex-shrink: 0;
 }
 .form {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   margin-top: 8px;
+  padding-bottom: 4px;
 }
 .actions {
-  padding: 12px 24px 20px !important;
-  gap: 8px;
+  padding: 12px 24px max(12px, env(safe-area-inset-bottom)) !important;
+  gap: 6px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+}
+.actions > :not(style) ~ :not(style) {
+  margin-left: 0 !important;
 }
 .cancelButton {
   text-transform: none !important;
-  color: #6b5b73 !important;
+  color: var(--text) !important;
   font-weight: 600 !important;
 }
 .submitButton {
   min-height: 48px !important;
   font-weight: 700 !important;
+}
+@media (max-width: 600px) {
+  .dialogPaper {
+    margin: 12px !important;
+    width: calc(100% - 24px) !important;
+  }
 }

@@ -66,7 +66,7 @@ describe("Cart review", () => {
     );
     expect(update).toHaveBeenCalledWith("hipo-pollo", 1);
     fireEvent.click(
-      screen.getByRole("button", { name: "Continuar con mis datos" }),
+      screen.getByRole("button", { name: "Continuar a confirmar" }),
     );
     expect(next).toHaveBeenCalledOnce();
     fireEvent.click(

@@ -145,4 +145,30 @@ Configura `VITE_GOOGLE_CLIENT_ID` con el mismo client ID del backend y autoriza
 El carrito y los datos del formulario se conservan durante esta sesión del navegador.
 Un envío incierto se reintenta con la misma key; mientras tanto, el pedido queda
 bloqueado para evitar que un cambio accidental produzca un segundo pedido.
-El comprobante indica que el pedido está pendiente de aprobación del local.
+El checkout tiene dos pasos: revisar cantidades y confirmar. En la confirmación,
+Google aparece primero; al iniciar sesión se muestran nombre editable y teléfono.
+Acepta móviles chilenos sin prefijo y los normaliza a `+56`; otros países requieren
+su prefijo internacional. Los errores se muestran junto al campo correspondiente.
+El botón de envío incluye el total y las acciones permanecen visibles mientras el
+contenido se desplaza en móvil. Durante el envío se bloquean cierre y nuevos envíos.
+
+El comprobante muestra número de pedido, resumen, total y estado recibido de la API.
+Puede abrirse de nuevo desde el home mientras la página siga cargada. Es un
+comprobante del envío, sin seguimiento automático de cambios posteriores. Los
+pedidos nuevos quedan pendientes de aprobación del local; un reintento recuperado
+muestra el estado devuelto por el servidor.
+
+## Producción en Cloudflare Pages
+
+Proyecto: `delivery-front`, conectado a `Asilvam/delivery-lunch-front`, rama `main`.
+Comando de compilación: `npm run build`. Directorio publicado: `dist`.
+La versión de Node se toma de `.nvmrc` (`v24.22.2`).
+
+Variables de compilación públicas:
+
+- `VITE_API_BASE_URL=https://delivery-back-e687ceeb9c0d.herokuapp.com`
+- `VITE_GOOGLE_CLIENT_ID`: el client ID público del backend.
+
+Dominio del frontend: `sabores.serviciosasm.cl`. En Google Cloud hay que autorizar
+`https://sabores.serviciosasm.cl` como origen JavaScript del cliente OAuth.
+Los secretos de MongoDB, JWT, Cloudinary y CallMeBot pertenecen únicamente a Heroku.
