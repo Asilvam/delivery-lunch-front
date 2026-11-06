@@ -28,7 +28,7 @@ export function BrandHeader({
             component={RouterLink}
             to="/"
             underline="none"
-            aria-label="Sabores Angelicales, ir al menú"
+            aria-label="Sabores Angelicales, ir al inicio"
             sx={{
               display: "inline-flex",
               alignItems: "center",
@@ -59,6 +59,7 @@ export function BrandHeader({
 
 export function BrandFooter() {
   const { pathname } = useLocation();
+  const customerPage = pathname === "/" || pathname === "/menu";
   return (
     <Box
       component="footer"
@@ -84,7 +85,7 @@ export function BrandFooter() {
         </Typography>
         <Link
           component={RouterLink}
-          to={pathname === "/" ? "/login" : "/"}
+          to={customerPage ? "/login" : "/menu"}
           underline="hover"
           color="primary.dark"
           sx={{
@@ -95,7 +96,7 @@ export function BrandFooter() {
             fontWeight: 600,
           }}
         >
-          {pathname === "/" ? "Acceso del personal" : "Ver menú del día"}
+          {customerPage ? "Acceso del personal" : "Ver menú del día"}
         </Link>
       </Container>
     </Box>

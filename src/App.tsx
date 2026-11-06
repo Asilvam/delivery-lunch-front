@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import PrivateRoute from "./router/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
-import CustomerApp from "./CustomerApp";
+import CustomerApp, { CustomerHomePage, CustomerMenuPage } from "./CustomerApp";
 
 const MenuPricesPage = lazy(() => import("./pages/MenuPricesPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -20,7 +20,10 @@ const Spinner = () => (
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<CustomerApp />} />
+      <Route path="/" element={<CustomerApp />}>
+        <Route index element={<CustomerHomePage />} />
+        <Route path="menu" element={<CustomerMenuPage />} />
+      </Route>
       <Route path="/login" element={<LoginPage />} />
 
       {/* Solo admin */}

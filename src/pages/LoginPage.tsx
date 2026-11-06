@@ -129,7 +129,7 @@ export default function LoginPage() {
           right={
             <Button
               component={RouterLink}
-              to="/"
+              to="/menu"
               startIcon={<ArrowBackRoundedIcon />}
               color="inherit"
               size="small"

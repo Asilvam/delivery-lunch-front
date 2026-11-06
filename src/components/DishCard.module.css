@@ -90,3 +90,22 @@
   width: 100%;
   min-height: 44px;
 }
+
+@media (max-width: 599px) {
+  .dishImage {
+    height: 156px;
+  }
+  .cardContent {
+    padding: 14px 14px 0 !important;
+  }
+  .dishHeading {
+    min-height: 0;
+  }
+  .dishName {
+    font-size: 1rem !important;
+  }
+  .cardActions {
+    padding: 12px 14px 14px !important;
+    gap: 10px;
+  }
+}

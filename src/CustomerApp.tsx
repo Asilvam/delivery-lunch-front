@@ -1,4 +1,6 @@
 import axios from "axios";
+import { Outlet, useLocation, useOutletContext } from "react-router-dom";
+import type { Dispatch, SetStateAction } from "react";
 import { MENU_PRICE } from "./domain/menu/menuOffer";
 import { useCustomerSession } from "./hooks/useCustomerSession";
 // src/CustomerApp.tsx
@@ -32,6 +34,7 @@ import {
 import { PageLayout, BrandHeader } from "./components/layout/PageLayout";
 import { CartPanel } from "./components/CartPanel";
 import { DishCard } from "./components/DishCard";
+import { CustomerHero } from "./components/CustomerHero";
 import { MenuLoadingScreen } from "./components/MenuLoadingScreen";
 import { OrderConfirmDialog } from "./components/OrderConfirmDialog";
 import { fetchDailyMenus, getMenuDateTimestamp } from "./api/menu";
@@ -61,6 +64,14 @@ function refreshCartPrices(items: CartItem[], menus: DailyMenu[]): CartItem[] {
 
 export default function CustomerApp() {
   const { session, signOut } = useCustomerSession();
+  const { pathname } = useLocation();
+  const previousPathname = useRef(pathname);
+  useEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.querySelector<HTMLElement>("main h1")?.focus({ preventScroll: true });
+  }, [pathname]);
   const sending = useRef(false);
   const [receipt, setReceipt] = useState<{
     order: OrderResponse;
@@ -150,11 +161,6 @@ export default function CustomerApp() {
   const selectedMenu =
     menusForNavigation[selectedMenuIndex] ?? menusForNavigation[0];
   const basePrice = selectedMenu?.basePrice ?? MENU_PRICE;
-  const hasSpecialPrices = selectedMenu?.dishes.some(
-    (dish) => dish.price !== basePrice,
-  );
-  const canGoBack = selectedMenuIndex > 0;
-  const canGoForward = selectedMenuIndex < menusForNavigation.length - 1;
 
   const handleAddToCart = (
     dishToAdd: Dish,
@@ -356,7 +362,6 @@ export default function CustomerApp() {
     <>
       {/* ─── APP BAR ──────────────────────────────────────────────────────────── */}
       <PageLayout
-        mainId="menu-del-dia"
         header={
           <BrandHeader
             right={
@@ -397,195 +402,19 @@ export default function CustomerApp() {
           </Alert>
         )}
 
-        {/* ─── MAIN ─────────────────────────────────────────────────────────────── */}
-        <Box sx={{ mb: 2.5 }}>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            sx={{ letterSpacing: "0.08em" }}
-          >
-            {isLoadingMenus
-              ? "Cargando menú…"
-              : selectedMenu
-                ? `Menú del día · ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${selectedMenu.isoDate}T12:00:00Z`))}`
-                : "Menú del día"}
-          </Typography>
-          <Typography
-            component="h1"
-            sx={{
-              fontSize: { xs: "1.7rem", sm: "2.1rem" },
-              fontWeight: 800,
-              letterSpacing: "-0.035em",
-              lineHeight: 1.2,
-              mt: 0.5,
-              mb: 1.5,
-            }}
-          >
-            Elige el que quieras.{" "}
-            <Box
-              component="span"
-              sx={{
-                display: { xs: "block", md: "inline" },
-                color: "primary.main",
-              }}
-            >
-              Por solo ${basePrice.toLocaleString("es-CL")}
-            </Box>
-          </Typography>
-          {hasSpecialPrices && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Los platos con precio especial lo muestran junto a Agregar.
-            </Typography>
-          )}
-          {!isLoadingMenus && menusForNavigation.length > 1 && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                flexWrap: "wrap",
-              }}
-            >
-              <IconButton
-                disabled={!canGoBack}
-                onClick={() => setSelectedMenuIndex((p) => Math.max(0, p - 1))}
-                size="small"
-                sx={{
-                  bgcolor: canGoBack ? "rgba(216,27,96,0.08)" : "transparent",
-                  border: "1px solid",
-                  borderColor: canGoBack ? "rgba(216,27,96,0.2)" : "divider",
-                }}
-              >
-                <ChevronLeftIcon fontSize="small" />
-              </IconButton>
-              <Box sx={{ display: "flex", gap: 0.8, flexWrap: "wrap" }}>
-                {menusForNavigation.map((menu, idx) => (
-                  <Box
-                    key={menu.date}
-                    onClick={() => setSelectedMenuIndex(idx)}
-                    sx={{
-                      px: 2,
-                      py: 0.6,
-                      borderRadius: 99,
-                      cursor: "pointer",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                      transition: "all 0.18s ease",
-                      ...(idx === selectedMenuIndex
-                        ? {
-                            bgcolor: "primary.main",
-                            color: "white",
-                            boxShadow: "0 3px 10px rgba(216,27,96,0.3)",
-                          }
-                        : {
-                            bgcolor: "rgba(216,27,96,0.07)",
-                            color: "primary.dark",
-                            "&:hover": { bgcolor: "rgba(216,27,96,0.14)" },
-                          }),
-                    }}
-                  >
-                    {menu.date}
-                  </Box>
-                ))}
-              </Box>
-              <IconButton
-                disabled={!canGoForward}
-                onClick={() =>
-                  setSelectedMenuIndex((p) =>
-                    Math.min(menusForNavigation.length - 1, p + 1),
-                  )
-                }
-                size="small"
-                sx={{
-                  bgcolor: canGoForward
-                    ? "rgba(216,27,96,0.08)"
-                    : "transparent",
-                  border: "1px solid",
-                  borderColor: canGoForward ? "rgba(216,27,96,0.2)" : "divider",
-                }}
-              >
-                <ChevronRightIcon fontSize="small" />
-              </IconButton>
-              {selectedMenuIndex !== 0 && (
-                <Button
-                  size="small"
-                  startIcon={<TodayIcon sx={{ fontSize: 14 }} />}
-                  onClick={() => setSelectedMenuIndex(0)}
-                  sx={{
-                    borderRadius: 99,
-                    px: 1.5,
-                    py: 0.5,
-                    fontSize: "0.78rem",
-                    color: "text.secondary",
-                    border: "1px solid",
-                    borderColor: "divider",
-                  }}
-                >
-                  Hoy
-                </Button>
-              )}
-            </Box>
-          )}
-        </Box>
-
-        {!isLoadingMenus && selectedMenu && (
-          <Box
-            sx={{
-              mb: 2.5,
-              px: 2,
-              py: 1.5,
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 2,
-              bgcolor: "background.paper",
-              display: "flex",
-              alignItems: { xs: "flex-start", sm: "center" },
-              flexDirection: { xs: "column", sm: "row" },
-              gap: { xs: 0.5, sm: 2 },
-            }}
-          >
-            <Typography
-              variant="body2"
-              fontWeight={800}
-              color="primary.dark"
-              sx={{ flexShrink: 0 }}
-            >
-              Todos incluyen
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Ensalada surtida · Pan fresco del día · Postre del día
-            </Typography>
-          </Box>
-        )}
-        {isLoadingMenus && <MenuLoadingScreen />}
-
-        {!isLoadingMenus && menuLoadError && (
-          <Box sx={{ textAlign: "center", py: 8 }}>
-            <Typography color="error" fontWeight={600}>
-              {menuLoadError}
-            </Typography>
-          </Box>
-        )}
-
-        {!isLoadingMenus && !menuLoadError && selectedMenu && (
-          <Grid
-            container
-            spacing={{ xs: 2, sm: 2.5 }}
-            alignItems="stretch"
-            justifyContent="flex-start"
-          >
-            {selectedMenu.dishes.map((dish) => (
-              <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <DishCard
-                  dish={dish}
-                  basePrice={basePrice}
-                  onAddToCart={handleAddToCart}
-                  remainingSharedStock={getRemainingDishStock(cartItems, dish)}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        )}
+        <Outlet
+          context={{
+            selectedMenu,
+            menusForNavigation,
+            isLoadingMenus,
+            menuLoadError,
+            selectedMenuIndex,
+            setSelectedMenuIndex,
+            basePrice,
+            cartItems,
+            handleAddToCart,
+          } satisfies CustomerPageContext}
+        />
       </PageLayout>
 
       {/* ─── CARRITO ──────────────────────────────────────────────────────────── */}
@@ -662,5 +491,233 @@ export default function CustomerApp() {
         />
       )}
     </>
+  );
+}
+
+interface CustomerPageContext {
+  selectedMenu: DailyMenu | undefined;
+  menusForNavigation: DailyMenu[];
+  isLoadingMenus: boolean;
+  menuLoadError: string | null;
+  selectedMenuIndex: number;
+  setSelectedMenuIndex: Dispatch<SetStateAction<number>>;
+  basePrice: number;
+  cartItems: CartItem[];
+  handleAddToCart: (
+    dish: Dish,
+    selections: DishSelections,
+    visibility: DishSelectionVisibility,
+  ) => void;
+}
+
+export function CustomerHomePage() {
+  const { selectedMenu, isLoadingMenus, basePrice } =
+    useOutletContext<CustomerPageContext>();
+  return (
+    <CustomerHero
+      basePrice={!isLoadingMenus && selectedMenu ? basePrice : undefined}
+      dishes={selectedMenu?.dishes}
+      isLoading={isLoadingMenus}
+    />
+  );
+}
+
+export function CustomerMenuPage() {
+  const {
+    selectedMenu,
+    menusForNavigation,
+    isLoadingMenus,
+    menuLoadError,
+    selectedMenuIndex,
+    setSelectedMenuIndex,
+    basePrice,
+    cartItems,
+    handleAddToCart,
+  } = useOutletContext<CustomerPageContext>();
+  const canGoBack = selectedMenuIndex > 0;
+  const canGoForward = selectedMenuIndex < menusForNavigation.length - 1;
+  const hasSpecialPrices = selectedMenu?.dishes.some(
+    (dish) => dish.price !== basePrice,
+  );
+  return (
+    <Box
+      component="section"
+      id="menu-del-dia"
+      aria-labelledby="menu-title"
+      tabIndex={-1}
+      sx={{
+        "&:focus": { outline: "none" },
+        "&:focus-visible": {
+          outline: "2px solid",
+          outlineColor: "primary.dark",
+          outlineOffset: 6,
+          borderRadius: 2,
+        },
+      }}
+    >
+      <Box sx={{ mb: 2.5 }}>
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          sx={{ letterSpacing: "0.08em" }}
+        >
+          {isLoadingMenus
+            ? "Cargando menú…"
+            : selectedMenu
+              ? `Menú del día · ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${selectedMenu.isoDate}T12:00:00Z`))}`
+              : "Menú del día"}
+        </Typography>
+        <Typography
+          component="h1"
+          id="menu-title"
+          tabIndex={-1}
+          sx={{
+            fontSize: { xs: "1.7rem", sm: "2.1rem" },
+            fontWeight: 800,
+            letterSpacing: "-0.035em",
+            lineHeight: 1.2,
+            mt: 0.5,
+            mb: 1.5,
+            outline: "none",
+          }}
+        >
+          Elige tu almuerzo de hoy
+        </Typography>
+        {!isLoadingMenus && selectedMenu && (
+          <Box sx={{ mb: 2 }}>
+            <Typography color="primary.dark" sx={{ fontWeight: 800, fontSize: "1.2rem" }}>
+              Menú general ${basePrice.toLocaleString("es-CL")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Ensalada surtida · Pan fresco del día · Postre del día
+            </Typography>
+            {hasSpecialPrices && (
+              <Typography variant="caption" color="text.secondary">
+                Los platos con precio especial lo indican junto a Agregar.
+              </Typography>
+            )}
+          </Box>
+        )}
+        {!isLoadingMenus && menusForNavigation.length > 1 && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <IconButton
+              disabled={!canGoBack}
+              onClick={() => setSelectedMenuIndex((p) => Math.max(0, p - 1))}
+              size="small"
+              sx={{
+                bgcolor: canGoBack ? "rgba(216,27,96,0.08)" : "transparent",
+                border: "1px solid",
+                borderColor: canGoBack ? "rgba(216,27,96,0.2)" : "divider",
+              }}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+            <Box sx={{ display: "flex", gap: 0.8, flexWrap: "wrap" }}>
+              {menusForNavigation.map((menu, idx) => (
+                <Box
+                  key={menu.date}
+                  onClick={() => setSelectedMenuIndex(idx)}
+                  sx={{
+                    px: 2,
+                    py: 0.6,
+                    borderRadius: 99,
+                    cursor: "pointer",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    transition: "all 0.18s ease",
+                    ...(idx === selectedMenuIndex
+                      ? {
+                          bgcolor: "primary.main",
+                          color: "white",
+                          boxShadow: "0 3px 10px rgba(216,27,96,0.3)",
+                        }
+                      : {
+                          bgcolor: "rgba(216,27,96,0.07)",
+                          color: "primary.dark",
+                          "&:hover": { bgcolor: "rgba(216,27,96,0.14)" },
+                        }),
+                  }}
+                >
+                  {menu.date}
+                </Box>
+              ))}
+            </Box>
+            <IconButton
+              disabled={!canGoForward}
+              onClick={() =>
+                setSelectedMenuIndex((p) =>
+                  Math.min(menusForNavigation.length - 1, p + 1),
+                )
+              }
+              size="small"
+              sx={{
+                bgcolor: canGoForward
+                  ? "rgba(216,27,96,0.08)"
+                  : "transparent",
+                border: "1px solid",
+                borderColor: canGoForward ? "rgba(216,27,96,0.2)" : "divider",
+              }}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
+            {selectedMenuIndex !== 0 && (
+              <Button
+                size="small"
+                startIcon={<TodayIcon sx={{ fontSize: 14 }} />}
+                onClick={() => setSelectedMenuIndex(0)}
+                sx={{
+                  borderRadius: 99,
+                  px: 1.5,
+                  py: 0.5,
+                  fontSize: "0.78rem",
+                  color: "text.secondary",
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                Hoy
+              </Button>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      {isLoadingMenus && <MenuLoadingScreen />}
+
+      {!isLoadingMenus && menuLoadError && (
+        <Box sx={{ textAlign: "center", py: 8 }}>
+          <Typography color="error" fontWeight={600}>
+            {menuLoadError}
+          </Typography>
+        </Box>
+      )}
+
+      {!isLoadingMenus && !menuLoadError && selectedMenu && (
+        <Grid
+          container
+          spacing={{ xs: 2, sm: 2.5 }}
+          alignItems="stretch"
+          justifyContent="flex-start"
+        >
+          {selectedMenu.dishes.map((dish) => (
+            <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <DishCard
+                dish={dish}
+                basePrice={basePrice}
+                onAddToCart={handleAddToCart}
+                remainingSharedStock={getRemainingDishStock(cartItems, dish)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
   );
 }

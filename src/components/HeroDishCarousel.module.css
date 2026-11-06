@@ -1,0 +1,12 @@
+.fadeIn {
+  animation: hero-photo-fade 700ms ease-in-out both;
+}
+
+@keyframes hero-photo-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn { animation: none; }
+}
