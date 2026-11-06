@@ -446,7 +446,7 @@ export default function CustomerApp() {
                 color: "primary.main",
               }}
             >
-              {hasSpecialPrices ? "Precio general: " : "Todos a "}$
+              {hasSpecialPrices ? "Precio general: " : "Por solo "}$
               {basePrice.toLocaleString("es-CL")}
             </Box>
           </Typography>
