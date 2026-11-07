@@ -1,15 +1,20 @@
-import axios from 'axios';
-import type { BackendMenuResponseDto, DailyMenu } from '../../types/menu';
-import { mapBackendResponseToDailyMenus } from '../mappers/menu.mapper';
+import axios from "axios";
+import type { BackendMenuResponseDto, DailyMenu } from "../../types/menu";
+import { mapBackendResponseToDailyMenus } from "../mappers/menu.mapper";
 
-export const fetchDailyMenusFromApi = async (): Promise<DailyMenu[]> => {
+export const fetchDailyMenusFromApi = async (
+  signal?: AbortSignal,
+): Promise<DailyMenu[]> => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
-  if (!baseUrl) throw new Error('VITE_API_BASE_URL no configurado');
+  if (!baseUrl) throw new Error("VITE_API_BASE_URL no configurado");
 
   const url = `${baseUrl}/menu/today`;
 
   try {
-    const response = await axios.get<BackendMenuResponseDto>(url, { timeout: 10000 });
+    const response = await axios.get<BackendMenuResponseDto>(url, {
+      timeout: 10000,
+      signal,
+    });
     return mapBackendResponseToDailyMenus(response.data);
   } catch (error) {
     // A day with only a draft has no public menu yet.

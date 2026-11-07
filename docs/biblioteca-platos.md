@@ -14,9 +14,9 @@ Precio general inicial: **$5.500**. El precio especial es opcional por publicaci
 | 4 | Bife de pechuga de pavo con arroz y papas fritas | `bife-pavo-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003995/delivery-lunch/biblioteca/bife-pavo-arroz-papas-fritas-879da6629525.png) |
 | 5 | Bife de lomo de cerdo con arroz y papas fritas | `bife-lomo-cerdo-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003996/delivery-lunch/biblioteca/bife-lomo-cerdo-arroz-papas-fritas-d67bc83c561c.png) |
 | 6 | Bife de lomo de cerdo con fideos con salsa o crema | `bife-lomo-cerdo-fideos-salsa.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003997/delivery-lunch/biblioteca/bife-lomo-cerdo-fideos-567a5cb945ab.png) |
-| 7 | Pulpa asada con arroz y papas fritas | `pulpa-asada-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003999/delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-9f563e51e856.png) |
-| 8 | Pulpa asada con puré | `pulpa-asada-pure.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004001/delivery-lunch/biblioteca/pulpa-asada-pure-bece92684ef5.png) |
-| 9 | Pulpa asada con fideos | `pulpa-asada-fideos.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004001/delivery-lunch/biblioteca/pulpa-asada-fideos-a78cd094b507.png) |
+| 7 | Pulpa asada con arroz y papas fritas | `pulpa-asada-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794015249/delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-586cee3a962a.png) |
+| 8 | Pulpa asada con puré | `pulpa-asada-pure.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794014897/delivery-lunch/biblioteca/pulpa-asada-pure-28448c719c47.png) |
+| 9 | Pulpa asada con fideos | `pulpa-asada-fideos.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794015247/delivery-lunch/biblioteca/pulpa-asada-fideos-ecc432356154.png) |
 | 10 | Carne al jugo con arroz y papas fritas | `carne-al-jugo-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004004/delivery-lunch/biblioteca/carne-al-jugo-arroz-papas-fritas-46b1ddfc7b82.png) |
 | 11 | Carne al jugo con fideos con salsa | `carne-al-jugo-fideos-salsa.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004005/delivery-lunch/biblioteca/carne-al-jugo-fideos-salsa-35f1b91acc3f.png) |
 | 12 | Cazuela de vacuno | `cazuela-vacuno.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004006/delivery-lunch/biblioteca/cazuela-vacuno-7ed88f9c62de.png) |
@@ -62,6 +62,7 @@ Una sola ficha. Posibles opciones del historial: pollo asado, atún, cerdo mongo
 
 - `biblioteca-platos.json` contiene el plato, nombre de archivo, URL pública, public ID, dimensiones y checksum de cada fotografía.
 - Las copias locales de las 17 nuevas están en `.tmp/biblioteca-platos/`, excluidas de Git; el catálogo usará sus URLs de Cloudinary.
+- Inicio, carrusel y login usan fotografías del menú publicado desde Cloudinary. Se retiraron las copias versionadas de platos y sus variantes locales del carrusel.
 - Los assets se subieron con identificadores basados en su contenido y sin sobrescribir imágenes existentes.
 - Las fechas del historial no crean ni republican menús.
 

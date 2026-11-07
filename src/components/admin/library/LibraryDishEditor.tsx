@@ -199,8 +199,10 @@ export default function LibraryDishEditor({
                 alt={input.nombre || "Fotografía del plato"}
                 sx={{
                   width: "100%",
-                  height: 190,
-                  objectFit: "cover",
+                  height: { xs: 240, sm: 300 },
+                  objectFit: "contain",
+                  display: "block",
+                  bgcolor: "background.default",
                   borderRadius: 1,
                   mb: 1,
                 }}

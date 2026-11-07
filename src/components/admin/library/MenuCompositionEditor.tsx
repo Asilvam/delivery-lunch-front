@@ -247,11 +247,8 @@ export default function MenuCompositionEditor({
         (p.activo || selected[p._id]) &&
         normalize(`${p.nombre} ${p.categoria}`).includes(normalize(query)),
     )
-    .sort(
-      (a, b) =>
-        Number(!!selected[b._id]) - Number(!!selected[a._id]) ||
-        a.nombre.localeCompare(b.nombre, "es"),
-    );
+    // Keep each card in place while its fields are opened or edited.
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   return (
     <Box
       component="form"

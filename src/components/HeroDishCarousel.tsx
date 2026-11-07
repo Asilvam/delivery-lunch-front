@@ -25,7 +25,10 @@ export function HeroDishCarousel({
   isLoading: boolean;
 }) {
   const slides = useMemo(
-    () => dishes?.filter((dish) => Boolean(dish.imageUrl)) ?? [],
+    () =>
+      dishes?.filter((dish) =>
+        dish.imageUrl?.startsWith("https://res.cloudinary.com/"),
+      ) ?? [],
     [dishes],
   );
   const [{ activeId, previousId }, setFrame] = useState<{
@@ -48,11 +51,13 @@ export function HeroDishCarousel({
   useEffect(() => {
     const updateVisibility = () => setVisible(!document.hidden);
     document.addEventListener("visibilitychange", updateVisibility);
-    return () => document.removeEventListener("visibilitychange", updateVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", updateVisibility);
   }, []);
 
   useEffect(() => {
-    if (slides.length < 2 || hovered || focused || !visible || reducedMotion) return;
+    if (slides.length < 2 || hovered || focused || !visible || reducedMotion)
+      return;
     let cancelled = false;
     let loading = false;
     let pendingId: string | undefined;
@@ -63,7 +68,10 @@ export function HeroDishCarousel({
       if (remaining.current.length === 0) {
         remaining.current = shuffled(slides.map((dish) => dish.id));
         if (remaining.current[0] === current.id) {
-          [remaining.current[0], remaining.current[1]] = [remaining.current[1], remaining.current[0]];
+          [remaining.current[0], remaining.current[1]] = [
+            remaining.current[1],
+            remaining.current[0],
+          ];
         }
       }
       pendingId = remaining.current.shift();
@@ -129,37 +137,50 @@ export function HeroDishCarousel({
       }}
     >
       {slide ? (
-        [previous, slide].filter((dish): dish is Dish => Boolean(dish)).map((dish) => {
-          const image = getHeroDishImage(dish.imageUrl ?? "");
-          const active = dish.id === slide.id;
-          return (
-            <Box
-            key={dish.id}
-            component="img"
-            src={image?.large ?? dish.imageUrl}
-            srcSet={image ? `${image.small} 640w, ${image.large} 1120w` : undefined}
-            sizes={IMAGE_SIZES}
-            width={1120}
-            height={840}
-            alt={active ? (dish.isHipo ? "Menú hipocalórico" : dish.name) : ""}
-            aria-hidden={!active || undefined}
-            loading="eager"
-            fetchPriority={activeId ? "auto" : "high"}
-            decoding="async"
-            className={active && previous ? styles.fadeIn : undefined}
-            onAnimationEnd={active ? () => setFrame((current) => ({ activeId: current.activeId })) : undefined}
-            sx={{
-              position: "absolute",
-              inset: 0,
-              display: "block",
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center 55%",
-            }}
-            />
-          );
-        })
+        [previous, slide]
+          .filter((dish): dish is Dish => Boolean(dish))
+          .map((dish) => {
+            const image = getHeroDishImage(dish.imageUrl ?? "");
+            const active = dish.id === slide.id;
+            return (
+              <Box
+                key={dish.id}
+                component="img"
+                src={image?.large ?? dish.imageUrl}
+                srcSet={
+                  image
+                    ? `${image.small} 640w, ${image.large} 1120w`
+                    : undefined
+                }
+                sizes={IMAGE_SIZES}
+                width={1120}
+                height={840}
+                alt={
+                  active ? (dish.isHipo ? "Menú hipocalórico" : dish.name) : ""
+                }
+                aria-hidden={!active || undefined}
+                loading="eager"
+                fetchPriority={activeId ? "auto" : "high"}
+                decoding="async"
+                className={active && previous ? styles.fadeIn : undefined}
+                onAnimationEnd={
+                  active
+                    ? () =>
+                        setFrame((current) => ({ activeId: current.activeId }))
+                    : undefined
+                }
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "block",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center 55%",
+                }}
+              />
+            );
+          })
       ) : isLoading ? (
         <Skeleton
           variant="rectangular"
@@ -170,11 +191,19 @@ export function HeroDishCarousel({
           aria-label="Cargando fotografías del menú"
         />
       ) : (
-        <Box sx={{
-          display: "grid", placeContent: "center", height: "100%",
-          p: 3, textAlign: "center", gap: 1,
-        }}>
-          <RestaurantMenuIcon sx={{ mx: "auto", fontSize: 40, color: "primary.dark" }} />
+        <Box
+          sx={{
+            display: "grid",
+            placeContent: "center",
+            height: "100%",
+            p: 3,
+            textAlign: "center",
+            gap: 1,
+          }}
+        >
+          <RestaurantMenuIcon
+            sx={{ mx: "auto", fontSize: 40, color: "primary.dark" }}
+          />
           <Typography variant="body2" color="text.secondary">
             Las fotografías aparecerán cuando se publique el menú.
           </Typography>

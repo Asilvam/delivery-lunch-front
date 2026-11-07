@@ -7,7 +7,8 @@ import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import loginPhoto from "../assets/dishes/pollo-asado-arroz-papas.png";
+import { fetchDailyMenusFromApi } from "../data/services/menuApi.service";
+import { cloudinaryImage } from "../shared/utils/images/cloudinary";
 import { brandColors as colors } from "../theme/brandColors";
 // src/pages/LoginPage.tsx
 import { useState, useRef, useEffect, type FormEvent } from "react";
@@ -36,6 +37,25 @@ export default function LoginPage() {
   const { login, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [loginPhoto, setLoginPhoto] = useState<string>();
+  useEffect(() => {
+    if (role) return;
+    const controller = new AbortController();
+    void fetchDailyMenusFromApi(controller.signal)
+      .then((menus) => {
+        if (controller.signal.aborted) return;
+        const photo = menus
+          .flatMap((menu) => menu.dishes)
+          .find((dish) =>
+            dish.imageUrl?.startsWith("https://res.cloudinary.com/"),
+          )?.imageUrl;
+        setLoginPhoto(photo ? cloudinaryImage(photo, 1120) : undefined);
+      })
+      .catch(() => {
+        // The decorative photo must never block staff access.
+      });
+    return () => controller.abort();
+  }, [role]);
   useEffect(() => {
     if (!role && sessionStorage.getItem("staff-session-expired") === "1") {
       sessionStorage.removeItem("staff-session-expired");
@@ -173,7 +193,7 @@ export default function LoginPage() {
                 position: "absolute",
                 inset: 0,
                 zIndex: -2,
-                backgroundImage: `url(${loginPhoto})`,
+                backgroundImage: loginPhoto ? `url(${loginPhoto})` : "none",
                 backgroundSize: "cover",
                 backgroundPosition: "48% center",
               },

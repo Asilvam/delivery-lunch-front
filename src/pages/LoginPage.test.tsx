@@ -18,6 +18,7 @@ vi.mock("../hooks/useAuth", () => ({
 }));
 vi.mock("axios", () => ({
   default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
     post: vi.fn(),
     isAxiosError: (error: { isAxiosError?: boolean }) =>
       Boolean(error?.isAxiosError),

@@ -1,6 +1,6 @@
-import { cloudinaryImage } from '../../shared/utils/images/cloudinary';
-import { MENU_PRICE } from '../../domain/menu/menuOffer';
-import { getLocalDishImage } from './dishImages';
+import { cloudinaryImage } from "../../shared/utils/images/cloudinary";
+import { MENU_PRICE } from "../../domain/menu/menuOffer";
+import { getLegacyCloudinaryDishImage } from "./dishImages";
 import type {
   BackendDailyMenuDto,
   BackendDishDto,
@@ -9,16 +9,23 @@ import type {
   DailyMenu,
   Dish,
   SelectableMenuOption,
-} from '../../types/menu';
-import { formatUiDate, getMenuDateTimestamp, parseIsoDate } from '../../shared/utils/date/menuDate';
-import { logger } from '../../shared/utils/logger';
+} from "../../types/menu";
+import {
+  formatUiDate,
+  getMenuDateTimestamp,
+  parseIsoDate,
+} from "../../shared/utils/date/menuDate";
+import { logger } from "../../shared/utils/logger";
 
 const BASE_INCLUDES = {
-  ensalada: 'Ensalada surtida',
-  postre: 'Postre del dia',
+  ensalada: "Ensalada surtida",
+  postre: "Postre del dia",
 };
 
-const normalizeSelectableValues = (value: BackendSelectableText, fallback: string): string[] => {
+const normalizeSelectableValues = (
+  value: BackendSelectableText,
+  fallback: string,
+): string[] => {
   if (Array.isArray(value)) {
     const sanitized = value
       .map((option) => option?.trim())
@@ -27,19 +34,24 @@ const normalizeSelectableValues = (value: BackendSelectableText, fallback: strin
     return sanitized.length > 0 ? sanitized : [fallback];
   }
 
-  if (typeof value === 'string' && value.trim()) {
+  if (typeof value === "string" && value.trim()) {
     return [value.trim()];
   }
 
   return [fallback];
 };
 
-const toSelectableMenuOption = (value: BackendSelectableText, fallback: string): SelectableMenuOption => {
+const toSelectableMenuOption = (
+  value: BackendSelectableText,
+  fallback: string,
+): SelectableMenuOption => {
   const options = normalizeSelectableValues(value, fallback);
   return { options };
 };
 
-const normalizeStock = (stock: number | null | undefined): number | undefined => {
+const normalizeStock = (
+  stock: number | null | undefined,
+): number | undefined => {
   if (stock === null || stock === undefined || Number.isNaN(stock)) {
     return undefined;
   }
@@ -56,15 +68,20 @@ export const mapBackendDishToDish = (dto: BackendDishDto): Dish => ({
   name: dto.nombre,
   description: dto.descripcion,
   price: dto.precio,
-  imageUrl: dto.imagen_url?.startsWith('https://res.cloudinary.com/')
+  imageUrl: dto.imagen_url?.startsWith("https://res.cloudinary.com/")
     ? cloudinaryImage(dto.imagen_url)
-    : getLocalDishImage(dto.nombre) ?? dto.imagen_url ?? undefined,
+    : cloudinaryImage(
+        getLegacyCloudinaryDishImage(dto.nombre) ?? dto.imagen_url ?? "",
+      ) || undefined,
   isHipo: dto.es_hipo ?? false,
-  proteinOptions: dto.opciones && dto.opciones.length > 0 ? dto.opciones : undefined,
+  proteinOptions:
+    dto.opciones && dto.opciones.length > 0 ? dto.opciones : undefined,
   stock: normalizeStock(dto.stock),
 });
 
-export const mapBackendMenuToDailyMenu = (dto: BackendDailyMenuDto): DailyMenu | null => {
+export const mapBackendMenuToDailyMenu = (
+  dto: BackendDailyMenuDto,
+): DailyMenu | null => {
   const parsedDate = parseIsoDate(dto.fecha);
   if (!parsedDate) {
     logger.warn(`[menu.mapper] Fecha backend invalida ignorada: ${dto.fecha}`);
@@ -90,7 +107,9 @@ const normalizeMenus = (menus: DailyMenu[]): DailyMenu[] => {
 
   menus.forEach((menu) => {
     if (getMenuDateTimestamp(menu.date) === null) {
-      logger.warn(`[menu.mapper] Fecha invalida ignorada en normalizacion: ${menu.date}`);
+      logger.warn(
+        `[menu.mapper] Fecha invalida ignorada en normalizacion: ${menu.date}`,
+      );
       return;
     }
 
@@ -99,7 +118,9 @@ const normalizeMenus = (menus: DailyMenu[]): DailyMenu[] => {
       return;
     }
 
-    logger.warn(`[menu.mapper] Fecha duplicada ignorada en normalizacion: ${menu.date}`);
+    logger.warn(
+      `[menu.mapper] Fecha duplicada ignorada en normalizacion: ${menu.date}`,
+    );
   });
 
   return [...uniqueByDate.values()].sort((a, b) => {
@@ -109,11 +130,12 @@ const normalizeMenus = (menus: DailyMenu[]): DailyMenu[] => {
   });
 };
 
-export const mapBackendResponseToDailyMenus = (response: BackendMenuResponseDto): DailyMenu[] => {
+export const mapBackendResponseToDailyMenus = (
+  response: BackendMenuResponseDto,
+): DailyMenu[] => {
   const mappedMenus = response
     .map(mapBackendMenuToDailyMenu)
     .filter((menu): menu is DailyMenu => menu !== null);
 
   return normalizeMenus(mappedMenus);
 };
-
