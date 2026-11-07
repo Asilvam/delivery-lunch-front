@@ -12,7 +12,7 @@ export const fetchDailyMenusFromApi = async (
 
   try {
     const response = await axios.get<BackendMenuResponseDto>(url, {
-      timeout: 10000,
+      timeout: 30000,
       signal,
     });
     return mapBackendResponseToDailyMenus(response.data);
