@@ -46,6 +46,9 @@ export type BackendSelectableText = string | string[] | null | undefined;
 
 export interface BackendDishDto {
     _id: string;
+    retirado?: boolean;
+    tienePedidos?: boolean;
+    imagenPublicId?: string;
     nombre: string;
     descripcion?: string;
     catalogoId?: string;

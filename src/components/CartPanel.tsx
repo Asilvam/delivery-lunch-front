@@ -18,6 +18,7 @@ import type { CartItem } from "../types/cart";
 import { getRemainingDishStock } from "../domain/cart/stock.rules";
 
 interface CartPanelProps {
+  orderingOpen?: boolean;
   cartItems: CartItem[];
   totalItems: number;
   totalPrice: number;
@@ -37,6 +38,7 @@ export function CartPanel({
   onUpdateQuantity,
   onRemove,
   onConfirmOrder,
+  orderingOpen = true,
 }: CartPanelProps) {
   return (
     <Box
@@ -232,7 +234,7 @@ export function CartPanel({
                         <IconButton
                           aria-label={`Agregar una porción de ${name}`}
                           onClick={() => onUpdateQuantity(item.key, 1)}
-                          disabled={atLimit}
+                          disabled={atLimit || !orderingOpen}
                           sx={{ width: 44, height: 44 }}
                         >
                           <AddIcon sx={{ fontSize: 18 }} />
@@ -369,6 +371,7 @@ export function CartPanel({
             size="large"
             endIcon={<ArrowForwardRoundedIcon />}
             onClick={onConfirmOrder}
+            disabled={!orderingOpen}
           >
             Continuar a confirmar
           </Button>

@@ -29,7 +29,12 @@ export default function MenuPricesPage() {
   };
   return (
     <PageLayout header={<StaffNavigation />}>
-      <Typography component="h1" variant="h4" fontWeight={800} sx={{ mb: 1 }}>
+      <Typography
+        component="h1"
+        variant="h4"
+        fontWeight={800}
+        sx={{ mb: 0.75, fontSize: { xs: "1.65rem", sm: "2.125rem" } }}
+      >
         Menús y biblioteca
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -38,8 +43,22 @@ export default function MenuPricesPage() {
       <Tabs
         value={tab}
         onChange={(_, value: number) => void changeTab(value)}
-        variant="fullWidth"
-        sx={{ mb: 3 }}
+        sx={{
+          mb: 2.5,
+          mt: 2.5,
+          minHeight: 44,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          "& .MuiTabs-flexContainer": { width: { xs: "100%", sm: "auto" } },
+          "& .MuiTab-root": {
+            flex: { xs: 1, sm: "0 0 auto" },
+            minWidth: 0,
+            px: { xs: 1, sm: 3 },
+            textTransform: "none",
+            fontWeight: 700,
+            fontSize: { xs: "0.8rem", sm: "0.9rem" },
+          },
+        }}
         aria-label="Administración de menús"
       >
         <Tab label="Menús del día" id="menus-tab" aria-controls="menus-panel" />

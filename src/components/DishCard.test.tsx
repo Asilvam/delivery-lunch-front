@@ -28,13 +28,25 @@ describe("Menu prices", () => {
   });
   it("shows the actual special price and preserves it in the cart", () => {
     const add = vi.fn();
-    render(<DishCard dish={{ ...dish, price: 6500 }} basePrice={5500} onAddToCart={add} />);
+    render(
+      <DishCard
+        dish={{ ...dish, price: 6500 }}
+        basePrice={5500}
+        onAddToCart={add}
+      />,
+    );
     expect(screen.getByText("$6.500")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /^Agregar / }));
     expect(add.mock.calls[0][0].price).toBe(6500);
   });
   it("hides the price when it matches a different configured general price", () => {
-    render(<DishCard dish={{ ...dish, price: 6500 }} basePrice={6500} onAddToCart={vi.fn()} />);
+    render(
+      <DishCard
+        dish={{ ...dish, price: 6500 }}
+        basePrice={6500}
+        onAddToCart={vi.fn()}
+      />,
+    );
     expect(screen.queryByText("$6.500")).toBeNull();
     expect(screen.queryByText("$5.500")).toBeNull();
   });
@@ -70,4 +82,22 @@ describe("Menu prices", () => {
       true,
     );
   });
+});
+
+it("blocks menu selection and protein choices outside ordering hours", () => {
+  const add = vi.fn();
+  render(
+    <DishCard
+      dish={{ ...dish, isHipo: true }}
+      orderingOpen={false}
+      onAddToCart={add}
+    />,
+  );
+  expect(
+    screen
+      .getByRole("combobox", { name: /Proteína/ })
+      .getAttribute("aria-disabled"),
+  ).toBe("true");
+  fireEvent.click(screen.getByRole("button", { name: "Elige tu proteína" }));
+  expect(add).not.toHaveBeenCalled();
 });

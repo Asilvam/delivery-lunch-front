@@ -24,6 +24,7 @@ import { MENU_DESSERT, MENU_PRICE, MENU_SALAD } from "../domain/menu/menuOffer";
 import styles from "./DishCard.module.css";
 
 interface Props {
+  orderingOpen?: boolean;
   dish: Dish;
   basePrice?: number;
   onAddToCart: (
@@ -52,6 +53,7 @@ export function DishCard({
   basePrice = MENU_PRICE,
   onAddToCart,
   remainingSharedStock,
+  orderingOpen = true,
 }: Props) {
   const proteinId = useId();
   const [protein, setProtein] = useState("");
@@ -61,7 +63,7 @@ export function DishCard({
   const soldOut = dish.stock === 0;
   const cartLimit = !soldOut && stock === 0;
   const needsProtein = isHipo && !options.includes(protein);
-  const disabled = soldOut || cartLimit || needsProtein;
+  const disabled = !orderingOpen || soldOut || cartLimit || needsProtein;
   const [title, subtitle] = isHipo
     ? ["Menú hipocalórico", ""]
     : (TITLES[dish.name] ?? [dish.name, ""]);
@@ -140,7 +142,9 @@ export function DishCard({
             sx={{ width: "100%", minWidth: 0 }}
             size="small"
             required
-            disabled={soldOut || cartLimit || options.length === 0}
+            disabled={
+              !orderingOpen || soldOut || cartLimit || options.length === 0
+            }
             className={styles.proteinControl}
           >
             <InputLabel shrink id={`${proteinId}-label`}>

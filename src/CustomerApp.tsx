@@ -1,3 +1,8 @@
+import { useOrderingHours } from "./hooks/useOrderingHours";
+import {
+  isOrderingOpen,
+  ORDERING_HOURS_MESSAGE,
+} from "./domain/orders/orderingHours";
 import axios from "axios";
 import { Outlet, useLocation, useOutletContext } from "react-router-dom";
 import type { Dispatch, SetStateAction } from "react";
@@ -64,13 +69,18 @@ function refreshCartPrices(items: CartItem[], menus: DailyMenu[]): CartItem[] {
 
 export default function CustomerApp() {
   const { session, signOut } = useCustomerSession();
+  const orderingOpen = useOrderingHours();
+  const notifyClosed = () =>
+    void userToast.fire({ icon: "info", title: ORDERING_HOURS_MESSAGE });
   const { pathname } = useLocation();
   const previousPathname = useRef(pathname);
   useEffect(() => {
     if (previousPathname.current === pathname) return;
     previousPathname.current = pathname;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    document.querySelector<HTMLElement>("main h1")?.focus({ preventScroll: true });
+    document
+      .querySelector<HTMLElement>("main h1")
+      ?.focus({ preventScroll: true });
   }, [pathname]);
   const sending = useRef(false);
   const [receipt, setReceipt] = useState<{
@@ -98,6 +108,27 @@ export default function CustomerApp() {
   }, [cartItems]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const cartTrigger = useRef<HTMLButtonElement>(null);
+  const setCartOpen = (open: boolean) => {
+    if (open === isCartOpen) return;
+    // Libera el foco antes de que MUI oculte el fondo o el panel que sale.
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+    setIsCartOpen(open);
+  };
+  const setCheckoutOpen = (open: boolean) => {
+    if (open === isOrderDialogOpen) return;
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+    setIsOrderDialogOpen(open);
+  };
+  const restoreCartFocus = () => {
+    if (isCartOpen || isOrderDialogOpen || receipt) return;
+    const trigger = cartTrigger.current;
+    if (trigger?.isConnected && !trigger.closest('[aria-hidden="true"]')) {
+      trigger.focus({ preventScroll: true });
+    }
+  };
   const [menus, setMenus] = useState<DailyMenu[]>([]);
   const [isLoadingMenus, setIsLoadingMenus] = useState(true);
   const [menuLoadError, setMenuLoadError] = useState<string | null>(null);
@@ -167,13 +198,17 @@ export default function CustomerApp() {
     selections: DishSelections,
     visibility: DishSelectionVisibility,
   ) => {
+    if (!isOrderingOpen()) {
+      notifyClosed();
+      return;
+    }
     if (getPendingOrder()) {
       void userToast.fire({
         icon: "info",
         title:
           "Confirma el resultado del envío pendiente antes de cambiar el pedido.",
       });
-      setIsOrderDialogOpen(true);
+      setCheckoutOpen(true);
       return;
     }
     const cartItemKey = buildCartItemKey(dishToAdd.id, selections);
@@ -232,8 +267,12 @@ export default function CustomerApp() {
   };
 
   const handleUpdateQuantity = (cartItemKey: string, delta: number) => {
+    if (delta > 0 && !isOrderingOpen()) {
+      notifyClosed();
+      return;
+    }
     if (getPendingOrder()) {
-      setIsOrderDialogOpen(true);
+      setCheckoutOpen(true);
       return;
     }
     const targetItem = cartItems.find((item) => item.key === cartItemKey);
@@ -262,13 +301,17 @@ export default function CustomerApp() {
 
   const handleRemoveFromCart = (cartItemKey: string) => {
     if (getPendingOrder()) {
-      setIsOrderDialogOpen(true);
+      setCheckoutOpen(true);
       return;
     }
     setCartItems((prev) => prev.filter((item) => item.key !== cartItemKey));
   };
 
   const handleConfirmOrder = () => {
+    if (!isOrderingOpen() && !getPendingOrder()) {
+      notifyClosed();
+      return;
+    }
     if (cartItems.length === 0) {
       void userToast.fire({
         icon: "info",
@@ -277,11 +320,15 @@ export default function CustomerApp() {
       return;
     }
     logger.info("[App] Abriendo dialog de confirmación de pedido");
-    setIsCartOpen(false);
-    setIsOrderDialogOpen(true);
+    setCartOpen(false);
+    setCheckoutOpen(true);
   };
 
   const handleSubmitOrder = async (payload: OrderPayload) => {
+    if (!isOrderingOpen() && !getPendingOrder()) {
+      notifyClosed();
+      return;
+    }
     if (!session || sending.current) return;
     sending.current = true;
     try {
@@ -291,7 +338,7 @@ export default function CustomerApp() {
         session.customer.googleId,
       );
       setPendingOrder(null);
-      setIsOrderDialogOpen(false);
+      setCheckoutOpen(false);
       setCartItems([]);
       sessionStorage.removeItem("checkout_contact");
       triggerCompletionFeedback();
@@ -308,8 +355,8 @@ export default function CustomerApp() {
         axios.isAxiosError(error) &&
         error.response?.data?.code === "PRICE_CHANGED"
       ) {
-        setIsOrderDialogOpen(false);
-        setIsCartOpen(true);
+        setCheckoutOpen(false);
+        setCartOpen(true);
         try {
           const fresh = await fetchDailyMenus();
           setMenus(fresh);
@@ -366,9 +413,10 @@ export default function CustomerApp() {
           <BrandHeader
             right={
               <IconButton
+                ref={cartTrigger}
                 aria-label="Abrir mi pedido"
                 color="primary"
-                onClick={() => setIsCartOpen(true)}
+                onClick={() => setCartOpen(true)}
                 sx={{
                   bgcolor:
                     totalItems > 0 ? "rgba(216,27,96,0.08)" : "transparent",
@@ -388,11 +436,22 @@ export default function CustomerApp() {
           />
         }
       >
+        {!orderingOpen && (
+          <Box
+            role="status"
+            sx={{ mb: 2, p: 2, bgcolor: "secondary.light", borderRadius: 2 }}
+          >
+            <Typography fontWeight={700}>Pedidos cerrados por ahora</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {ORDERING_HOURS_MESSAGE}
+            </Typography>
+          </Box>
+        )}
         {pendingOrder && (
           <Alert
             severity="warning"
             action={
-              <Button onClick={() => setIsOrderDialogOpen(true)}>
+              <Button onClick={() => setCheckoutOpen(true)}>
                 Confirmar resultado
               </Button>
             }
@@ -403,17 +462,20 @@ export default function CustomerApp() {
         )}
 
         <Outlet
-          context={{
-            selectedMenu,
-            menusForNavigation,
-            isLoadingMenus,
-            menuLoadError,
-            selectedMenuIndex,
-            setSelectedMenuIndex,
-            basePrice,
-            cartItems,
-            handleAddToCart,
-          } satisfies CustomerPageContext}
+          context={
+            {
+              selectedMenu,
+              menusForNavigation,
+              isLoadingMenus,
+              menuLoadError,
+              selectedMenuIndex,
+              setSelectedMenuIndex,
+              basePrice,
+              cartItems,
+              handleAddToCart,
+              orderingOpen,
+            } satisfies CustomerPageContext
+          }
         />
       </PageLayout>
 
@@ -421,10 +483,13 @@ export default function CustomerApp() {
       {isMobile ? (
         <Dialog
           open={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
+          onClose={() => setCartOpen(false)}
+          disableRestoreFocus
+          aria-label="Resumen del pedido"
           fullWidth
           maxWidth="sm"
           slotProps={{
+            transition: { onExited: restoreCartFocus },
             paper: {
               sx: {
                 borderRadius: 2,
@@ -437,11 +502,12 @@ export default function CustomerApp() {
           }}
         >
           <CartPanel
+            orderingOpen={orderingOpen}
             cartItems={cartItems}
             totalItems={totalItems}
             totalPrice={totalPrice}
             isMobile={isMobile}
-            onClose={() => setIsCartOpen(false)}
+            onClose={() => setCartOpen(false)}
             onUpdateQuantity={handleUpdateQuantity}
             onRemove={handleRemoveFromCart}
             onConfirmOrder={handleConfirmOrder}
@@ -450,15 +516,18 @@ export default function CustomerApp() {
       ) : (
         <Drawer
           anchor="right"
+          ModalProps={{ disableRestoreFocus: true }}
+          slotProps={{ transition: { onExited: restoreCartFocus } }}
           open={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
+          onClose={() => setCartOpen(false)}
         >
           <CartPanel
+            orderingOpen={orderingOpen}
             cartItems={cartItems}
             totalItems={totalItems}
             totalPrice={totalPrice}
             isMobile={isMobile}
-            onClose={() => setIsCartOpen(false)}
+            onClose={() => setCartOpen(false)}
             onUpdateQuantity={handleUpdateQuantity}
             onRemove={handleRemoveFromCart}
             onConfirmOrder={handleConfirmOrder}
@@ -478,15 +547,17 @@ export default function CustomerApp() {
       {/* ─── DIALOG CONFIRMACIÓN PEDIDO ───────────────────────────────────────── */}
       {(selectedMenu || pendingOrder) && (
         <OrderConfirmDialog
+          orderingOpen={orderingOpen}
           open={isOrderDialogOpen}
           menu={selectedMenu}
           cartItems={cartItems}
           totalPrice={totalPrice}
           pendingPayload={pendingOrder?.payload}
           onClose={() => {
-            setIsOrderDialogOpen(false);
-            setIsCartOpen(true);
+            setCheckoutOpen(false);
+            setCartOpen(true);
           }}
+          onExited={restoreCartFocus}
           onSubmit={handleSubmitOrder}
         />
       )}
@@ -495,6 +566,7 @@ export default function CustomerApp() {
 }
 
 interface CustomerPageContext {
+  orderingOpen: boolean;
   selectedMenu: DailyMenu | undefined;
   menusForNavigation: DailyMenu[];
   isLoadingMenus: boolean;
@@ -511,10 +583,11 @@ interface CustomerPageContext {
 }
 
 export function CustomerHomePage() {
-  const { selectedMenu, isLoadingMenus, basePrice } =
+  const { selectedMenu, isLoadingMenus, basePrice, orderingOpen } =
     useOutletContext<CustomerPageContext>();
   return (
     <CustomerHero
+      orderingOpen={orderingOpen}
       basePrice={!isLoadingMenus && selectedMenu ? basePrice : undefined}
       dishes={selectedMenu?.dishes}
       isLoading={isLoadingMenus}
@@ -533,6 +606,7 @@ export function CustomerMenuPage() {
     basePrice,
     cartItems,
     handleAddToCart,
+    orderingOpen,
   } = useOutletContext<CustomerPageContext>();
   const canGoBack = selectedMenuIndex > 0;
   const canGoForward = selectedMenuIndex < menusForNavigation.length - 1;
@@ -655,9 +729,7 @@ export function CustomerMenuPage() {
               }
               size="small"
               sx={{
-                bgcolor: canGoForward
-                  ? "rgba(216,27,96,0.08)"
-                  : "transparent",
+                bgcolor: canGoForward ? "rgba(216,27,96,0.08)" : "transparent",
                 border: "1px solid",
                 borderColor: canGoForward ? "rgba(216,27,96,0.2)" : "divider",
               }}
@@ -706,6 +778,7 @@ export function CustomerMenuPage() {
           {selectedMenu.dishes.map((dish) => (
             <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <DishCard
+                orderingOpen={orderingOpen}
                 dish={dish}
                 basePrice={basePrice}
                 onAddToCart={handleAddToCart}

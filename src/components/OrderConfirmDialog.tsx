@@ -25,12 +25,14 @@ import type { OrderPayload } from "../types/order";
 import styles from "./OrderConfirmDialog.module.css";
 
 interface OrderConfirmDialogProps {
+  orderingOpen?: boolean;
   open: boolean;
   menu?: DailyMenu;
   cartItems: CartItem[];
   totalPrice: number;
   pendingPayload?: OrderPayload;
   onClose: () => void;
+  onExited?: () => void;
   onSubmit: (payload: OrderPayload) => Promise<void>;
 }
 
@@ -40,8 +42,10 @@ export const OrderConfirmDialog = ({
   cartItems,
   totalPrice,
   onClose,
+  onExited,
   onSubmit,
   pendingPayload,
+  orderingOpen = true,
 }: OrderConfirmDialogProps) => {
   const { session } = useCustomerSession();
   const submitting = useRef(false);
@@ -84,6 +88,7 @@ export const OrderConfirmDialog = ({
   };
 
   const handleSubmit = async () => {
+    if (!orderingOpen && !pendingPayload) return;
     if (!session || submitting.current || (!pendingPayload && !validate()))
       return;
     if ((!menu || cartItems.length === 0) && !pendingPayload) return;
@@ -129,13 +134,19 @@ export const OrderConfirmDialog = ({
     <Dialog
       open={open}
       onClose={handleClose}
+      disableRestoreFocus
+      slotProps={{ transition: { onExited } }}
       fullWidth
       maxWidth="md"
       aria-labelledby={`${formId}-title`}
       aria-describedby={`${formId}-description`}
       PaperProps={{ className: styles.dialogPaper }}
     >
-      <DialogTitle id={`${formId}-header`} className={styles.title} component="div">
+      <DialogTitle
+        id={`${formId}-header`}
+        className={styles.title}
+        component="div"
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
@@ -330,6 +341,7 @@ export const OrderConfirmDialog = ({
           variant="contained"
           disabled={
             isSubmitting ||
+            (!orderingOpen && !pendingPayload) ||
             !session ||
             (!pendingPayload && (!menu || cartItems.length === 0))
           }

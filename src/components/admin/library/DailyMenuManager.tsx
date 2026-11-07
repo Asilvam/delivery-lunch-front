@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
-  TextField,
   Typography,
+  TextField,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMountedRef } from "../../../hooks/useMountedRef";
 import {
@@ -26,19 +27,15 @@ import {
   fetchLibrary,
   libraryError,
   saveComposition,
+  saveMenuPublication,
+  type MenuPublicationInput,
   type AdminMenuSummary,
   type LibraryDish,
   type MenuCompositionInput,
 } from "../../../data/services/dishLibraryApi.service";
-import {
-  saveMenuPrices,
-  type MenuPricesInput,
-} from "../../../data/services/menuPricingApi.service";
 import type { BackendDailyMenuDto } from "../../../types/menu";
 import MenuCompositionEditor from "./MenuCompositionEditor";
-import MenuPricesEditor from "../MenuPricesEditor";
-import MenuPublicationPreview from "./MenuPublicationPreview";
-import { mapBackendDishToDish } from "../../../data/mappers/menu.mapper";
+import PublishedMenuEditor from "./PublishedMenuEditor";
 import { parseIsoDate } from "../../../shared/utils/date/menuDate";
 
 export default function DailyMenuManager({
@@ -59,8 +56,12 @@ export default function DailyMenuManager({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [preview, setPreview] = useState(false);
   const [revision, setRevision] = useState(0);
+  const [creating, setCreating] = useState(false);
+  const [newDate, setNewDate] = useState("");
+  const [checkingDate, setCheckingDate] = useState(false);
+  const [existingDate, setExistingDate] = useState(false);
+  const [createError, setCreateError] = useState("");
   const dirty = useRef(false);
   const mark = (value: boolean) => {
     dirty.current = value;
@@ -101,13 +102,9 @@ export default function DailyMenuManager({
     return () => window.removeEventListener("beforeunload", warn);
   }, []);
   const changeDate = async (value: string) => {
-    if (
-      value === date ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
-      !parseIsoDate(value) ||
-      saving
-    )
-      return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !parseIsoDate(value) || saving)
+      return false;
+    if (value === date) return true;
     if (
       dirty.current &&
       !(
@@ -120,10 +117,11 @@ export default function DailyMenuManager({
         })
       ).isConfirmed
     )
-      return;
+      return false;
     mark(false);
     setLoading(true);
     setDate(value);
+    return true;
   };
   const save = async (input: MenuCompositionInput) => {
     if (!token || saving) return;
@@ -165,69 +163,205 @@ export default function DailyMenuManager({
       if (mounted.current) setSaving(false);
     }
   };
-  const savePrices = async (input: MenuPricesInput) => {
+  const savePublished = async (input: MenuPublicationInput) => {
     if (!token || !menu || saving) return;
     setSaving(true);
     try {
-      const result = await saveMenuPrices(menu._id, input, token);
+      const result = await saveMenuPublication(token, menu._id, input);
       if (mounted.current) {
         mark(false);
         setMenu(result);
         void staffToast.fire({
           icon: "success",
-          title: "Precios guardados",
+          title: "Menú actualizado",
           timer: STAFF_ACTION_DURATION_MS,
         });
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted.current)
         void staffToast.fire({
           icon: "error",
-          title: libraryError(e, "No pudimos guardar los precios"),
+          title: libraryError(
+            error,
+            "No pudimos guardar el menú. Conservamos tus cambios.",
+          ),
         });
     } finally {
       if (mounted.current) setSaving(false);
     }
   };
+  const reload = async () => {
+    if (saving) return;
+    if (
+      dirty.current &&
+      !(
+        await appAlert.fire({
+          title: "¿Recargar el menú?",
+          text: "Se descartarán los cambios que aún no guardaste.",
+          showCancelButton: true,
+          confirmButtonText: "Recargar",
+          cancelButtonText: "Seguir editando",
+        })
+      ).isConfirmed
+    )
+      return;
+    mark(false);
+    setLoading(true);
+    setRevision((value) => value + 1);
+  };
+  const openCreate = () => {
+    const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "America/Santiago",
+    });
+    const occupied = new Set(previous.map((item) => item.fecha));
+    const candidate = new Date(`${today}T12:00:00Z`);
+    while (occupied.has(candidate.toISOString().slice(0, 10)))
+      candidate.setUTCDate(candidate.getUTCDate() + 1);
+    setNewDate(candidate.toISOString().slice(0, 10));
+    setExistingDate(false);
+    setCreateError("");
+    setCreating(true);
+  };
+  const startMenu = async () => {
+    if (!token || checkingDate || !parseIsoDate(newDate)) return;
+    setCheckingDate(true);
+    setCreateError("");
+    try {
+      const existing = await fetchAdminMenu(token, newDate);
+      if (!mounted.current) return;
+      if (existing && !existingDate) {
+        setExistingDate(true);
+        return;
+      }
+      if (await changeDate(newDate)) setCreating(false);
+    } catch (error) {
+      if (mounted.current)
+        setCreateError(
+          libraryError(
+            error,
+            "No pudimos comprobar la fecha. Intenta nuevamente.",
+          ),
+        );
+    } finally {
+      if (mounted.current) setCheckingDate(false);
+    }
+  };
   const published = menu && menu.estado !== "borrador";
-  const text = (value: unknown) =>
-    Array.isArray(value)
-      ? value.join(", ")
-      : typeof value === "string"
-        ? value
-        : "";
   return (
     <Box>
-      <Box
+      <Paper
+        variant="outlined"
         sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
+          p: { xs: 2, sm: 2.5 },
+          mb: 2.5,
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "minmax(0, 1fr) auto",
+          },
           gap: 2,
-          mb: 3,
+          alignItems: "center",
         }}
       >
-        <TextField
-          label="Fecha del menú"
-          type="date"
-          value={date}
-          disabled={saving}
-          onChange={(e) => void changeDate(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
-        <Chip
-          label={
-            loading
-              ? "Cargando…"
-              : published
-                ? "Publicado"
-                : menu
-                  ? "Borrador"
-                  : "Nuevo menú"
-          }
-          color={published ? "success" : "default"}
-        />
-      </Box>
+        <Box
+          sx={{ display: "flex", gap: 1.5, alignItems: "center", minWidth: 0 }}
+        >
+          <TextField
+            label="Fecha del menú"
+            type="date"
+            size="small"
+            value={date}
+            disabled={saving || checkingDate}
+            onChange={(e) => void changeDate(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+            sx={{ flex: { xs: 1, sm: "0 1 185px" }, minWidth: 0 }}
+          />
+          <Chip
+            size="small"
+            label={
+              loading
+                ? "Cargando…"
+                : published
+                  ? "Publicado"
+                  : menu
+                    ? "Borrador"
+                    : "Sin guardar"
+            }
+            color={published ? "success" : "default"}
+          />
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={openCreate}
+          disabled={loading || saving}
+        >
+          Crear nuevo menú
+        </Button>
+      </Paper>
+      <Dialog
+        open={creating}
+        onClose={() => {
+          if (!checkingDate) setCreating(false);
+        }}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="create-menu-title"
+      >
+        <Box
+          component="form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void startMenu();
+          }}
+        >
+          <DialogTitle id="create-menu-title">Crear nuevo menú</DialogTitle>
+          <DialogContent sx={{ display: "grid", gap: 2, pt: "8px !important" }}>
+            <Typography variant="body2" color="text.secondary">
+              Elige la fecha. Después selecciona los platos y sus porciones;
+              podrás guardar un borrador o publicar.
+            </Typography>
+            <TextField
+              label="Fecha del nuevo menú"
+              type="date"
+              value={newDate}
+              autoFocus
+              fullWidth
+              required
+              disabled={checkingDate}
+              onChange={(event) => {
+                setNewDate(event.target.value);
+                setExistingDate(false);
+                setCreateError("");
+              }}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            {existingDate && (
+              <Alert severity="info">
+                Ya existe un menú para esta fecha. Puedes abrirlo para editarlo
+                o elegir otra fecha.
+              </Alert>
+            )}
+            {createError && <Alert severity="error">{createError}</Alert>}
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5, pt: 1, gap: 1 }}>
+            <Button onClick={() => setCreating(false)} disabled={checkingDate}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={checkingDate || !parseIsoDate(newDate)}
+            >
+              {checkingDate
+                ? "Comprobando…"
+                : existingDate
+                  ? "Abrir menú existente"
+                  : "Continuar"}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
       {error && (
         <Alert
           severity="error"
@@ -255,40 +389,15 @@ export default function DailyMenuManager({
         token && (
           <>
             {published ? (
-              <>
-                <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, mb: 2 }}>
-                  <Typography component="h2" variant="h6" fontWeight={700}>
-                    Menú publicado · {menu.platos.length} platos
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 1, mb: 2 }}
-                  >
-                    Para preparar otro día, cambia la fecha. Puedes reutilizar
-                    esta selección al crear el nuevo menú.
-                  </Typography>
-                  <Button variant="outlined" onClick={() => setPreview(true)}>
-                    Ver publicación
-                  </Button>
-                </Paper>
-                <Accordion variant="outlined">
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography fontWeight={700}>
-                      Editar precio general y excepciones
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <MenuPricesEditor
-                      key={`${menu._id}-${menu.updatedAt}`}
-                      menu={menu}
-                      saving={saving}
-                      onSave={savePrices}
-                      onDirtyChange={mark}
-                    />
-                  </AccordionDetails>
-                </Accordion>
-              </>
+              <PublishedMenuEditor
+                key={`${menu._id}-${menu.updatedAt}`}
+                menu={menu}
+                library={library}
+                saving={saving}
+                onSave={savePublished}
+                onDirtyChange={mark}
+                onReload={() => void reload()}
+              />
             ) : (
               <MenuCompositionEditor
                 key={`${date}-${menu?._id ?? "new"}-${menu?.updatedAt ?? revision}`}
@@ -305,24 +414,6 @@ export default function DailyMenuManager({
             )}
           </>
         )
-      )}
-      {preview && menu && (
-        <MenuPublicationPreview
-          fecha={menu.fecha}
-          precioBase={menu.precioBase ?? 5500}
-          includes={`${text(menu.ensalada)} · ${menu.pan} · ${text(menu.postre)}`}
-          dishes={menu.platos.map((p) => ({
-            id: p._id,
-            nombre: p.nombre,
-            descripcion: p.descripcion,
-            imagenUrl: mapBackendDishToDish(p).imageUrl,
-            precio: p.precio,
-            stock: p.stock ?? 0,
-            esHipo: p.es_hipo,
-            opciones: p.opciones ?? [],
-          }))}
-          onClose={() => setPreview(false)}
-        />
       )}
     </Box>
   );

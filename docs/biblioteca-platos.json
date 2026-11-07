@@ -1,14 +1,14 @@
 {
-  "versionInventario": 1,
+  "versionInventario": 2,
   "estado": "disponible_para_importacion_administrador",
   "precioGeneralPorDefecto": 5500,
   "reglaPrecio": "El precio especial se define opcionalmente en la publicación diaria; vacío hereda el general.",
   "reglaImagen": "Toda fotografía publicada se alojará en Cloudinary y se vinculará a su plato; se reutiliza al republicar.",
   "resumen": {
     "fichasPropuestas": 23,
-    "fotosExistentesLocales": 17,
+    "fotosExistentesLocales": 23,
     "fotosNuevasPorPreparar": 0,
-    "fotosNuevasRecibidas": 17,
+    "fotosNuevasRecibidas": 23,
     "fotosCloudinary": 23,
     "fotosPendientesCloudinary": 0
   },
@@ -21,7 +21,7 @@
     "Se corrigieron tildes, mayúsculas, Polllo y la escritura lazaña a lasaña sin cambiar los acompañamientos.",
     "Las fechas de los listados son referencias del historial: este inventario no crea ni republica menús de esas fechas.",
     "Se recibieron y revisaron las 17 fotos faltantes; archivos originales conservados. La receta exacta debe concordar con las imágenes, en particular el zapallo italiano y la lasaña.",
-    "Las 23 imágenes están subidas a Cloudinary y asociadas en este manifiesto. Las copias de preparación de las 17 nuevas están en .tmp/biblioteca-platos, excluidas de Git. El despliegue no carga ni publica datos automáticamente."
+    "Las 23 fotos actuales de la biblioteca están verificadas en Cloudinary a 1254 × 1254. Se conservaron sin cambios las 8 que ya cumplían y se actualizaron las otras 15 con el catálogo completo recibido. Los identificadores se mantuvieron y se guardaron las nuevas URLs versionadas. Las copias de preparación y respaldos están excluidos de Git."
   ],
   "platos": [
     {
@@ -30,11 +30,13 @@
       "categoria": "Pollo",
       "archivoImagenSugerido": "pollo-asado-arroz-papas-fritas.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794003979/delivery-lunch/biblioteca/pollo-asado-arroz-papas-fritas-7be5b8760d4b.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017542/delivery-lunch/biblioteca/pollo-asado-arroz-papas-fritas-7be5b8760d4b.png",
       "imagenPublicId": "delivery-lunch/biblioteca/pollo-asado-arroz-papas-fritas-7be5b8760d4b",
-      "imagenAncho": 1448,
-      "imagenAlto": 1086,
-      "imagenSha256": "7be5b8760d4bd796f3fe5721cde30798407cac4f555f991136c4d3231df10d95"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "a4a5123f0cf841f9e97188be837ea5d8137286e4aee5f549bc7b360bcbe7a04e",
+      "archivoOrigen": "18_pollo_asado_arroz_papas_fritas.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/18_pollo_asado_arroz_papas_fritas.png"
     },
     {
       "clave": "pollo-asado-fideos",
@@ -42,11 +44,13 @@
       "categoria": "Pollo",
       "archivoImagenSugerido": "pollo-asado-fideos.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794003981/delivery-lunch/biblioteca/pollo-asado-fideos-c3af6fde4fa3.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017545/delivery-lunch/biblioteca/pollo-asado-fideos-c3af6fde4fa3.png",
       "imagenPublicId": "delivery-lunch/biblioteca/pollo-asado-fideos-c3af6fde4fa3",
-      "imagenAncho": 1448,
-      "imagenAlto": 1086,
-      "imagenSha256": "c3af6fde4fa3986ff2f1cbd356adce37eb785f553bfaea079ad7a1ac7ebe2b1c"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "2b15865a3bf7472789ff3b0446d9828fd2433c3ce55b3a82da56cb18dd6d071e",
+      "archivoOrigen": "19_pollo_asado_fideos_salsa.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/19_pollo_asado_fideos_salsa.png"
     },
     {
       "clave": "cerdo-mongoliano-arroz",
@@ -54,11 +58,13 @@
       "categoria": "Cerdo",
       "archivoImagenSugerido": "cerdo-mongoliano-arroz.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794003981/delivery-lunch/biblioteca/cerdo-mongoliano-arroz-aac3bfcc4cf8.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017549/delivery-lunch/biblioteca/cerdo-mongoliano-arroz-aac3bfcc4cf8.png",
       "imagenPublicId": "delivery-lunch/biblioteca/cerdo-mongoliano-arroz-aac3bfcc4cf8",
-      "imagenAncho": 487,
-      "imagenAlto": 382,
-      "imagenSha256": "aac3bfcc4cf843945f3293386925eb2f5168680ad6d05bd468afe7ccd49af2fa"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "1d11013b938cdfa39d349dea5e9e707a1e69a7a301648b1b97bb6d578b958c5b",
+      "archivoOrigen": "20_cerdo_mongoliano_arroz.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/20_cerdo_mongoliano_arroz.png"
     },
     {
       "clave": "cerdo-mongoliano-fideos",
@@ -66,11 +72,13 @@
       "categoria": "Cerdo",
       "archivoImagenSugerido": "cerdo-mongoliano-fideos.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794003982/delivery-lunch/biblioteca/cerdo-mongoliano-fideos-5a39896645e3.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017552/delivery-lunch/biblioteca/cerdo-mongoliano-fideos-5a39896645e3.png",
       "imagenPublicId": "delivery-lunch/biblioteca/cerdo-mongoliano-fideos-5a39896645e3",
-      "imagenAncho": 738,
-      "imagenAlto": 394,
-      "imagenSha256": "5a39896645e32f42be5941ae7396a7c74bd4fa268ec00d0a7e92c8fe4ba27b31"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "803142be17854e9081058bb543594154273532a897a0d6d205b0d8d05dcc29fd",
+      "archivoOrigen": "21_cerdo_mongoliano_fideos.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/21_cerdo_mongoliano_fideos.png"
     },
     {
       "clave": "porotos-con-riendas",
@@ -78,11 +86,13 @@
       "categoria": "Legumbres",
       "archivoImagenSugerido": "porotos-con-riendas.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794003983/delivery-lunch/biblioteca/porotos-con-riendas-f424526f4013.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017555/delivery-lunch/biblioteca/porotos-con-riendas-f424526f4013.png",
       "imagenPublicId": "delivery-lunch/biblioteca/porotos-con-riendas-f424526f4013",
-      "imagenAncho": 784,
-      "imagenAlto": 327,
-      "imagenSha256": "f424526f4013afd03d7ced7d77cdb20a25fc8afe91caab8cd44ef3b683057d83"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "32d2951ee66ca4fea9bf7deb08ae8eff0741a737aca74c04cc54f59de380c10b",
+      "archivoOrigen": "22_porotos_con_riendas.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/22_porotos_con_riendas.png"
     },
     {
       "clave": "menu-hipocalorico",
@@ -90,7 +100,7 @@
       "categoria": "Hipocalórico",
       "archivoImagenSugerido": "menu-hipocalorico.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794003988/delivery-lunch/biblioteca/menu-hipocalorico-ddc396ae1e79.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017558/delivery-lunch/biblioteca/menu-hipocalorico-ddc396ae1e79.png",
       "imagenPublicId": "delivery-lunch/biblioteca/menu-hipocalorico-ddc396ae1e79",
       "opcionesPosibles": [
         "Pollo asado",
@@ -101,9 +111,11 @@
         "Pulpa asada"
       ],
       "alternativaPorConfirmar": "Zapallo: precisar si corresponde a zapallo italiano y cómo se prepara.",
-      "imagenAncho": 1536,
-      "imagenAlto": 1024,
-      "imagenSha256": "ddc396ae1e7906f63ef7e3273841dcc144a49e4d0c6c941ea44e6f891a454146"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "c9ada9c7d4d4baffccc539e351ce2fa4e0836031258b559cc8d681fbe2f5f467",
+      "archivoOrigen": "23_hipocalorico_atun.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/23_hipocalorico_atun.png"
     },
     {
       "clave": "pollo-asado-arroz-papas-mayo",
@@ -195,14 +207,14 @@
       "nombre": "Pulpa asada con arroz y papas fritas",
       "categoria": "Pulpa",
       "archivoImagenSugerido": "pulpa-asada-arroz-papas-fritas.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/pulpa-asada-arroz-papas-fritas.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/07_pulpa_cerdo_arroz_papas_fritas.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794015249/delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-586cee3a962a.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017516/delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-586cee3a962a.png",
       "imagenPublicId": "delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-586cee3a962a",
-      "archivoOrigen": "07_pulpa_cerdo_asada_arroz_papas_fritas.png",
-      "imagenAncho": 768,
-      "imagenAlto": 1195,
-      "imagenSha256": "586cee3a962a3dbd40255988d9ff80121e934ceece0e0122cf0fb8560a3bf687"
+      "archivoOrigen": "07_pulpa_cerdo_arroz_papas_fritas.png",
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "144195d7eda18a4932386c797f7bc42ea42f3e1902851c24d14ba7e49e55b01a"
     },
     {
       "clave": "pulpa-asada-pure",
@@ -223,14 +235,14 @@
       "nombre": "Pulpa asada con fideos",
       "categoria": "Pulpa",
       "archivoImagenSugerido": "pulpa-asada-fideos.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/pulpa-asada-fideos.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/09_pulpa_cerdo_fideos.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794015247/delivery-lunch/biblioteca/pulpa-asada-fideos-ecc432356154.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017519/delivery-lunch/biblioteca/pulpa-asada-fideos-ecc432356154.png",
       "imagenPublicId": "delivery-lunch/biblioteca/pulpa-asada-fideos-ecc432356154",
-      "archivoOrigen": "09_pulpa_cerdo_asada_fideos.png",
-      "imagenAncho": 768,
-      "imagenAlto": 1195,
-      "imagenSha256": "ecc432356154c3326b7c9f3a3fa8e40d71e3a2d3bd83b3c4b126aca11b606ed4"
+      "archivoOrigen": "09_pulpa_cerdo_fideos.png",
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "5e7ca392f0c93e6a37fdbe4d71ca9f33893894f39dc53f116a1a3a11c67e4213"
     },
     {
       "clave": "carne-al-jugo-arroz-papas-fritas",
@@ -251,60 +263,60 @@
       "nombre": "Carne al jugo con fideos con salsa",
       "categoria": "Carne al jugo",
       "archivoImagenSugerido": "carne-al-jugo-fideos-salsa.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/carne-al-jugo-fideos-salsa.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/11_carne_al_jugo_fideos_salsa.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004005/delivery-lunch/biblioteca/carne-al-jugo-fideos-salsa-35f1b91acc3f.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017522/delivery-lunch/biblioteca/carne-al-jugo-fideos-salsa-35f1b91acc3f.png",
       "imagenPublicId": "delivery-lunch/biblioteca/carne-al-jugo-fideos-salsa-35f1b91acc3f",
       "archivoOrigen": "11_carne_al_jugo_fideos_salsa.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/carne-al-jugo-fideos-salsa.webp",
-      "imagenAncho": 764,
-      "imagenAlto": 778,
-      "imagenSha256": "35f1b91acc3fae86daecc41e6168934485971adaf5e9b68dc09074011a8c15fa"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "994f12bf972bf245fee54df50df64f45b253f9effa65bc950db444f5dccd6443"
     },
     {
       "clave": "cazuela-vacuno",
       "nombre": "Cazuela de vacuno",
       "categoria": "Tradicional",
       "archivoImagenSugerido": "cazuela-vacuno.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/cazuela-vacuno.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/12_cazuela_vacuno.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004006/delivery-lunch/biblioteca/cazuela-vacuno-7ed88f9c62de.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017524/delivery-lunch/biblioteca/cazuela-vacuno-7ed88f9c62de.png",
       "imagenPublicId": "delivery-lunch/biblioteca/cazuela-vacuno-7ed88f9c62de",
       "archivoOrigen": "12_cazuela_vacuno.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/cazuela-vacuno.webp",
-      "imagenAncho": 762,
-      "imagenAlto": 778,
-      "imagenSha256": "7ed88f9c62ded668c77d120773261b32623fbe77b95237a1b478c06a8eb064d1"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "575832c507ec0e1c7026d4631a7a4f89554c84ae73918d3a62c48d1e8eabdb55"
     },
     {
       "clave": "lentejas-cerdo-horno",
       "nombre": "Lentejas con cerdo al horno",
       "categoria": "Legumbres",
       "archivoImagenSugerido": "lentejas-cerdo-horno.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/lentejas-cerdo-horno.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/13_lentejas_cerdo_horno.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004006/delivery-lunch/biblioteca/lentejas-cerdo-horno-242fb553cb3f.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017526/delivery-lunch/biblioteca/lentejas-cerdo-horno-242fb553cb3f.png",
       "imagenPublicId": "delivery-lunch/biblioteca/lentejas-cerdo-horno-242fb553cb3f",
       "archivoOrigen": "13_lentejas_cerdo_horno.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/lentejas-cerdo-horno.webp",
-      "imagenAncho": 762,
-      "imagenAlto": 778,
-      "imagenSha256": "242fb553cb3f7f46b85820b6bdddb1498580acfbd38f7114424b7971848d2419"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "c21cd89e749aa622a522736b30ef8b0a226efa6b1d145152eafa4efdeef96537"
     },
     {
       "clave": "zapallo-italiano-arroz-papas-fritas",
       "nombre": "Zapallo italiano con arroz y papas fritas",
       "categoria": "Zapallo italiano",
       "archivoImagenSugerido": "zapallo-italiano-arroz-papas-fritas.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/zapallo-italiano-arroz-papas-fritas.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/14_zapallo_italiano_arroz_papas_fritas.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004007/delivery-lunch/biblioteca/zapallo-italiano-arroz-papas-fritas-f40a882ff29d.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017529/delivery-lunch/biblioteca/zapallo-italiano-arroz-papas-fritas-f40a882ff29d.png",
       "imagenPublicId": "delivery-lunch/biblioteca/zapallo-italiano-arroz-papas-fritas-f40a882ff29d",
       "archivoOrigen": "14_zapallo_italiano_arroz_papas_fritas.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/zapallo-italiano-arroz-papas-fritas.webp",
-      "imagenAncho": 764,
-      "imagenAlto": 778,
-      "imagenSha256": "f40a882ff29d13c105db6fec2dacf715e8776855ef194bb4f3d0b83188b22bf8",
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "201a4f118d1c603730a392647fb311302b56877e3c6b644e2b5c1a304e417f82",
       "notaImagen": "Se observa zapallo italiano en rodajas salteadas con arroz y papas fritas. Revisar ingredientes de la guarnición antes de publicar; algunas piezas parecen pasta."
     },
     {
@@ -312,15 +324,15 @@
       "nombre": "Lasaña",
       "categoria": "Pastas",
       "archivoImagenSugerido": "lasana.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/lasana.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/15_lasana.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004008/delivery-lunch/biblioteca/lasana-3e16d3366b78.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017533/delivery-lunch/biblioteca/lasana-3e16d3366b78.png",
       "imagenPublicId": "delivery-lunch/biblioteca/lasana-3e16d3366b78",
       "archivoOrigen": "15_lasana.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/lasana.webp",
-      "imagenAncho": 1020,
-      "imagenAlto": 754,
-      "imagenSha256": "3e16d3366b7848b3348baaf5b6f9896c0f80c799779dc388e12a666baae1a6da",
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "c16941e837750de442a6faa140f33fb46f1b0b426451298cd4373491852a3dd5",
       "notaImagen": "Se observa lasaña con relleno de apariencia cárnica. Confirmar receta antes de describir sus ingredientes."
     },
     {
@@ -328,30 +340,30 @@
       "nombre": "Charquicán con huevo",
       "categoria": "Tradicional",
       "archivoImagenSugerido": "charquican-huevo.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/charquican-huevo.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/16_charquican_huevo.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004008/delivery-lunch/biblioteca/charquican-huevo-d3cfff4e4447.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017537/delivery-lunch/biblioteca/charquican-huevo-d3cfff4e4447.png",
       "imagenPublicId": "delivery-lunch/biblioteca/charquican-huevo-d3cfff4e4447",
       "archivoOrigen": "16_charquican_huevo.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/charquican-huevo.webp",
-      "imagenAncho": 1016,
-      "imagenAlto": 754,
-      "imagenSha256": "d3cfff4e4447dd958f33f14d61539e459180d38db997ada06130aa8e6d26c6a2"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "541fcd7c8d9f7509d572dbc2b1f0451f56f3da8b5ad4b285a341e72ed2d30274"
     },
     {
       "clave": "charquican-bife-cerdo",
       "nombre": "Charquicán con bife de cerdo",
       "categoria": "Tradicional",
       "archivoImagenSugerido": "charquican-bife-cerdo.png",
-      "imagenLocalDisponible": ".tmp/biblioteca-platos/charquican-bife-cerdo.png",
+      "imagenLocalDisponible": ".tmp/biblioteca-platos/catalogo-1254/png/17_charquican_bife_cerdo.png",
       "estadoFoto": "disponible_cloudinary",
-      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794004009/delivery-lunch/biblioteca/charquican-bife-cerdo-bf907dde7a07.png",
+      "imagenUrl": "https://res.cloudinary.com/dsbpineil/image/upload/v1794017539/delivery-lunch/biblioteca/charquican-bife-cerdo-bf907dde7a07.png",
       "imagenPublicId": "delivery-lunch/biblioteca/charquican-bife-cerdo-bf907dde7a07",
       "archivoOrigen": "17_charquican_bife_cerdo.png",
       "imagenWebpLocal": ".tmp/biblioteca-platos/webp/charquican-bife-cerdo.webp",
-      "imagenAncho": 1020,
-      "imagenAlto": 754,
-      "imagenSha256": "bf907dde7a07b598d4daa8dd8b801f0716bda3725741c497cfb79281a571edc2"
+      "imagenAncho": 1254,
+      "imagenAlto": 1254,
+      "imagenSha256": "88749a440033ba7a2fc436297d242e3e4f37935cb5439d4e40c54f44246957e4"
     }
   ]
 }

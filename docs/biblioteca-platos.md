@@ -2,7 +2,7 @@
 
 Precio general inicial: **$5.500**. El precio especial es opcional por publicación diaria.
 
-**23 fichas propuestas con 23 fotografías asociadas en Cloudinary.** Se revisaron y organizaron 17 imágenes nuevas, además de las 6 existentes. Este inventario está disponible para cargar desde Administrador → Menús → Biblioteca de platos. La carga es explícita y no publica menús.
+**23 fichas con 23 fotografías asociadas en Cloudinary, verificadas a 1254 × 1254 px (1:1).** En la actualización con el catálogo completo se conservaron las 8 fotos que ya cumplían el tamaño y se reemplazaron las otras 15. Este inventario está disponible para cargar desde Administrador → Menús → Biblioteca de platos. La carga es explícita y no publica menús.
 
 ## Nuevas imágenes organizadas
 
@@ -14,30 +14,30 @@ Precio general inicial: **$5.500**. El precio especial es opcional por publicaci
 | 4 | Bife de pechuga de pavo con arroz y papas fritas | `bife-pavo-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003995/delivery-lunch/biblioteca/bife-pavo-arroz-papas-fritas-879da6629525.png) |
 | 5 | Bife de lomo de cerdo con arroz y papas fritas | `bife-lomo-cerdo-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003996/delivery-lunch/biblioteca/bife-lomo-cerdo-arroz-papas-fritas-d67bc83c561c.png) |
 | 6 | Bife de lomo de cerdo con fideos con salsa o crema | `bife-lomo-cerdo-fideos-salsa.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003997/delivery-lunch/biblioteca/bife-lomo-cerdo-fideos-567a5cb945ab.png) |
-| 7 | Pulpa asada con arroz y papas fritas | `pulpa-asada-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794015249/delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-586cee3a962a.png) |
+| 7 | Pulpa asada con arroz y papas fritas | `pulpa-asada-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017516/delivery-lunch/biblioteca/pulpa-asada-arroz-papas-fritas-586cee3a962a.png) |
 | 8 | Pulpa asada con puré | `pulpa-asada-pure.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794014897/delivery-lunch/biblioteca/pulpa-asada-pure-28448c719c47.png) |
-| 9 | Pulpa asada con fideos | `pulpa-asada-fideos.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794015247/delivery-lunch/biblioteca/pulpa-asada-fideos-ecc432356154.png) |
+| 9 | Pulpa asada con fideos | `pulpa-asada-fideos.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017519/delivery-lunch/biblioteca/pulpa-asada-fideos-ecc432356154.png) |
 | 10 | Carne al jugo con arroz y papas fritas | `carne-al-jugo-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004004/delivery-lunch/biblioteca/carne-al-jugo-arroz-papas-fritas-46b1ddfc7b82.png) |
-| 11 | Carne al jugo con fideos con salsa | `carne-al-jugo-fideos-salsa.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004005/delivery-lunch/biblioteca/carne-al-jugo-fideos-salsa-35f1b91acc3f.png) |
-| 12 | Cazuela de vacuno | `cazuela-vacuno.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004006/delivery-lunch/biblioteca/cazuela-vacuno-7ed88f9c62de.png) |
-| 13 | Lentejas con cerdo al horno | `lentejas-cerdo-horno.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004006/delivery-lunch/biblioteca/lentejas-cerdo-horno-242fb553cb3f.png) |
-| 14 | Zapallo italiano con arroz y papas fritas | `zapallo-italiano-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004007/delivery-lunch/biblioteca/zapallo-italiano-arroz-papas-fritas-f40a882ff29d.png) |
-| 15 | Lasaña | `lasana.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004008/delivery-lunch/biblioteca/lasana-3e16d3366b78.png) |
-| 16 | Charquicán con huevo | `charquican-huevo.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004008/delivery-lunch/biblioteca/charquican-huevo-d3cfff4e4447.png) |
-| 17 | Charquicán con bife de cerdo | `charquican-bife-cerdo.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794004009/delivery-lunch/biblioteca/charquican-bife-cerdo-bf907dde7a07.png) |
+| 11 | Carne al jugo con fideos con salsa | `carne-al-jugo-fideos-salsa.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017522/delivery-lunch/biblioteca/carne-al-jugo-fideos-salsa-35f1b91acc3f.png) |
+| 12 | Cazuela de vacuno | `cazuela-vacuno.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017524/delivery-lunch/biblioteca/cazuela-vacuno-7ed88f9c62de.png) |
+| 13 | Lentejas con cerdo al horno | `lentejas-cerdo-horno.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017526/delivery-lunch/biblioteca/lentejas-cerdo-horno-242fb553cb3f.png) |
+| 14 | Zapallo italiano con arroz y papas fritas | `zapallo-italiano-arroz-papas-fritas.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017529/delivery-lunch/biblioteca/zapallo-italiano-arroz-papas-fritas-f40a882ff29d.png) |
+| 15 | Lasaña | `lasana.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017533/delivery-lunch/biblioteca/lasana-3e16d3366b78.png) |
+| 16 | Charquicán con huevo | `charquican-huevo.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017537/delivery-lunch/biblioteca/charquican-huevo-d3cfff4e4447.png) |
+| 17 | Charquicán con bife de cerdo | `charquican-bife-cerdo.png` | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017539/delivery-lunch/biblioteca/charquican-bife-cerdo-bf907dde7a07.png) |
 
-Las fotos 1 a 10 corresponden a los números finales de los archivos recibidos de Descargas, no al orden en que se adjuntaron en el chat. Se conservaron los originales y sus dimensiones.
+La numeración corresponde al catálogo recibido. Los nombres del sistema y las asociaciones con cada plato se conservaron. Los PNG del ZIP se usan como originales; Cloudinary entrega los formatos y tamaños optimizados.
 
 ## Fotografías anteriores incorporadas a Cloudinary
 
 | Plato | Imagen |
 | --- | --- |
-| Pollo asado con arroz y papas fritas | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003979/delivery-lunch/biblioteca/pollo-asado-arroz-papas-fritas-7be5b8760d4b.png) |
-| Pollo asado con fideos con salsa o crema | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003981/delivery-lunch/biblioteca/pollo-asado-fideos-c3af6fde4fa3.png) |
-| Cerdo mongoliano con arroz | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003981/delivery-lunch/biblioteca/cerdo-mongoliano-arroz-aac3bfcc4cf8.png) |
-| Cerdo mongoliano con fideos | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003982/delivery-lunch/biblioteca/cerdo-mongoliano-fideos-5a39896645e3.png) |
-| Porotos con riendas | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003983/delivery-lunch/biblioteca/porotos-con-riendas-f424526f4013.png) |
-| Menú hipocalórico | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794003988/delivery-lunch/biblioteca/menu-hipocalorico-ddc396ae1e79.png) |
+| Pollo asado con arroz y papas fritas | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017542/delivery-lunch/biblioteca/pollo-asado-arroz-papas-fritas-7be5b8760d4b.png) |
+| Pollo asado con fideos con salsa o crema | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017545/delivery-lunch/biblioteca/pollo-asado-fideos-c3af6fde4fa3.png) |
+| Cerdo mongoliano con arroz | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017549/delivery-lunch/biblioteca/cerdo-mongoliano-arroz-aac3bfcc4cf8.png) |
+| Cerdo mongoliano con fideos | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017552/delivery-lunch/biblioteca/cerdo-mongoliano-fideos-5a39896645e3.png) |
+| Porotos con riendas | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017555/delivery-lunch/biblioteca/porotos-con-riendas-f424526f4013.png) |
+| Menú hipocalórico | [Ver imagen](https://res.cloudinary.com/dsbpineil/image/upload/v1794017558/delivery-lunch/biblioteca/menu-hipocalorico-ddc396ae1e79.png) |
 
 ## Revisión visual
 
@@ -45,8 +45,8 @@ Las fotos 1 a 10 corresponden a los números finales de los archivos recibidos d
 - Foto 9: la pulpa se acompaña de fideos sin salsa roja visible. Se conserva el nombre genérico de la preparación.
 - Foto 14: el zapallo italiano aparece en rodajas salteadas, con arroz y papas fritas; algunas piezas de la guarnición parecen pasta. Revisar que represente la receta del negocio antes de publicarlo.
 - Foto 15: la lasaña tiene un relleno de apariencia cárnica. El nombre sigue siendo Lasaña hasta precisar la receta.
-- Las fotos 11 a 14 tienen aproximadamente 762–764 × 778 px; las 15 a 17 tienen 1016–1020 × 754 px. Las primeras diez son de 1254 × 1254 px. Se conservaron sin ampliar.
-- Las siete variantes WebP del ZIP también se guardaron con nombres descriptivos; Cloudinary recibió los PNG como originales.
+- Todas las fotos actualmente vinculadas a la biblioteca miden 1254 × 1254 px. Algunas del ZIP fueron recortadas y ampliadas desde originales de menor resolución: el nuevo tamaño no recupera el detalle que faltaba.
+- El catálogo completo incluye 23 PNG y 23 WebP, todos íntegros y de 1254 × 1254 px. Se usaron únicamente los PNG de los 15 platos que necesitaban actualización.
 
 ## Hipocalórico
 
@@ -61,9 +61,9 @@ Una sola ficha. Posibles opciones del historial: pollo asado, atún, cerdo mongo
 ## Archivos y asociación
 
 - `biblioteca-platos.json` contiene el plato, nombre de archivo, URL pública, public ID, dimensiones y checksum de cada fotografía.
-- Las copias locales de las 17 nuevas están en `.tmp/biblioteca-platos/`, excluidas de Git; el catálogo usará sus URLs de Cloudinary.
+- Las copias de preparación están en `.tmp/biblioteca-platos/`, excluidas de Git. El ZIP completo se extrajo en `catalogo-1254/` y las fotos reemplazadas se respaldaron en `catalogo-1254/respaldo-anterior/`.
 - Inicio, carrusel y login usan fotografías del menú publicado desde Cloudinary. Se retiraron las copias versionadas de platos y sus variantes locales del carrusel.
-- Los assets se subieron con identificadores basados en su contenido y sin sobrescribir imágenes existentes.
+- Los recursos que necesitaron actualización conservaron su identificador en Cloudinary. La biblioteca y el proyecto usan sus nuevas URLs versionadas; las ocho fotos que ya medían 1254 × 1254 conservaron también su versión.
 - Las fechas del historial no crean ni republican menús.
 
 El uso de la biblioteca y el editor diario está documentado en `biblioteca-flujo.md`.

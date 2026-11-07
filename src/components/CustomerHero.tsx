@@ -6,11 +6,15 @@ import type { Dish } from "../types/menu";
 import { HeroDishCarousel } from "./HeroDishCarousel";
 
 export function CustomerHero({
-  basePrice, dishes, isLoading,
+  basePrice,
+  dishes,
+  isLoading,
+  orderingOpen = true,
 }: {
   basePrice?: number;
   dishes?: Dish[];
   isLoading: boolean;
+  orderingOpen?: boolean;
 }) {
   return (
     <Box
@@ -58,7 +62,11 @@ export function CustomerHero({
           }}
         >
           ¡Hoy se almuerza rico en Quintero!{" "}
-          <Box component="span" aria-hidden="true" sx={{ display: { xs: "none", sm: "inline" } }}>
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{ display: { xs: "none", sm: "inline" } }}
+          >
             🍽️
           </Box>
         </Typography>
@@ -71,34 +79,53 @@ export function CustomerHero({
           Disfruta un almuerzo fresco y delicioso, con distintas alternativas
           para elegir cada día.
         </Typography>
-        <Box sx={{
-          my: { xs: 1.75, sm: 2, md: 2.5 },
-          p: { xs: 1.5, sm: 0 },
-          bgcolor: { xs: "background.default", sm: "transparent" },
-          border: { xs: "1px solid", sm: "none" },
-          borderColor: { xs: "divider", sm: "transparent" },
-          borderRadius: { xs: 2, sm: 0 },
-        }}>
+        <Box
+          sx={{
+            my: { xs: 1.75, sm: 2, md: 2.5 },
+            p: { xs: 1.5, sm: 0 },
+            bgcolor: { xs: "background.default", sm: "transparent" },
+            border: { xs: "1px solid", sm: "none" },
+            borderColor: { xs: "divider", sm: "transparent" },
+            borderRadius: { xs: 2, sm: 0 },
+          }}
+        >
           {isLoading ? (
-            <Skeleton variant="rounded" animation={false} width={240} height={44} sx={{ maxWidth: "100%" }} aria-hidden="true" />
-          ) : basePrice !== undefined && (
-            <Typography
-              color="primary.dark"
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "baseline",
-                columnGap: 1,
-                fontWeight: 700,
-                fontSize: { xs: "1.1rem", md: "1.3rem" },
-                lineHeight: 1.2,
-              }}
-            >
-              Y por solo
-              <Box component="span" sx={{ color: "primary.main", fontSize: { xs: "2rem", md: "2.4rem" }, fontWeight: 900, letterSpacing: "-0.04em" }}>
-                ${basePrice.toLocaleString("es-CL")}
-              </Box>
-            </Typography>
+            <Skeleton
+              variant="rounded"
+              animation={false}
+              width={240}
+              height={44}
+              sx={{ maxWidth: "100%" }}
+              aria-hidden="true"
+            />
+          ) : (
+            basePrice !== undefined && (
+              <Typography
+                color="primary.dark"
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "baseline",
+                  columnGap: 1,
+                  fontWeight: 700,
+                  fontSize: { xs: "1.1rem", md: "1.3rem" },
+                  lineHeight: 1.2,
+                }}
+              >
+                Y por solo
+                <Box
+                  component="span"
+                  sx={{
+                    color: "primary.main",
+                    fontSize: { xs: "2rem", md: "2.4rem" },
+                    fontWeight: 900,
+                    letterSpacing: "-0.04em",
+                  }}
+                >
+                  ${basePrice.toLocaleString("es-CL")}
+                </Box>
+              </Typography>
+            )
           )}
           <Typography
             color="text.secondary"
@@ -108,7 +135,11 @@ export function CustomerHero({
           </Typography>
           <Typography
             color="text.secondary"
-            sx={{ fontSize: "0.75rem", mt: 0.75, display: { xs: "none", sm: "block" } }}
+            sx={{
+              fontSize: "0.75rem",
+              mt: 0.75,
+              display: { xs: "none", sm: "block" },
+            }}
           >
             Los platos con precio especial lo indican en su tarjeta.
           </Typography>
@@ -124,11 +155,16 @@ export function CustomerHero({
             width: { xs: "100%", sm: "auto" },
           }}
         >
-          Elegir mi almuerzo
+          {orderingOpen ? "Elegir mi almuerzo" : "Ver menú del día"}
         </Button>
         <Typography
           color="text.secondary"
-          sx={{ display: { xs: "block", sm: "none" }, fontSize: "0.7rem", textAlign: "center", mt: 1 }}
+          sx={{
+            display: { xs: "block", sm: "none" },
+            fontSize: "0.7rem",
+            textAlign: "center",
+            mt: 1,
+          }}
         >
           Precios especiales indicados en el menú.
         </Typography>

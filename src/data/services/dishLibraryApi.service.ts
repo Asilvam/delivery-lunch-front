@@ -38,6 +38,18 @@ export interface AdminMenuSummary {
   precioBase: number;
   updatedAt?: string;
 }
+export interface MenuPublicationInput {
+  precioBase: number;
+  expectedUpdatedAt: string;
+  platos: {
+    id?: string;
+    catalogoId?: string;
+    stock?: number;
+    expectedStock?: number;
+    precioEspecial: number | null;
+    opcionesProteina: string[];
+  }[];
+}
 const base = import.meta.env.VITE_API_BASE_URL as string;
 const options = (token: string, signal?: AbortSignal) => ({
   headers: { Authorization: `Bearer ${token}` },
@@ -133,6 +145,18 @@ export const saveComposition = async (
         input,
         options(token),
       )
+  ).data;
+export const saveMenuPublication = async (
+  token: string,
+  id: string,
+  input: MenuPublicationInput,
+) =>
+  (
+    await axios.patch<BackendDailyMenuDto>(
+      `${base}/menu/${id}/publication`,
+      input,
+      options(token),
+    )
   ).data;
 export function libraryError(error: unknown, fallback: string): string {
   const message: unknown = axios.isAxiosError(error)

@@ -47,28 +47,30 @@ const selectionsFromMenu = (
   resetStock = false,
 ): Record<string, Selection> =>
   Object.fromEntries(
-    (menu?.platos ?? []).flatMap((dish) => {
-      const match = findLibraryDish(dish, library);
-      return match
-        ? [
-            [
-              match._id,
-              {
-                stock: resetStock ? "" : String(dish.stock ?? 0),
-                price:
-                  resetStock || dish.precio === menu?.precioBase
-                    ? ""
-                    : String(dish.precio),
-                proteins: match.esHipo
-                  ? (dish.opciones ?? []).filter((p) =>
-                      match.opciones.includes(p),
-                    )
-                  : [],
-              },
-            ],
-          ]
-        : [];
-    }),
+    (menu?.platos ?? [])
+      .filter((dish) => !dish.retirado)
+      .flatMap((dish) => {
+        const match = findLibraryDish(dish, library);
+        return match
+          ? [
+              [
+                match._id,
+                {
+                  stock: resetStock ? "" : String(dish.stock ?? 0),
+                  price:
+                    resetStock || dish.precio === menu?.precioBase
+                      ? ""
+                      : String(dish.precio),
+                  proteins: match.esHipo
+                    ? (dish.opciones ?? []).filter((p) =>
+                        match.opciones.includes(p),
+                      )
+                    : [],
+                },
+              ],
+            ]
+          : [];
+      }),
   );
 const strings = (value: unknown, fallback: string) =>
   Array.isArray(value)
@@ -121,7 +123,7 @@ export default function MenuCompositionEditor({
   );
   const [missing, setMissing] = useState(() =>
     (menu?.platos ?? [])
-      .filter((p) => !findLibraryDish(p, library))
+      .filter((p) => !p.retirado && !findLibraryDish(p, library))
       .map((p) => p.nombre),
   );
   const [query, setQuery] = useState("");
@@ -219,7 +221,7 @@ export default function MenuCompositionEditor({
       setSelected(selectionsFromMenu(source, library, true));
       setMissing(
         source.platos
-          .filter((p) => !findLibraryDish(p, library))
+          .filter((p) => !p.retirado && !findLibraryDish(p, library))
           .map((p) => p.nombre),
       );
       setSalad(strings(source.ensalada, "Ensalada surtida"));
@@ -560,7 +562,15 @@ export default function MenuCompositionEditor({
           )}{" "}
           porciones
         </Typography>
-        <Box sx={{ display: { xs: "grid", sm: "flex" }, gridTemplateColumns: "1fr 1fr", gap: 1, flexWrap: "wrap", width: { xs: "100%", sm: "auto" } }}>
+        <Box
+          sx={{
+            display: { xs: "grid", sm: "flex" },
+            gridTemplateColumns: "1fr 1fr",
+            gap: 1,
+            flexWrap: "wrap",
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <Button
             disabled={!draftValid || busy}
             onClick={() => void onSave(payload("borrador"))}

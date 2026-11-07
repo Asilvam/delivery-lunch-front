@@ -14,7 +14,7 @@ Las notas internas permiten revisar detalles de las fotos, como la preparación 
 
 ## Crear un menú
 
-1. Elegir la **fecha** en Menús del día. Si ya hay un menú publicado, se muestra su publicación y el editor de precios. Para preparar otro día se cambia la fecha.
+1. Pulsar **Crear nuevo menú** y elegir la fecha (se sugiere la próxima disponible desde hoy). **Continuar** abre el editor; no guarda ni publica todavía. Si ya existe un menú, se ofrece abrirlo sin sobrescribirlo. La fecha de la barra permite consultar y editar otros días.
 2. Si la fecha está libre, aparece el editor. El precio general inicia en **$5.500**, con ensalada surtida, pan fresco del día y postre del día editables.
 3. Buscar y seleccionar platos. En cada selección ingresar las porciones. Dejar **Precio especial** vacío para heredar el general, o escribir un valor distinto.
 4. En el hipocalórico elegir cuáles de sus proteínas estarán disponibles ese día. El stock es del plato completo, compartido entre sus opciones.
@@ -33,7 +33,17 @@ Si un plato antiguo no tiene correspondencia en la biblioteca, se informa explí
 
 Cada publicación guarda una copia del nombre, descripción, imagen, opciones, precio y stock inicial, junto con la referencia al plato de biblioteca. Editar una ficha no modifica automáticamente publicaciones anteriores. Los pedidos mantienen los datos y precios con los que fueron registrados.
 
-La composición de un menú publicado queda cerrada. Sigue disponible el editor de precio general y excepciones. La creación y publicación del menú completo usa una transacción; los borradores se protegen frente a ediciones simultáneas mediante su versión de actualización.
+Los menús publicados permiten agregar platos desde la biblioteca, retirar platos, elegir proteínas del hipocalórico y cambiar el precio general o los precios especiales. Nombre, descripción y fotografía se editan exclusivamente en la biblioteca. Cada cambio del menú se guarda explícitamente con **Guardar cambios**.
+
+**Stock disponible** representa las porciones que se pueden pedir ahora; admite cero para marcar agotado. Guardar otros datos conserva el stock que hayan descontado los nuevos pedidos. Si se modifica una cantidad y el stock cambió desde que se cargó el editor, se pide recargar antes de guardar. Los cambios administrativos del menú también se protegen por su versión de actualización.
+
+Un plato solo puede retirarse si no tiene ningún pedido registrado, sin importar el estado (incluso cancelado). Si ya tiene pedidos, se ofrece **Marcar agotado**, que pone el stock en cero al guardar y conserva el plato visible. El backend comprueba la restricción al guardar. Los platos retirados sin pedidos conservan su registro e identificador para poder reincorporarlos. La publicación y su edición completa son transaccionales.
+
+## Horario para pedidos
+
+Los clientes pueden elegir platos y enviar pedidos todos los días de **08:00 a 16:00, hora de Chile continental (America/Santiago)**. A las 16:00 se bloquean la selección, el aumento de cantidades y el envío de nuevos pedidos, incluso sin recargar la página. La hora del dispositivo no cambia la zona horaria usada por la regla.
+
+El backend valida el mismo horario y rechaza nuevas órdenes fuera de él. Se permite recuperar el resultado de un envío que ya se había guardado con la misma clave de idempotencia; esto no crea un pedido nuevo. Administración, biblioteca y atención de comandas siguen disponibles fuera del horario de compra.
 
 ## Implementación y verificación
 
