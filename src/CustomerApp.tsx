@@ -14,7 +14,6 @@ import {
   Alert,
   Typography,
   Box,
-  Grid,
   IconButton,
   Badge,
   Drawer,
@@ -769,24 +768,30 @@ export function CustomerMenuPage() {
       )}
 
       {!isLoadingMenus && !menuLoadError && selectedMenu && (
-        <Grid
-          container
-          spacing={{ xs: 2, sm: 2.5 }}
-          alignItems="stretch"
-          justifyContent="flex-start"
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              sm: "repeat(2, minmax(0, 1fr))",
+              md: "repeat(3, minmax(0, 1fr))",
+            },
+            gridAutoRows: { xs: "auto", sm: "1fr" },
+            gap: { xs: 2, sm: 2.5 },
+            alignItems: "stretch",
+          }}
         >
           {selectedMenu.dishes.map((dish) => (
-            <Grid key={dish.id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <DishCard
-                orderingOpen={orderingOpen}
-                dish={dish}
-                basePrice={basePrice}
-                onAddToCart={handleAddToCart}
-                remainingSharedStock={getRemainingDishStock(cartItems, dish)}
-              />
-            </Grid>
+            <DishCard
+              key={dish.id}
+              orderingOpen={orderingOpen}
+              dish={dish}
+              basePrice={basePrice}
+              onAddToCart={handleAddToCart}
+              remainingSharedStock={getRemainingDishStock(cartItems, dish)}
+            />
           ))}
-        </Grid>
+        </Box>
       )}
     </Box>
   );

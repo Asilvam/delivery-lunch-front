@@ -107,11 +107,11 @@ export function DishCard({
         </Box>
         <CardMedia
           component="img"
-          height="180"
           image={dish.imageUrl || imageFallback}
           alt={dish.name}
           loading="lazy"
           className={styles.dishImage}
+          sx={{ objectFit: "contain" }}
           onError={(event) => {
             const image = event.currentTarget;
             if (image.src !== imageFallback) {
@@ -122,7 +122,7 @@ export function DishCard({
         />
       </Box>
       <CardContent className={styles.cardContent}>
-        <Box className={styles.dishHeading}>
+        <Box>
           <Typography component="h2" variant="h6" className={styles.dishName}>
             {title}
           </Typography>

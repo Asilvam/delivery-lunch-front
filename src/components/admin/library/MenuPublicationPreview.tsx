@@ -79,7 +79,7 @@ export default function MenuPublicationPreview({
                     ? cloudinaryImage(dish.imagenUrl, 480)
                     : undefined
                 }
-                height="160"
+                sx={{ aspectRatio: "1 / 1", objectFit: "contain" }}
                 alt={dish.nombre}
               />
               <CardContent>

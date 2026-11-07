@@ -10,11 +10,14 @@
 .imageWrapper {
   position: relative;
   overflow: hidden;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  background: #fdf2f8;
 }
 .dishImage {
   display: block;
   width: 100%;
-  object-fit: cover;
+  height: 100%;
 }
 .badgeGroup {
   position: absolute;
@@ -46,10 +49,10 @@
 }
 .cardContent {
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   padding: 16px 16px 0 !important;
-}
-.dishHeading {
-  min-height: 50px;
 }
 .dishName {
   font-size: 1.08rem !important;
@@ -67,7 +70,9 @@
   font-weight: 800 !important;
 }
 .proteinControl {
-  margin-top: 14px !important;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
 }
 .cardActions {
   padding: 16px !important;
@@ -82,24 +87,14 @@
   border-radius: 12px !important;
 }
 
-.proteinControl {
-  width: 100%;
-  min-width: 0;
-}
 .proteinControl :global(.MuiOutlinedInput-root) {
   width: 100%;
   min-height: 44px;
 }
 
 @media (max-width: 599px) {
-  .dishImage {
-    height: 156px;
-  }
   .cardContent {
     padding: 14px 14px 0 !important;
-  }
-  .dishHeading {
-    min-height: 0;
   }
   .dishName {
     font-size: 1rem !important;
