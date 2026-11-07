@@ -70,45 +70,52 @@ export default function MenuPublicationPreview({
             gap: 2,
           }}
         >
-          {dishes.map((dish) => (
-            <Card key={dish.id} variant="outlined">
-              <CardMedia
-                component="img"
-                image={
-                  dish.imagenUrl
-                    ? cloudinaryImage(dish.imagenUrl, 480)
-                    : undefined
-                }
-                sx={{ aspectRatio: "1 / 1", objectFit: "contain" }}
-                alt={dish.nombre}
-              />
-              <CardContent>
-                <Typography fontWeight={700}>{dish.nombre}</Typography>
-                {dish.descripcion && (
-                  <Typography variant="body2" color="text.secondary">
-                    {dish.descripcion}
+          {[...dishes]
+            .sort((a, b) => Number(!!a.esHipo) - Number(!!b.esHipo))
+            .map((dish) => (
+              <Card key={dish.id} variant="outlined">
+                <CardMedia
+                  component="img"
+                  image={
+                    dish.imagenUrl
+                      ? cloudinaryImage(dish.imagenUrl, 480)
+                      : undefined
+                  }
+                  sx={{ aspectRatio: "1 / 1", objectFit: "contain" }}
+                  alt={dish.nombre}
+                />
+                <CardContent>
+                  <Typography fontWeight={700}>{dish.nombre}</Typography>
+                  {dish.descripcion && (
+                    <Typography variant="body2" color="text.secondary">
+                      {dish.descripcion}
+                    </Typography>
+                  )}
+                  <Typography variant="caption" color="text.secondary">
+                    {dish.stock} porciones
                   </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                  {dish.stock} porciones
-                </Typography>
-                {dish.precio !== precioBase && (
-                  <Typography fontWeight={800} color="primary.main">
-                    ${dish.precio.toLocaleString("es-CL")}
-                  </Typography>
-                )}
-                {dish.esHipo && (
-                  <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}
-                  >
-                    {dish.opciones?.map((protein) => (
-                      <Chip key={protein} label={protein} size="small" />
-                    ))}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {dish.precio !== precioBase && (
+                    <Typography fontWeight={800} color="primary.main">
+                      ${dish.precio.toLocaleString("es-CL")}
+                    </Typography>
+                  )}
+                  {dish.esHipo && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        mt: 1,
+                      }}
+                    >
+                      {dish.opciones?.map((protein) => (
+                        <Chip key={protein} label={protein} size="small" />
+                      ))}
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>

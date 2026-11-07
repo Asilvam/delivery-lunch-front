@@ -607,6 +607,25 @@ export function CustomerMenuPage() {
     handleAddToCart,
     orderingOpen,
   } = useOutletContext<CustomerPageContext>();
+  const menuGrid = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const grid = menuGrid.current;
+    if (!grid) return;
+    const headings = [
+      ...grid.querySelectorAll<HTMLElement>('[data-menu-heading="standard"]'),
+    ];
+    const alignHeadings = () => {
+      const height = Math.max(
+        0,
+        ...headings.map((heading) => heading.getBoundingClientRect().height),
+      );
+      grid.style.setProperty("--menu-heading-height", `${height}px`);
+    };
+    const observer = new ResizeObserver(alignHeadings);
+    headings.forEach((heading) => observer.observe(heading));
+    alignHeadings();
+    return () => observer.disconnect();
+  }, [selectedMenu, isLoadingMenus, menuLoadError]);
   const canGoBack = selectedMenuIndex > 0;
   const canGoForward = selectedMenuIndex < menusForNavigation.length - 1;
   const hasSpecialPrices = selectedMenu?.dishes.some(
@@ -769,6 +788,7 @@ export function CustomerMenuPage() {
 
       {!isLoadingMenus && !menuLoadError && selectedMenu && (
         <Box
+          ref={menuGrid}
           sx={{
             display: "grid",
             gridTemplateColumns: {
@@ -776,7 +796,6 @@ export function CustomerMenuPage() {
               sm: "repeat(2, minmax(0, 1fr))",
               md: "repeat(3, minmax(0, 1fr))",
             },
-            gridAutoRows: { xs: "auto", sm: "1fr" },
             gap: { xs: 2, sm: 2.5 },
             alignItems: "stretch",
           }}

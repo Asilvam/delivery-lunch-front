@@ -104,3 +104,24 @@
     gap: 10px;
   }
 }
+
+.standardCard {
+  height: auto;
+  align-self: start;
+}
+.standardCard .cardContent {
+  flex-grow: 0;
+  min-height: calc(var(--menu-heading-height, 0px) + 16px);
+}
+.standardCard .dishName {
+  margin-bottom: 0 !important;
+}
+.standardCard .cardActions {
+  margin-top: 0;
+  padding-top: 12px !important;
+}
+@media (max-width: 599px) {
+  .standardCard .cardContent {
+    min-height: calc(var(--menu-heading-height, 0px) + 14px);
+  }
+}

@@ -35,19 +35,6 @@ interface Props {
   remainingSharedStock?: number;
 }
 
-const TITLES: Record<string, [string, string]> = {
-  "Pollo asado con arroz y papas fritas": [
-    "Pollo asado",
-    "Con arroz y papas fritas",
-  ],
-  "Pollo asado con fideos con salsa o crema": [
-    "Pollo asado con fideos",
-    "Salsa o crema del día",
-  ],
-  "Cerdo mongoliano con arroz": ["Cerdo mongoliano", "Acompañado de arroz"],
-  "Cerdo mongoliano con fideos": ["Cerdo mongoliano", "Acompañado de fideos"],
-};
-
 export function DishCard({
   dish,
   basePrice = MENU_PRICE,
@@ -64,14 +51,15 @@ export function DishCard({
   const cartLimit = !soldOut && stock === 0;
   const needsProtein = isHipo && !options.includes(protein);
   const disabled = !orderingOpen || soldOut || cartLimit || needsProtein;
-  const [title, subtitle] = isHipo
-    ? ["Menú hipocalórico", ""]
-    : (TITLES[dish.name] ?? [dish.name, ""]);
   const imageFallback =
     "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400&auto=format&fit=crop";
 
   return (
-    <Card className={styles.card} component="article" aria-label={title}>
+    <Card
+      className={`${styles.card} ${isHipo ? "" : styles.standardCard}`}
+      component="article"
+      aria-label={dish.name}
+    >
       <Box className={styles.imageWrapper}>
         <Box className={styles.badgeGroup}>
           {isHipo && (
@@ -122,20 +110,21 @@ export function DishCard({
         />
       </Box>
       <CardContent className={styles.cardContent}>
-        <Box>
+        <Box data-menu-heading={isHipo ? undefined : "standard"}>
           <Typography component="h2" variant="h6" className={styles.dishName}>
-            {title}
+            {dish.name}
           </Typography>
-          {(dish.description || subtitle) && (
+          {dish.description && (
             <Typography
               variant="body2"
               color="text.secondary"
               className={styles.dishSubtitle}
             >
-              {dish.description || subtitle}
+              {dish.description}
             </Typography>
           )}
         </Box>
+
         {isHipo && (
           <FormControl
             fullWidth
@@ -185,6 +174,7 @@ export function DishCard({
             ${dish.price.toLocaleString("es-CL")}
           </Typography>
         )}
+
         <Button
           variant="contained"
           startIcon={<AddShoppingCartIcon />}

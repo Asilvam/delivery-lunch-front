@@ -98,7 +98,9 @@ export const mapBackendMenuToDailyMenu = (
       bread: dto.pan,
       dessert: toSelectableMenuOption(dto.postre, BASE_INCLUDES.postre),
     },
-    dishes: dto.platos.map(mapBackendDishToDish),
+    dishes: dto.platos
+      .map(mapBackendDishToDish)
+      .sort((a, b) => Number(!!a.isHipo) - Number(!!b.isHipo)),
   };
 };
 
