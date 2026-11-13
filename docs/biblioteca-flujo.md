@@ -14,7 +14,7 @@ Las notas internas permiten revisar detalles de las fotos, como la preparación 
 
 ## Crear un menú
 
-1. Pulsar **Crear nuevo menú** y elegir la fecha (se sugiere la próxima disponible desde hoy). **Continuar** abre el editor; no guarda ni publica todavía. Si ya existe un menú, se ofrece abrirlo sin sobrescribirlo. La fecha de la barra permite consultar y editar otros días.
+1. Pulsar **Crear nuevo menú** y elegir la fecha (se sugiere la próxima disponible desde hoy). **Continuar** abre el editor; no guarda ni publica todavía. Si ya existe un menú, se ofrece abrirlo sin sobrescribirlo. La fecha de la barra permite consultar otros días. Solo se pueden crear o publicar menús para hoy o una fecha futura; los históricos permanecen disponibles para consulta.
 2. Si la fecha está libre, aparece el editor. El precio general inicia en **$5.500**, con ensalada surtida, pan fresco del día y postre del día editables.
 3. Buscar y seleccionar platos. Cada selección propone 20 porciones, o 10 para el hipocalórico; las cantidades se pueden editar. Dejar **Precio especial** vacío para heredar el general, o escribir un valor distinto.
 4. En el hipocalórico elegir cuáles de sus proteínas estarán disponibles ese día. El stock es del plato completo, compartido entre sus opciones.
@@ -43,7 +43,7 @@ Un plato solo puede retirarse si no tiene ningún pedido registrado, sin importa
 
 Los clientes pueden elegir platos y enviar pedidos todos los días de **08:00 a 16:00, hora de Chile continental (America/Santiago)**. A las 16:00 se bloquean la selección, el aumento de cantidades y el envío de nuevos pedidos, incluso sin recargar la página. La hora del dispositivo no cambia la zona horaria usada por la regla.
 
-El backend valida el mismo horario y rechaza nuevas órdenes fuera de él. Se permite recuperar el resultado de un envío que ya se había guardado con la misma clave de idempotencia; esto no crea un pedido nuevo. Administración, biblioteca y atención de comandas siguen disponibles fuera del horario de compra.
+El backend valida el mismo horario y exige que la fecha del pedido y del menú correspondan a hoy, con el menú publicado. Lo comprueba antes de reservar stock y antes de guardar. Un menú pasado o futuro no acepta pedidos nuevos, aunque se conserve en una pestaña o carrito anterior. Se permite recuperar el resultado de un envío que ya se había guardado con la misma clave de idempotencia; esto no crea un pedido nuevo. Administración, biblioteca y atención de comandas siguen disponibles fuera del horario de compra.
 
 ## Implementación y verificación
 

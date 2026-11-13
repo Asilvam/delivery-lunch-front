@@ -47,6 +47,9 @@ export default function DailyMenuManager({
 }) {
   const { token } = useAuth();
   const mounted = useMountedRef();
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Santiago",
+  });
   const [date, setDate] = useState(() =>
     new Date().toLocaleDateString("en-CA", { timeZone: "America/Santiago" }),
   );
@@ -210,9 +213,6 @@ export default function DailyMenuManager({
     setRevision((value) => value + 1);
   };
   const openCreate = () => {
-    const today = new Date().toLocaleDateString("en-CA", {
-      timeZone: "America/Santiago",
-    });
     const occupied = new Set(previous.map((item) => item.fecha));
     const candidate = new Date(`${today}T12:00:00Z`);
     while (occupied.has(candidate.toISOString().slice(0, 10)))
@@ -224,6 +224,10 @@ export default function DailyMenuManager({
   };
   const startMenu = async () => {
     if (!token || checkingDate || !parseIsoDate(newDate)) return;
+    if (newDate < today) {
+      setCreateError("No puedes crear menús con fecha pasada.");
+      return;
+    }
     setCheckingDate(true);
     setCreateError("");
     try {
@@ -334,7 +338,10 @@ export default function DailyMenuManager({
                 setExistingDate(false);
                 setCreateError("");
               }}
-              slotProps={{ inputLabel: { shrink: true } }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { min: today },
+              }}
             />
             {existingDate && (
               <Alert severity="info">
@@ -351,7 +358,9 @@ export default function DailyMenuManager({
             <Button
               type="submit"
               variant="contained"
-              disabled={checkingDate || !parseIsoDate(newDate)}
+              disabled={
+                checkingDate || !parseIsoDate(newDate) || newDate < today
+              }
             >
               {checkingDate
                 ? "Comprobando…"
