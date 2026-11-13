@@ -94,3 +94,42 @@ describe("Cart review", () => {
     ).toHaveProperty("disabled", true);
   });
 });
+
+it("keeps expired dishes visible, blocks increases and checkout, and requires explicit restart", () => {
+  const restart = vi.fn(),
+    update = vi.fn(),
+    confirm = vi.fn();
+  render(
+    <CartPanel
+      cartItems={[porotos]}
+      totalItems={2}
+      totalPrice={11000}
+      isMobile
+      cartIssue="Tu carrito venció."
+      onStartNewCart={restart}
+      onClose={vi.fn()}
+      onRemove={vi.fn()}
+      onUpdateQuantity={update}
+      onConfirmOrder={confirm}
+    />,
+  );
+  expect(screen.getByRole("status").textContent).toContain(
+    "Tu carrito venció.",
+  );
+  expect(screen.getByText("Porotos con riendas")).toBeDefined();
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Agregar una porción de Porotos con riendas",
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Continuar a confirmar" }),
+  );
+  expect(update).not.toHaveBeenCalled();
+  expect(confirm).not.toHaveBeenCalled();
+  expect(restart).not.toHaveBeenCalled();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Empezar un nuevo pedido" }),
+  );
+  expect(restart).toHaveBeenCalledOnce();
+});

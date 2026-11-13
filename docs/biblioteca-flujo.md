@@ -45,6 +45,14 @@ Los clientes pueden elegir platos y enviar pedidos todos los días de **08:00 a 
 
 El backend valida el mismo horario y exige que la fecha del pedido y del menú correspondan a hoy, con el menú publicado. Lo comprueba antes de reservar stock y antes de guardar. Un menú pasado o futuro no acepta pedidos nuevos, aunque se conserve en una pestaña o carrito anterior. Se permite recuperar el resultado de un envío que ya se había guardado con la misma clave de idempotencia; esto no crea un pedido nuevo. Administración, biblioteca y atención de comandas siguen disponibles fuera del horario de compra.
 
+## Vigencia del carrito
+
+El backend entrega `venceEn`, la hora absoluta de cierre del menú (16:00 en America/Santiago), ajustada al horario de verano o invierno. El carrito guarda esa vigencia junto con el identificador y la fecha del menú en la sesión de la pestaña.
+
+Al vencer, los platos siguen visibles, pero no se pueden aumentar cantidades ni confirmar un pedido nuevo. **Empezar un nuevo pedido** descarta ese carrito explícitamente y consulta el menú de hoy. Los platos anteriores nunca se trasladan por nombre o fotografía a otra publicación. Al cambiar el día, se vuelve a consultar el menú vigente; regresar a una pestaña comprueba de inmediato su vigencia.
+
+Los carritos del formato anterior solo se vinculan si todos sus identificadores de plato pertenecen al mismo menú consultado. Si falta información para verificarlo, se conserva el contenido y se bloquea la confirmación. Los envíos pendientes de respuesta mantienen su clave y contenido original para recuperar el resultado sin duplicarlo, incluso después del cierre.
+
 ## Implementación y verificación
 
 - Backend: `dish_library`, importación inicial idempotente, CRUD de administrador, validación Cloudinary y composición transaccional.

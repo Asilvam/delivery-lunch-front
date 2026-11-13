@@ -19,6 +19,8 @@ import { getRemainingDishStock } from "../domain/cart/stock.rules";
 
 interface CartPanelProps {
   orderingOpen?: boolean;
+  cartIssue?: string;
+  onStartNewCart?: () => void;
   cartItems: CartItem[];
   totalItems: number;
   totalPrice: number;
@@ -39,6 +41,8 @@ export function CartPanel({
   onRemove,
   onConfirmOrder,
   orderingOpen = true,
+  cartIssue,
+  onStartNewCart,
 }: CartPanelProps) {
   return (
     <Box
@@ -96,6 +100,19 @@ export function CartPanel({
           p: 2.5,
         }}
       >
+        {cartIssue && (
+          <Box
+            role="status"
+            sx={{ mb: 2, p: 2, bgcolor: "background.default", borderRadius: 2 }}
+          >
+            <Typography variant="body2">{cartIssue}</Typography>
+            {onStartNewCart && (
+              <Button onClick={onStartNewCart} sx={{ mt: 1 }}>
+                Empezar un nuevo pedido
+              </Button>
+            )}
+          </Box>
+        )}
         {cartItems.length ? (
           <>
             <List
@@ -234,7 +251,7 @@ export function CartPanel({
                         <IconButton
                           aria-label={`Agregar una porción de ${name}`}
                           onClick={() => onUpdateQuantity(item.key, 1)}
-                          disabled={atLimit || !orderingOpen}
+                          disabled={atLimit || !orderingOpen || !!cartIssue}
                           sx={{ width: 44, height: 44 }}
                         >
                           <AddIcon sx={{ fontSize: 18 }} />
@@ -371,7 +388,7 @@ export function CartPanel({
             size="large"
             endIcon={<ArrowForwardRoundedIcon />}
             onClick={onConfirmOrder}
-            disabled={!orderingOpen}
+            disabled={!orderingOpen || !!cartIssue}
           >
             Continuar a confirmar
           </Button>

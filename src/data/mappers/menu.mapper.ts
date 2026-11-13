@@ -92,6 +92,7 @@ export const mapBackendMenuToDailyMenu = (
     id: dto._id,
     date: formatUiDate(parsedDate),
     isoDate: dto.fecha,
+    expiresAt: dto.venceEn,
     basePrice: dto.precioBase ?? MENU_PRICE,
     includes: {
       salad: toSelectableMenuOption(dto.ensalada, BASE_INCLUDES.ensalada),

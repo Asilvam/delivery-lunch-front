@@ -38,6 +38,7 @@ export interface DailyMenu {
     date: string;     // UI format: DD/MM/YY
     basePrice?: number;
     isoDate: string;  // ISO format: YYYY-MM-DD (for API payloads)
+    expiresAt?: string;
     includes: DailyMenuIncludes;
     dishes: Dish[];
 }
@@ -64,6 +65,7 @@ export interface BackendDishDto {
 export interface BackendDailyMenuDto {
     _id: string;
     fecha: string;
+    venceEn?: string;
     estado?: "borrador" | "publicado";
     precioBase?: number;
     updatedAt?: string;

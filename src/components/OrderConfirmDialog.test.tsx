@@ -158,6 +158,8 @@ describe("Progressive Google checkout", () => {
         <OrderConfirmDialog
           open
           pendingPayload={pending}
+          orderingOpen={false}
+          cartIssue="Tu carrito venció."
           cartItems={[]}
           totalPrice={5500}
           onClose={vi.fn()}
@@ -178,4 +180,34 @@ describe("Progressive Google checkout", () => {
     );
     expect(submit).toHaveBeenCalledWith(pending);
   });
+});
+
+it("blocks both the button and form submission if the open checkout expires", () => {
+  const submit = vi.fn();
+  sessionStorage.setItem(
+    "checkout_contact",
+    JSON.stringify({ telefono: "+56912345678" }),
+  );
+  render(
+    <CustomerSessionContext.Provider
+      value={{ session, signIn: vi.fn(), signOut: vi.fn() }}
+    >
+      <OrderConfirmDialog
+        open
+        menu={menu}
+        cartItems={[item]}
+        totalPrice={5500}
+        cartIssue="Tu carrito venció."
+        onClose={vi.fn()}
+        onSubmit={submit}
+      />
+    </CustomerSessionContext.Provider>,
+  );
+  const button = screen.getByRole("button", { name: "Enviar pedido · $5.500" });
+  expect(button).toHaveProperty("disabled", true);
+  fireEvent.submit(document.getElementById(button.getAttribute("form")!)!);
+  expect(submit).not.toHaveBeenCalled();
+  expect(screen.getByRole("status").textContent).toContain(
+    "Tu carrito venció.",
+  );
 });

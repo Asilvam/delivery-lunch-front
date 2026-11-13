@@ -1,10 +1,26 @@
+import { useCartValidity } from "./hooks/useCartValidity";
+import {
+  CART_STORAGE_KEY,
+  cartForMenu,
+  cartStatusMessage,
+  chileToday,
+  emptyMenuCart,
+  menuCartStatus,
+  readMenuCart,
+  reconcileMenuCart,
+} from "./domain/cart/menuCart";
 import { useOrderingHours } from "./hooks/useOrderingHours";
 import {
   isOrderingOpen,
   ORDERING_HOURS_MESSAGE,
 } from "./domain/orders/orderingHours";
 import axios from "axios";
-import { Outlet, useLocation, useOutletContext } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+  useOutletContext,
+  useNavigate,
+} from "react-router-dom";
 import type { Dispatch, SetStateAction } from "react";
 import { MENU_PRICE } from "./domain/menu/menuOffer";
 import { useCustomerSession } from "./hooks/useCustomerSession";
@@ -28,7 +44,7 @@ import TodayIcon from "@mui/icons-material/Today";
 import { appAlert } from "./utils/notifications";
 
 import { appTheme } from "./theme/appTheme";
-import { buildCartItemKey, normalizeMenuCart } from "./domain/cart/cartHelpers";
+import { buildCartItemKey } from "./domain/cart/cartHelpers";
 import {
   userToast,
   showAddToCartFeedback,
@@ -41,7 +57,7 @@ import { DishCard } from "./components/DishCard";
 import { CustomerHero } from "./components/CustomerHero";
 import { MenuLoadingScreen } from "./components/MenuLoadingScreen";
 import { OrderConfirmDialog } from "./components/OrderConfirmDialog";
-import { fetchDailyMenus, getMenuDateTimestamp } from "./api/menu";
+import { fetchDailyMenus } from "./api/menu";
 import { sendOrder, getPendingOrder } from "./api/order";
 import type {
   DailyMenu,
@@ -56,22 +72,13 @@ import type { OrderPayload } from "./types/order";
 import { canAddDish, getRemainingDishStock } from "./domain/cart/stock.rules";
 import { logger } from "./shared/utils/logger";
 
-function refreshCartPrices(items: CartItem[], menus: DailyMenu[]): CartItem[] {
-  const dishes = new Map(
-    menus.flatMap((menu) => menu.dishes).map((dish) => [dish.id, dish]),
-  );
-  return items.map((item) => ({
-    ...item,
-    dish: dishes.get(item.dish.id) ?? item.dish,
-  }));
-}
-
 export default function CustomerApp() {
   const { session, signOut } = useCustomerSession();
   const orderingOpen = useOrderingHours();
   const notifyClosed = () =>
     void userToast.fire({ icon: "info", title: ORDERING_HOURS_MESSAGE });
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const previousPathname = useRef(pathname);
   useEffect(() => {
     if (previousPathname.current === pathname) return;
@@ -88,23 +95,20 @@ export default function CustomerApp() {
   } | null>(null);
   const closeReceipt = useCallback(() => setReceipt(null), []);
   const [pendingOrder, setPendingOrder] = useState(() => getPendingOrder());
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    try {
-      const stored = JSON.parse(
-        sessionStorage.getItem("lunch_cart") || "[]",
-      ) as CartItem[];
-      return Array.isArray(stored)
-        ? getPendingOrder()
-          ? stored
-          : normalizeMenuCart(stored)
-        : [];
-    } catch {
-      return [];
-    }
-  });
+  const [menuCart, setMenuCart] = useState(() =>
+    readMenuCart(!getPendingOrder()),
+  );
+  const cartItems = menuCart.items;
+  const setCartItems = useCallback((update: SetStateAction<CartItem[]>) => {
+    setMenuCart((current) => {
+      const items =
+        typeof update === "function" ? update(current.items) : update;
+      return items.length ? { ...current, items } : emptyMenuCart();
+    });
+  }, []);
   useEffect(() => {
-    sessionStorage.setItem("lunch_cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+    sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(menuCart));
+  }, [menuCart]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const cartTrigger = useRef<HTMLButtonElement>(null);
@@ -133,22 +137,30 @@ export default function CustomerApp() {
   const [menuLoadError, setMenuLoadError] = useState<string | null>(null);
   const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
   const isMobile = useMediaQuery(appTheme.breakpoints.down("sm"));
+  const [menuRevision, setMenuRevision] = useState(0);
+  const { today: todayIso, status: cartStatus } = useCartValidity(
+    menuCart,
+    menus,
+    isLoadingMenus,
+  );
+  const cartIssue = pendingOrder ? undefined : cartStatusMessage[cartStatus];
 
   useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
     const loadMenus = async () => {
       logger.info("[App] Cargando menús...");
       try {
         setIsLoadingMenus(true);
         const [data] = await Promise.all([
-          fetchDailyMenus(),
+          fetchDailyMenus(controller.signal),
           new Promise<void>((resolve) => setTimeout(resolve, 1000)),
         ]);
         if (!mounted) return;
         logger.info(`[App] Menús cargados: ${data.length} día(s)`, data);
         setMenus(data);
         if (!getPendingOrder())
-          setCartItems((items) => refreshCartPrices(items, data));
+          setMenuCart((current) => reconcileMenuCart(current, data));
         setMenuLoadError(null);
         setSelectedMenuIndex(0);
         if (data.length === 0) {
@@ -174,23 +186,43 @@ export default function CustomerApp() {
     void loadMenus();
     return () => {
       mounted = false;
-      appAlert.close();
+      controller.abort();
     };
-  }, []);
+  }, [todayIso, menuRevision]);
+  useEffect(
+    () => () => {
+      appAlert.close();
+    },
+    [],
+  );
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTimestamp = today.getTime();
-
-  const availableMenus: DailyMenu[] = menus.filter((menu) => {
-    const ts = getMenuDateTimestamp(menu.date);
-    return ts !== null && ts >= todayTimestamp;
-  });
-
-  const menusForNavigation = availableMenus.length > 0 ? availableMenus : menus;
+  const menusForNavigation = menus.filter((menu) => menu.isoDate === todayIso);
   const selectedMenu =
     menusForNavigation[selectedMenuIndex] ?? menusForNavigation[0];
+  const checkoutMenu =
+    menus.find(
+      (menu) => menu.id === menuCart.menuId && menu.isoDate === menuCart.fecha,
+    ) ?? selectedMenu;
   const basePrice = selectedMenu?.basePrice ?? MENU_PRICE;
+  const ensureCartReady = () => {
+    const status = menuCartStatus(menuCart, menus, isLoadingMenus);
+    if (status === "ready") return true;
+    void userToast.fire({
+      icon: "info",
+      title: cartStatusMessage[status] ?? "Tu carrito está vacío.",
+    });
+    return false;
+  };
+  const startNewCart = () => {
+    if (getPendingOrder()) {
+      setCheckoutOpen(true);
+      return;
+    }
+    setMenuCart(emptyMenuCart());
+    setCartOpen(false);
+    setMenuRevision((value) => value + 1);
+    navigate("/menu");
+  };
 
   const handleAddToCart = (
     dishToAdd: Dish,
@@ -208,6 +240,27 @@ export default function CustomerApp() {
           "Confirma el resultado del envío pendiente antes de cambiar el pedido.",
       });
       setCheckoutOpen(true);
+      return;
+    }
+    if (
+      !selectedMenu ||
+      selectedMenu.isoDate !== chileToday() ||
+      !selectedMenu.expiresAt ||
+      !Number.isFinite(Date.parse(selectedMenu.expiresAt)) ||
+      Date.now() >= Date.parse(selectedMenu.expiresAt)
+    ) {
+      void userToast.fire({
+        icon: "info",
+        title: "Este menú ya no está vigente. Revisa el menú del día.",
+      });
+      setMenuRevision((value) => value + 1);
+      return;
+    }
+    if (
+      cartItems.length &&
+      (menuCart.menuId !== selectedMenu.id || !ensureCartReady())
+    ) {
+      setCartOpen(true);
       return;
     }
     const cartItemKey = buildCartItemKey(dishToAdd.id, selections);
@@ -229,15 +282,17 @@ export default function CustomerApp() {
     let wasExisting = false;
     let wasBlocked = false;
 
-    setCartItems((prev) => {
+    setMenuCart((current) => {
+      const bound = current.items.length ? current : cartForMenu(selectedMenu);
+      const prev = bound.items;
       if (!canAddDish(prev, dishToAdd)) {
         wasBlocked = true;
-        return prev;
+        return current;
       }
       const existing = prev.find((item) => item.key === cartItemKey);
       wasExisting = Boolean(existing);
       nextQuantity = existing ? existing.quantity + 1 : 1;
-      return existing
+      const items = existing
         ? prev.map((item) =>
             item.key === cartItemKey
               ? { ...item, quantity: item.quantity + 1 }
@@ -253,6 +308,7 @@ export default function CustomerApp() {
               visibility,
             },
           ];
+      return { ...bound, items };
     });
 
     if (wasBlocked) {
@@ -274,6 +330,7 @@ export default function CustomerApp() {
       setCheckoutOpen(true);
       return;
     }
+    if (delta > 0 && !ensureCartReady()) return;
     const targetItem = cartItems.find((item) => item.key === cartItemKey);
     if (!targetItem) return;
     let wasBlocked = false;
@@ -311,6 +368,7 @@ export default function CustomerApp() {
       notifyClosed();
       return;
     }
+    if (!getPendingOrder() && !ensureCartReady()) return;
     if (cartItems.length === 0) {
       void userToast.fire({
         icon: "info",
@@ -328,6 +386,13 @@ export default function CustomerApp() {
       notifyClosed();
       return;
     }
+    if (
+      !getPendingOrder() &&
+      (!ensureCartReady() ||
+        payload.menuId !== menuCart.menuId ||
+        payload.fecha !== menuCart.fecha)
+    )
+      return;
     if (!session || sending.current) return;
     sending.current = true;
     try {
@@ -359,7 +424,7 @@ export default function CustomerApp() {
         try {
           const fresh = await fetchDailyMenus();
           setMenus(fresh);
-          setCartItems((items) => refreshCartPrices(items, fresh));
+          setMenuCart((current) => reconcileMenuCart(current, fresh));
           void userToast.fire({
             icon: "info",
             title: "El precio cambió",
@@ -501,6 +566,12 @@ export default function CustomerApp() {
           }}
         >
           <CartPanel
+            cartIssue={cartIssue}
+            onStartNewCart={
+              cartStatus !== "checking" && !pendingOrder
+                ? startNewCart
+                : undefined
+            }
             orderingOpen={orderingOpen}
             cartItems={cartItems}
             totalItems={totalItems}
@@ -521,6 +592,12 @@ export default function CustomerApp() {
           onClose={() => setCartOpen(false)}
         >
           <CartPanel
+            cartIssue={cartIssue}
+            onStartNewCart={
+              cartStatus !== "checking" && !pendingOrder
+                ? startNewCart
+                : undefined
+            }
             orderingOpen={orderingOpen}
             cartItems={cartItems}
             totalItems={totalItems}
@@ -544,11 +621,12 @@ export default function CustomerApp() {
       )}
 
       {/* ─── DIALOG CONFIRMACIÓN PEDIDO ───────────────────────────────────────── */}
-      {(selectedMenu || pendingOrder) && (
+      {(checkoutMenu || pendingOrder || cartItems.length > 0) && (
         <OrderConfirmDialog
+          cartIssue={cartIssue}
           orderingOpen={orderingOpen}
           open={isOrderDialogOpen}
-          menu={selectedMenu}
+          menu={checkoutMenu}
           cartItems={cartItems}
           totalPrice={totalPrice}
           pendingPayload={pendingOrder?.payload}

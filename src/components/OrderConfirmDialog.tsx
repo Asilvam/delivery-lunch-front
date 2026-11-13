@@ -26,6 +26,7 @@ import styles from "./OrderConfirmDialog.module.css";
 
 interface OrderConfirmDialogProps {
   orderingOpen?: boolean;
+  cartIssue?: string;
   open: boolean;
   menu?: DailyMenu;
   cartItems: CartItem[];
@@ -46,6 +47,7 @@ export const OrderConfirmDialog = ({
   onSubmit,
   pendingPayload,
   orderingOpen = true,
+  cartIssue,
 }: OrderConfirmDialogProps) => {
   const { session } = useCustomerSession();
   const submitting = useRef(false);
@@ -88,7 +90,7 @@ export const OrderConfirmDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!orderingOpen && !pendingPayload) return;
+    if ((!orderingOpen || cartIssue) && !pendingPayload) return;
     if (!session || submitting.current || (!pendingPayload && !validate()))
       return;
     if ((!menu || cartItems.length === 0) && !pendingPayload) return;
@@ -188,6 +190,14 @@ export const OrderConfirmDialog = ({
       </DialogTitle>
 
       <DialogContent className={styles.content}>
+        {cartIssue && !pendingPayload && (
+          <Box
+            role="status"
+            sx={{ mb: 2, p: 2, bgcolor: "background.default", borderRadius: 2 }}
+          >
+            <Typography variant="body2">{cartIssue}</Typography>
+          </Box>
+        )}
         <Box
           component="form"
           id={formId}
@@ -341,7 +351,7 @@ export const OrderConfirmDialog = ({
           variant="contained"
           disabled={
             isSubmitting ||
-            (!orderingOpen && !pendingPayload) ||
+            ((!orderingOpen || !!cartIssue) && !pendingPayload) ||
             !session ||
             (!pendingPayload && (!menu || cartItems.length === 0))
           }
