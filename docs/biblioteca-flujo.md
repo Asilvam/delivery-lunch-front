@@ -16,7 +16,7 @@ Las notas internas permiten revisar detalles de las fotos, como la preparación 
 
 1. Pulsar **Crear nuevo menú** y elegir la fecha (se sugiere la próxima disponible desde hoy). **Continuar** abre el editor; no guarda ni publica todavía. Si ya existe un menú, se ofrece abrirlo sin sobrescribirlo. La fecha de la barra permite consultar y editar otros días.
 2. Si la fecha está libre, aparece el editor. El precio general inicia en **$5.500**, con ensalada surtida, pan fresco del día y postre del día editables.
-3. Buscar y seleccionar platos. En cada selección ingresar las porciones. Dejar **Precio especial** vacío para heredar el general, o escribir un valor distinto.
+3. Buscar y seleccionar platos. Cada selección propone 20 porciones, o 10 para el hipocalórico; las cantidades se pueden editar. Dejar **Precio especial** vacío para heredar el general, o escribir un valor distinto.
 4. En el hipocalórico elegir cuáles de sus proteínas estarán disponibles ese día. El stock es del plato completo, compartido entre sus opciones.
 5. **Guardar borrador** conserva el trabajo, incluso si faltan cantidades o proteínas. No aparece en el sitio público y no acepta pedidos.
 6. **Previsualizar** muestra fotos, nombres, precios e ingredientes generales. **Publicar menú** exige al menos un plato activo con fotografía y cantidad positiva, y proteínas válidas para el hipocalórico.
@@ -25,7 +25,7 @@ Solo existe un menú por fecha. Un menú publicado para una fecha futura aparece
 
 ## Reutilizar una selección
 
-Desde un menú nuevo o borrador, **Usar selección de otro menú** recupera platos y acompañamientos. Las porciones quedan vacías y los precios especiales se restablecen al precio general actual. Las proteínas recuperadas se pueden revisar antes de publicar.
+Desde un menú nuevo o borrador, **Usar selección de otro menú** recupera platos y acompañamientos. Las porciones se proponen en 20 por plato, o 10 para el hipocalórico, y los precios especiales se restablecen al precio general actual. Las proteínas recuperadas se pueden revisar antes de publicar.
 
 Si un plato antiguo no tiene correspondencia en la biblioteca, se informa explícitamente. El administrador debe incorporarlo o descartar esa referencia antes de guardar.
 

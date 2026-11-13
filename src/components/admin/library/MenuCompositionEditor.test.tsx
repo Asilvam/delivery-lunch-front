@@ -57,9 +57,13 @@ it("inherits the daily price when special is empty and sends an explicit overrid
   fireEvent.click(
     screen.getByRole("checkbox", { name: "Seleccionar Pollo asado" }),
   );
+  expect(screen.getByLabelText("Porciones de Pollo asado")).toHaveProperty(
+    "value",
+    "20",
+  );
   expect(screen.getByRole("button", { name: "Publicar menú" })).toHaveProperty(
     "disabled",
-    true,
+    false,
   );
   fireEvent.change(screen.getByLabelText("Porciones de Pollo asado"), {
     target: { value: "12" },
@@ -86,6 +90,10 @@ it("allows an incomplete draft but requires daily proteins before publishing a h
   const save = setup();
   fireEvent.click(
     screen.getByRole("checkbox", { name: "Seleccionar Menú hipocalórico" }),
+  );
+  expect(screen.getByLabelText("Porciones de Menú hipocalórico")).toHaveProperty(
+    "value",
+    "10",
   );
   fireEvent.change(screen.getByLabelText("Porciones de Menú hipocalórico"), {
     target: { value: "5" },

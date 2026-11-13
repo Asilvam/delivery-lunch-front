@@ -41,6 +41,7 @@ const findLibraryDish = (dish: BackendDishDto, library: LibraryDish[]) =>
       (p.esHipo &&
         (dish.es_hipo || /^hipo(calorico)?$/.test(normalize(dish.nombre)))),
   );
+const defaultStock = (dish: LibraryDish) => String(dish.esHipo ? 10 : 20);
 const selectionsFromMenu = (
   menu: BackendDailyMenuDto | null,
   library: LibraryDish[],
@@ -56,7 +57,9 @@ const selectionsFromMenu = (
               [
                 match._id,
                 {
-                  stock: resetStock ? "" : String(dish.stock ?? 0),
+                  stock: resetStock
+                    ? defaultStock(match)
+                    : String(dish.stock ?? 0),
                   price:
                     resetStock || dish.precio === menu?.precioBase
                       ? ""
@@ -153,7 +156,12 @@ export default function MenuCompositionEditor({
     setSelected((current) => {
       const next = { ...current };
       if (next[dish._id]) delete next[dish._id];
-      else next[dish._id] = { stock: "", price: "", proteins: [] };
+      else
+        next[dish._id] = {
+          stock: defaultStock(dish),
+          price: "",
+          proteins: [],
+        };
       return next;
     });
   };
@@ -230,7 +238,7 @@ export default function MenuCompositionEditor({
       mark();
       void staffToast.fire({
         icon: "info",
-        title: "Selección copiada. Ingresa las porciones de este día.",
+        title: "Selección copiada. Revisa las porciones de este día.",
       });
     } catch (error) {
       if (mounted.current)
@@ -293,7 +301,7 @@ export default function MenuCompositionEditor({
             value=""
             disabled={busy || !previous.length}
             onChange={(e) => void copy(e.target.value)}
-            helperText="Recupera platos y acompañamientos; las cantidades se ingresan de nuevo."
+            helperText="Recupera platos y acompañamientos con las porciones por defecto."
           >
             <option value="">Elegir un menú anterior</option>
             {previous
