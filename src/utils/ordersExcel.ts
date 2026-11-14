@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { Order } from "../types/order";
+import type { DashboardSummary } from "../data/services/statisticsApi.service";
 
 const CLP = '"$"#,##0;[Red]-"$"#,##0';
 const createdDate = new Intl.DateTimeFormat("es-CL", {
@@ -140,8 +141,10 @@ export function buildOrdersWorkbook(
   orders: Order[],
   date: string,
   endDate = date,
+  summary?: DashboardSummary,
 ): ExcelJS.Workbook {
-  if (!orders.length) throw new Error("No hay pedidos para exportar.");
+  if (!orders.length && !summary)
+    throw new Error("No hay pedidos para exportar.");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Sabores Angelicales";
   workbook.created = new Date();
@@ -165,8 +168,12 @@ export function buildOrdersWorkbook(
       "Total (CLP)",
       "Aceptado (Chile)",
       "Entregado/Cancelado (Chile)",
+      "Pago",
+      "Medio de pago",
+      "Pago registrado",
+      "Listo para entregar",
     ],
-    [29, 17, 23, 32, 23, 32, 12, 20, 23, 29],
+    [29, 17, 23, 32, 23, 32, 12, 20, 23, 29, 24, 22, 23, 23],
   );
   const detalle = createSheet(
     workbook,
@@ -199,15 +206,20 @@ export function buildOrdersWorkbook(
         ? "Aprobado"
         : "Pendiente de aprobación",
       en_preparacion: "En preparación",
+      listo: "Listo para entregar",
       entregado: "Entregado",
       cancelado: "Cancelado",
     }[order.estado];
     const created = formatDate(order.createdAt);
     const accepted = formatDate(order.aceptadoEn);
-    const finished = formatDate(
-      (order.estado === "cancelado" ? order.canceladoEn : order.entregadoEn) ||
-        order.updatedAt,
-    );
+    const finished =
+      order.estado === "cancelado" || order.estado === "entregado"
+        ? formatDate(
+            (order.estado === "cancelado"
+              ? order.canceladoEn
+              : order.entregadoEn) || order.updatedAt,
+          )
+        : "";
     pedidos.addRow([
       order._id,
       menuDate(order.fecha),
@@ -219,6 +231,18 @@ export function buildOrdersWorkbook(
       order.total,
       accepted,
       finished,
+      order.pagado === true
+        ? "Pagado"
+        : order.pagado === false
+          ? "Pendiente"
+          : "Sin registrar",
+      order.medioPago === "efectivo"
+        ? "Efectivo"
+        : order.medioPago === "transferencia"
+          ? "Transferencia"
+          : "",
+      formatDate(order.pagadoEn),
+      formatDate(order.listoEn),
     ]);
     for (const item of order.items) {
       const subtotal = item.precio * item.cantidad;
@@ -246,14 +270,18 @@ export function buildOrdersWorkbook(
   pedidos.getColumn(1).numFmt = "@";
   pedidos.getColumn(5).numFmt = "@";
   detalle.getColumn(1).numFmt = "@";
-  finishSheet(
-    pedidos,
-    [8],
-    [
-      { column: 7, value: quantity },
-      { column: 8, value: orders.reduce((sum, order) => sum + order.total, 0) },
-    ],
-  );
+  if (orders.length)
+    finishSheet(
+      pedidos,
+      [8],
+      [
+        { column: 7, value: quantity },
+        {
+          column: 8,
+          value: orders.reduce((sum, order) => sum + order.total, 0),
+        },
+      ],
+    );
   if (detalle.rowCount > 4)
     finishSheet(
       detalle,
@@ -263,17 +291,104 @@ export function buildOrdersWorkbook(
         { column: 9, value: detailTotal },
       ],
     );
+  if (summary) {
+    const sheet = createSheet(
+      workbook,
+      "Resumen",
+      period,
+      ["Indicador", "Valor", "Referencia"],
+      [45, 24, 70],
+    );
+    sheet.getCell("A2").value = `Resumen ${period} · Métricas`;
+    sheet.getCell("A3").value =
+      "Consulta informativa. No cambia pedidos ni cierra la jornada.";
+    const rows: [string, number, string][] = [
+      [
+        "Pedidos recibidos",
+        summary.pedidosTotales,
+        "Recibidos en el período seleccionado",
+      ],
+      [
+        "Pedidos entregados",
+        summary.pedidosCompletados,
+        "Recibidos en el período seleccionado",
+      ],
+      [
+        "Pedidos cancelados",
+        summary.pedidosCancelados,
+        "Recibidos en el período seleccionado",
+      ],
+      [
+        "Pendientes",
+        summary.pedidosPendientes,
+        "Recibidos en el período seleccionado",
+      ],
+      [
+        "En preparación",
+        summary.pedidosEnPreparacion,
+        "Recibidos en el período seleccionado",
+      ],
+      [
+        "Listos para entregar",
+        summary.pedidosListos ?? 0,
+        "Recibidos en el período seleccionado",
+      ],
+      [
+        "Menús vendidos",
+        summary.menusVendidos,
+        "Porciones de pedidos entregados del período",
+      ],
+      [
+        "Ventas entregadas",
+        summary.ingresosTotales,
+        "Importe de pedidos entregados recibidos en el período",
+      ],
+    ];
+    if (summary.pagos)
+      rows.push(
+        [
+          "Cobros registrados",
+          summary.pagos.total,
+          "Por fecha de registro del pago, incluye pagos de pedidos cancelados",
+        ],
+        ["Efectivo", summary.pagos.efectivo, "Por fecha de registro del pago"],
+        [
+          "Transferencia",
+          summary.pagos.transferencia,
+          "Por fecha de registro del pago",
+        ],
+        [
+          "Por cobrar",
+          summary.pagos.porCobrar,
+          "Pedidos entregados recibidos en el período, marcados pendientes de pago",
+        ],
+        [
+          "Pago sin registrar",
+          summary.pagos.sinRegistro,
+          "Cantidad de pedidos entregados sin información de pago",
+        ],
+      );
+    rows.forEach((values, index) => {
+      const row = sheet.addRow(values);
+      row.alignment = { vertical: "top", wrapText: true };
+      row.height = 34;
+      if (index === 7 || (index >= 8 && index <= 11))
+        row.getCell(2).numFmt = CLP;
+    });
+  }
   return workbook;
 }
 export async function createOrdersExcel(
   orders: Order[],
   date: string,
   endDate = date,
+  summary?: DashboardSummary,
 ): Promise<{ blob: Blob; filename: string }> {
   const buffer = await buildOrdersWorkbook(
     orders,
     date,
     endDate,
+    summary,
   ).xlsx.writeBuffer();
   const bytes = new Uint8Array(buffer.byteLength);
   bytes.set(new Uint8Array(buffer));

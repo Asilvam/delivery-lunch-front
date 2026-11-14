@@ -15,6 +15,8 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import { appAlert } from "../../utils/notifications";
 import type { Order } from "../../types/order";
+import OrderPayment from "./OrderPayment";
+import OrderWaitTime from "./OrderWaitTime";
 
 interface Props {
   order: Order;
@@ -101,6 +103,8 @@ export default function PendingOrderCard({
           />
         </Box>
 
+        <OrderWaitTime order={order} />
+        <OrderPayment order={order} />
         <Box mb={1.5}>
           <Typography variant="caption" color="text.secondary" display="block">
             <b>Fecha pedido:</b> {order.fecha} &nbsp;·&nbsp;{" "}

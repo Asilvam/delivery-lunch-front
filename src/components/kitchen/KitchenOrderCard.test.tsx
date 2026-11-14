@@ -9,6 +9,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import KitchenOrderCard from "./KitchenOrderCard";
 import type { Order } from "../../types/order";
 import { appAlert } from "../../utils/notifications";
+vi.mock("../admin/OrderPayment", () => ({ default: () => null }));
 vi.mock("../../utils/notifications", () => ({ appAlert: { fire: vi.fn() } }));
 vi.mock("../../utils/actionFeedback", () => ({
   showActionError: vi.fn(),
@@ -63,6 +64,17 @@ it("shows the original menu date and preserves manual preparation and delivery a
       isAdmin={false}
     />,
   );
+  fireEvent.click(screen.getByRole("button", { name: "Marcar listo" }));
+  await waitFor(() => expect(update).toHaveBeenCalledWith("previous", "listo"));
+  view.rerender(
+    <KitchenOrderCard
+      order={{ ...previous, estado: "listo", listoEn: "2026-11-12T15:00:00Z" }}
+      showMenuDate
+      onStatusChange={update}
+      isAdmin={false}
+    />,
+  );
+  expect(screen.getByText("Listo para entregar")).toBeDefined();
   fireEvent.click(screen.getByRole("button", { name: "Marcar entregado" }));
   await waitFor(() =>
     expect(update).toHaveBeenCalledWith("previous", "entregado"),

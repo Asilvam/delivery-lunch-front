@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { useCurrentDay } from "../../hooks/useCurrentDay";
-import { Box, Chip, Typography } from "@mui/material";
+import { Box, Chip, Paper, Typography } from "@mui/material";
 import WifiOffIcon from "@mui/icons-material/WifiOff";
 import WifiIcon from "@mui/icons-material/Wifi";
 import KitchenOrderCard from "./KitchenOrderCard";
@@ -28,7 +28,8 @@ export default function KitchenOrdersPanel({
       (order) =>
         order.validadoPorAdmin &&
         (order.estado === OrderStatus.PENDIENTE ||
-          order.estado === OrderStatus.EN_PREPARACION),
+          order.estado === OrderStatus.EN_PREPARACION ||
+          order.estado === OrderStatus.LISTO),
     )
     .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
   const previous = active.filter((order) => order.fecha < today);
@@ -52,6 +53,9 @@ export default function KitchenOrdersPanel({
         const older = group.id === "previous";
         const preparing = group.orders.filter(
           (order) => order.estado === OrderStatus.EN_PREPARACION,
+        ).length;
+        const ready = group.orders.filter(
+          (order) => order.estado === OrderStatus.LISTO,
         ).length;
         return (
           <Box
@@ -80,8 +84,9 @@ export default function KitchenOrdersPanel({
               </Typography>
               {group.orders.length > 0 && (
                 <Typography variant="body2" color="text.secondary">
-                  {group.orders.length - preparing} por preparar · {preparing}{" "}
-                  en preparación
+                  {group.orders.length - preparing - ready} por preparar ·{" "}
+                  {preparing} en preparación
+                  {ready > 0 ? ` · ${ready} listos para entregar` : ""}
                 </Typography>
               )}
               {!older && (
@@ -104,6 +109,71 @@ export default function KitchenOrdersPanel({
                 </Typography>
               )}
             </Box>
+            {group.orders.length > 0 && (
+              <Paper
+                variant="outlined"
+                sx={{ p: 2, mb: 2 }}
+                aria-label={`Resumen de producción ${older ? "de días anteriores" : "de hoy"}`}
+              >
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(3, minmax(0, 1fr))",
+                    },
+                    gap: 2,
+                  }}
+                >
+                  {[
+                    { status: OrderStatus.PENDIENTE, title: "Por preparar" },
+                    {
+                      status: OrderStatus.EN_PREPARACION,
+                      title: "En preparación",
+                    },
+                    {
+                      status: OrderStatus.LISTO,
+                      title: "Listos para entregar",
+                    },
+                  ].map(({ status, title }) => {
+                    const counts = new Map<string, number>();
+                    for (const order of group.orders.filter(
+                      (item) => item.estado === status,
+                    ))
+                      for (const item of order.items) {
+                        const label = `${item.nombre}${item.selecciones?.proteina ? ` · ${item.selecciones.proteina}` : ""}`;
+                        counts.set(
+                          label,
+                          (counts.get(label) ?? 0) + item.cantidad,
+                        );
+                      }
+                    return (
+                      counts.size > 0 && (
+                        <Box key={status}>
+                          <Typography
+                            component="h3"
+                            variant="subtitle2"
+                            fontWeight={700}
+                            sx={{ mb: 0.5 }}
+                          >
+                            {title}
+                          </Typography>
+                          {[...counts].map(([name, count]) => (
+                            <Typography
+                              key={name}
+                              variant="body2"
+                              sx={{ overflowWrap: "anywhere" }}
+                            >
+                              {count}× {name}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )
+                    );
+                  })}
+                </Box>
+              </Paper>
+            )}
             {group.orders.length === 0 ? (
               <Box textAlign="center" py={8}>
                 <Typography color="text.secondary" fontWeight={500}>

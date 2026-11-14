@@ -9,6 +9,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import CustomersPage from "./CustomersPage";
 import {
   blockCustomer,
+  deleteCustomer,
   fetchCustomers,
 } from "../data/services/customersApi.service";
 import { appAlert, staffAlert } from "../utils/notifications";
@@ -22,6 +23,7 @@ vi.mock("../hooks/useAuth", () => ({
 vi.mock("../data/services/customersApi.service", () => ({
   fetchCustomers: vi.fn(),
   blockCustomer: vi.fn(),
+  deleteCustomer: vi.fn(),
 }));
 vi.mock("../utils/notifications", () => ({
   appAlert: { fire: vi.fn() },
@@ -47,6 +49,34 @@ beforeEach(() => {
     pageSize: 25,
   });
   vi.mocked(blockCustomer).mockResolvedValue();
+  vi.mocked(deleteCustomer).mockResolvedValue();
+});
+it("deletes only after confirmation and refreshes the list without removing historical orders", async () => {
+  vi.mocked(appAlert.fire)
+    .mockResolvedValueOnce({ isConfirmed: false } as never)
+    .mockResolvedValueOnce({ isConfirmed: true } as never);
+  render(<CustomersPage />);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Eliminar a Cliente" }),
+  );
+  await waitFor(() => expect(appAlert.fire).toHaveBeenCalledOnce());
+  expect(deleteCustomer).not.toHaveBeenCalled();
+  vi.mocked(fetchCustomers).mockResolvedValue({
+    items: [],
+    total: 0,
+    page: 1,
+    pageSize: 25,
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Eliminar a Cliente" }));
+  await waitFor(() =>
+    expect(deleteCustomer).toHaveBeenCalledWith("admin-token", "user"),
+  );
+  expect(
+    await screen.findByText("No hay clientes para esta búsqueda."),
+  ).toBeDefined();
+  expect(staffAlert.fire).toHaveBeenCalledWith(
+    expect.objectContaining({ title: "Cliente eliminado", timer: 1000 }),
+  );
 });
 afterEach(() => {
   cleanup();

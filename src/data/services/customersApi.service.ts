@@ -29,3 +29,9 @@ export async function blockCustomer(
     { timeout: 15000, headers: { Authorization: `Bearer ${token}` } },
   );
 }
+export async function deleteCustomer(token: string, googleId: string) {
+  await axios.delete(
+    `${import.meta.env.VITE_API_BASE_URL}/customers/${encodeURIComponent(googleId)}`,
+    { timeout: 15000, headers: { Authorization: `Bearer ${token}` } },
+  );
+}

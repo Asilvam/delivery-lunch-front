@@ -58,24 +58,30 @@ export function OrderReceiptDialog({
             detail: "El pedido figura entregado.",
             severity: "success" as const,
           }
-        : order.estado === OrderStatus.EN_PREPARACION
+        : order.estado === OrderStatus.LISTO
           ? {
-              title: "En preparación",
-              detail: "Cocina está preparando tu pedido.",
-              severity: "info" as const,
+              title: "Listo para entregar",
+              detail: "Tu pedido está preparado y listo para entregar.",
+              severity: "success" as const,
             }
-          : order.validadoPorAdmin
+          : order.estado === OrderStatus.EN_PREPARACION
             ? {
-                title: "Pedido aprobado",
-                detail: "El local aprobó tu pedido y lo envió a cocina.",
-                severity: "success" as const,
-              }
-            : {
-                title: "Pendiente de aprobación",
-                detail:
-                  "El local revisará tu pedido antes de enviarlo a cocina.",
+                title: "En preparación",
+                detail: "Cocina está preparando tu pedido.",
                 severity: "info" as const,
-              };
+              }
+            : order.validadoPorAdmin
+              ? {
+                  title: "Pedido aprobado",
+                  detail: "El local aprobó tu pedido y lo envió a cocina.",
+                  severity: "success" as const,
+                }
+              : {
+                  title: "Pendiente de aprobación",
+                  detail:
+                    "El local revisará tu pedido antes de enviarlo a cocina.",
+                  severity: "info" as const,
+                };
   if (!open) return null;
   return createPortal(
     <Box sx={{ display: "grid", gap: 2, textAlign: "left" }}>

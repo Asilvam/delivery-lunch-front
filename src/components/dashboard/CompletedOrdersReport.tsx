@@ -21,6 +21,8 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { useMountedRef } from "../../hooks/useMountedRef";
 import { staffAlert } from "../../utils/notifications";
 import { OrderStatus, type Order } from "../../types/order";
+import OrderPayment from "../admin/OrderPayment";
+import type { DashboardSummary } from "../../data/services/statisticsApi.service";
 
 const money = (value: number) => `$${value.toLocaleString("es-CL")}`;
 const formatDate = (value?: string) => {
@@ -71,11 +73,15 @@ export default function CompletedOrdersReport({
   startDate,
   endDate,
   loading,
+  onPaymentRecorded,
+  summary,
 }: {
   orders: Order[];
   startDate: string;
   endDate: string;
   loading: boolean;
+  onPaymentRecorded?: () => void;
+  summary?: DashboardSummary;
 }) {
   const [exporting, setExporting] = useState(false);
   const exportInProgress = useRef(false);
@@ -97,18 +103,26 @@ export default function CompletedOrdersReport({
     (currentPage + 1) * rowsPerPage,
   );
   const exportExcel = async () => {
-    if (loading || exportInProgress.current || !completed.length) return;
+    if (loading || exportInProgress.current || (!completed.length && !summary))
+      return;
     exportInProgress.current = true;
     setExporting(true);
     try {
       const { createOrdersExcel, downloadOrdersExcel } =
         await import("../../utils/ordersExcel");
-      const file = await createOrdersExcel(completed, startDate, endDate);
+      const file = await createOrdersExcel(
+        completed,
+        startDate,
+        endDate,
+        summary,
+      );
       if (!mounted.current) return;
       downloadOrdersExcel(file);
       void staffAlert.fire({
         icon: "info",
-        title: `Descarga solicitada para ${completed.length} ${completed.length === 1 ? "pedido" : "pedidos"}. Si la cancelaste, puedes volver a exportar.`,
+        title: completed.length
+          ? `Descarga solicitada para ${completed.length} ${completed.length === 1 ? "pedido" : "pedidos"}. Si la cancelaste, puedes volver a exportar.`
+          : "Descarga del resumen solicitada. Si la cancelaste, puedes volver a exportar.",
       });
     } catch {
       if (mounted.current)
@@ -151,6 +165,7 @@ export default function CompletedOrdersReport({
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Entregados y cancelados · recibidos en el período seleccionado.
+            {summary && " El Excel incluye el resumen del período."}
           </Typography>
         </Box>
         <Button
@@ -162,7 +177,7 @@ export default function CompletedOrdersReport({
               <DownloadIcon />
             )
           }
-          disabled={loading || exporting || !completed.length}
+          disabled={loading || exporting || (!completed.length && !summary)}
           onClick={() => void exportExcel()}
         >
           {exporting ? "Preparando Excel…" : "Exportar a Excel"}
@@ -200,6 +215,7 @@ export default function CompletedOrdersReport({
                 <Status order={order} />
               </Box>
               <Items order={order} />
+              <OrderPayment order={order} onRecorded={onPaymentRecorded} />
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -208,6 +224,15 @@ export default function CompletedOrdersReport({
               >
                 Recibido: {formatDate(order.createdAt)}
               </Typography>
+              {order.listoEn && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                >
+                  Listo: {formatDate(order.listoEn)}
+                </Typography>
+              )}
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -231,19 +256,32 @@ export default function CompletedOrdersReport({
           ))}
         </Box>
       ) : (
-        <TableContainer sx={{ maxHeight: 640 }}>
+        <TableContainer sx={{ maxHeight: 640, overflowX: "auto" }}>
           <Table
             size="small"
             stickyHeader
             aria-label="Historial de pedidos completados"
-            sx={{ minWidth: 1000 }}
+            sx={{
+              minWidth: 1320,
+              tableLayout: "fixed",
+              "& th, & td": { px: 1.5 },
+            }}
           >
+            <colgroup>
+              {[150, 110, 220, 110, 110, 110, 130, 270, 110].map(
+                (width, index) => (
+                  <col key={index} style={{ width }} />
+                ),
+              )}
+            </colgroup>
             <TableHead>
               <TableRow>
                 <TableCell>Cliente</TableCell>
                 <TableCell>Estado</TableCell>
+                <TableCell>Pago</TableCell>
                 <TableCell>Recibido</TableCell>
                 <TableCell>Preparación</TableCell>
+                <TableCell>Listo</TableCell>
                 <TableCell>Entregado / Cancelado</TableCell>
                 <TableCell>Platos</TableCell>
                 <TableCell align="right">Total pedido</TableCell>
@@ -256,11 +294,17 @@ export default function CompletedOrdersReport({
                   hover
                   sx={{ "& td": { verticalAlign: "top", py: 2 } }}
                 >
-                  <TableCell sx={{ maxWidth: 180, overflowWrap: "anywhere" }}>
+                  <TableCell sx={{ overflowWrap: "break-word" }}>
                     {order.cliente}
                   </TableCell>
                   <TableCell>
                     <Status order={order} />
+                  </TableCell>
+                  <TableCell>
+                    <OrderPayment
+                      order={order}
+                      onRecorded={onPaymentRecorded}
+                    />
                   </TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDate(order.createdAt)}
@@ -269,9 +313,12 @@ export default function CompletedOrdersReport({
                     {formatDate(order.aceptadoEn)}
                   </TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    {formatDate(order.listoEn)}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDate(finishedAt(order))}
                   </TableCell>
-                  <TableCell sx={{ minWidth: 230 }}>
+                  <TableCell sx={{ overflowWrap: "break-word" }}>
                     <Items order={order} />
                   </TableCell>
                   <TableCell

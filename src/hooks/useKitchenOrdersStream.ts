@@ -16,6 +16,7 @@ interface UseKitchenOrdersStreamResult {
 
 export function useKitchenOrdersStream(
   token: string | null,
+  onNewOrder?: () => void,
 ): UseKitchenOrdersStreamResult {
   const [orders, setOrders] = useState<Order[]>([]);
   const [connected, setConnected] = useState(false);
@@ -32,8 +33,14 @@ export function useKitchenOrdersStream(
   useEffect(() => {
     if (!token) return;
     fetchKitchenOrders(token)
-      .then((snapshot) => setOrders(prev => [...new Map([...snapshot, ...prev].map(o => [o._id, o])).values()]))
-      .catch(() => setError("No pudimos cargar el historial inicial. Revisa la conexión."));
+      .then((snapshot) =>
+        setOrders((prev) => [
+          ...new Map([...snapshot, ...prev].map((o) => [o._id, o])).values(),
+        ]),
+      )
+      .catch(() =>
+        setError("No pudimos cargar el historial inicial. Revisa la conexión."),
+      );
   }, [token]);
 
   // ── Stream SSE (actualizaciones en tiempo real) ────────────────────────────
@@ -41,6 +48,8 @@ export function useKitchenOrdersStream(
     if (!token) return;
 
     const ctrl = new AbortController();
+    let snapshotComplete = false;
+    const seenOrders = new Set<string>();
     abortRef.current = ctrl;
 
     void fetchEventSource(`${BASE_URL}/orders/stream/kitchen`, {
@@ -48,26 +57,46 @@ export function useKitchenOrdersStream(
       signal: ctrl.signal,
 
       onopen: async (res) => {
+        snapshotComplete = false;
         if (res.ok) {
           setConnected(true);
           setError(null);
         } else {
-          if (res.status === 401) { window.dispatchEvent(new Event('staff-session-expired')); ctrl.abort(); }
+          if (res.status === 401) {
+            window.dispatchEvent(new Event("staff-session-expired"));
+            ctrl.abort();
+          }
           setConnected(false);
-          setError('No pudimos actualizar los pedidos. Revisando conexión…');
-          throw new Error('No se pudo establecer la conexión');
+          setError("No pudimos actualizar los pedidos. Revisando conexión…");
+          throw new Error("No se pudo establecer la conexión");
         }
       },
 
       onmessage: (ev) => {
+        if (ctrl.signal.aborted) return;
+        if (ev.event === "kitchen_snapshot_complete") {
+          snapshotComplete = true;
+          return;
+        }
         if (ev.event === "order_validated") {
           try {
             const order = JSON.parse(ev.data) as Order;
+            if (!order._id) return;
+            const alreadySeen = seenOrders.has(order._id);
+            seenOrders.add(order._id);
             setOrders((prev) => {
               // Evitar duplicados (ya puede existir en el snapshot)
               if (prev.some((o) => o._id === order._id)) return prev;
               return [order, ...prev];
             });
+            if (
+              snapshotComplete &&
+              !alreadySeen &&
+              order.validadoPorAdmin &&
+              order.estado === "pendiente"
+            ) {
+              onNewOrder?.();
+            }
           } catch {
             /* noop */
           }
@@ -86,13 +115,18 @@ export function useKitchenOrdersStream(
       },
 
       onerror: () => {
+        snapshotComplete = false;
         setConnected(false);
-        setError("Conexión interrumpida. Estamos intentando recuperar los pedidos.");
+        setError(
+          "Conexión interrumpida. Estamos intentando recuperar los pedidos.",
+        );
       },
 
       onclose: () => {
+        snapshotComplete = false;
         setConnected(false);
-        if (!ctrl.signal.aborted) throw new Error('Conexión cerrada; reintentando');
+        if (!ctrl.signal.aborted)
+          throw new Error("Conexión cerrada; reintentando");
       },
     });
 
@@ -101,7 +135,7 @@ export function useKitchenOrdersStream(
       abortRef.current = null;
       setConnected(false);
     };
-  }, [token]);
+  }, [token, onNewOrder]);
 
   return { orders, updateOrder, connected, error };
 }

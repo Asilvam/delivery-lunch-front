@@ -35,6 +35,7 @@ export interface OrderResponse {
 export const OrderStatus = {
   PENDIENTE: "pendiente",
   EN_PREPARACION: "en_preparacion",
+  LISTO: "listo",
   ENTREGADO: "entregado",
   CANCELADO: "cancelado",
 } as const;
@@ -56,5 +57,9 @@ export interface Order {
   updatedAt: string;
   aceptadoEn?: string;
   entregadoEn?: string;
+  listoEn?: string;
   canceladoEn?: string;
+  pagado?: boolean;
+  medioPago?: "efectivo" | "transferencia";
+  pagadoEn?: string;
 }

@@ -3,6 +3,7 @@ import { expect, it } from "vitest";
 import ExcelJS from "exceljs";
 import { buildOrdersWorkbook } from "./ordersExcel";
 import type { Order } from "../types/order";
+import type { DashboardSummary } from "../data/services/statisticsApi.service";
 const date = "2026-11-06";
 const order: Order = {
   _id: "000000000000000000000001",
@@ -58,7 +59,8 @@ it("exports a valid XLSX preserving real prices, quantities, text and Chile time
     result: 17000,
   });
   expect(pedidos.views[0]).toMatchObject({ state: "frozen", ySplit: 4 });
-  expect(pedidos.autoFilter).toBe("A4:J5");
+  expect(pedidos.autoFilter).toBe("A4:N5");
+  expect(pedidos.getCell("K5").value).toBe("Sin registrar");
   const detalle = loaded.getWorksheet("Detalle")!;
   expect(detalle.getCell("F6").value).toBe("Atún");
   expect(pedidos.getCell("I5").text).toContain("23:45:00");
@@ -91,6 +93,52 @@ it("labels cancellation explicitly and does not count the order total once per d
 });
 it("does not produce an empty export", () =>
   expect(() => buildOrdersWorkbook([], date)).toThrow("No hay pedidos"));
+
+it("keeps ready orders distinct from completed orders and exports the ready timestamp", () => {
+  const workbook = buildOrdersWorkbook(
+    [{ ...order, estado: "listo", listoEn: "2026-11-06T03:00:00Z" }],
+    date,
+  );
+  const sheet = workbook.getWorksheet("Pedidos")!;
+  expect(sheet.getCell("F5").text).toBe("Listo para entregar");
+  expect(sheet.getCell("N5").text).toContain("00:00:00");
+  expect(sheet.getCell("J5").text).toBe("");
+});
+
+it("exports the same metrics summary even with no completed orders, separating sales and collections", async () => {
+  const summary: DashboardSummary = {
+    pedidosTotales: 4,
+    pedidosCompletados: 1,
+    pedidosCancelados: 1,
+    pedidosPendientes: 1,
+    pedidosEnPreparacion: 0,
+    pedidosListos: 1,
+    menusVendidos: 2,
+    ingresosTotales: 11000,
+    tasaCompletacion: 25,
+    pagos: {
+      total: 17000,
+      efectivo: 6000,
+      transferencia: 11000,
+      porCobrar: 5500,
+      sinRegistro: 1,
+    },
+    periodo: { startDate: date, endDate: date },
+  };
+  const workbook = buildOrdersWorkbook([], date, date, summary);
+  const loaded = new ExcelJS.Workbook();
+  await loaded.xlsx.load(await workbook.xlsx.writeBuffer());
+  const sheet = loaded.getWorksheet("Resumen")!;
+  const values = new Map<string, ExcelJS.CellValue>();
+  sheet.eachRow((row, i) => {
+    if (i > 4) values.set(row.getCell(1).text, row.getCell(2).value);
+  });
+  expect(values.get("Ventas entregadas")).toBe(11000);
+  expect(values.get("Cobros registrados")).toBe(17000);
+  expect(values.get("Por cobrar")).toBe(5500);
+  expect(values.get("Listos para entregar")).toBe(1);
+  expect(sheet.getCell("A3").text).toContain("No cambia pedidos");
+});
 
 it("identifies the metrics date range in both workbook sheets", () => {
   const workbook = buildOrdersWorkbook([order], "2026-11-01", date);

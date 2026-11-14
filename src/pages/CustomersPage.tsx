@@ -21,6 +21,7 @@ import {
 } from "../utils/notifications";
 import {
   blockCustomer,
+  deleteCustomer,
   fetchCustomers,
   type CustomerFilter,
 } from "../data/services/customersApi.service";
@@ -121,6 +122,35 @@ export default function CustomersPage() {
       void staffAlert.fire({
         icon: "error",
         title: "No pudimos cambiar el acceso del cliente. Intenta nuevamente.",
+      });
+    } finally {
+      setUpdating(null);
+    }
+  };
+  const removeCustomer = async (customer: CustomerRow) => {
+    if (!token || updating) return;
+    const result = await appAlert.fire({
+      icon: "warning",
+      title: "¿Eliminar este cliente?",
+      text: `Se quitará a ${customer.name} del listado y se cerrará su sesión. Sus pedidos se conservan. Si vuelve a ingresar con Google, reaparecerá.`,
+      showCancelButton: true,
+      confirmButtonText: "Eliminar cliente",
+      cancelButtonText: "Volver",
+    });
+    if (!result.isConfirmed) return;
+    setUpdating(customer.googleId);
+    try {
+      await deleteCustomer(token, customer.googleId);
+      setRevision((value) => value + 1);
+      void staffAlert.fire({
+        icon: "success",
+        title: "Cliente eliminado",
+        timer: STAFF_ACTION_DURATION_MS,
+      });
+    } catch {
+      void staffAlert.fire({
+        icon: "error",
+        title: "No pudimos eliminar al cliente. Intenta nuevamente.",
       });
     } finally {
       setUpdating(null);
@@ -252,22 +282,43 @@ export default function CustomersPage() {
                 Último: {date(customer.lastOrderAt)}
               </Typography>
             </Box>
-            <Button
-              variant="outlined"
-              color={customer.blocked ? "primary" : "error"}
-              onClick={() => void changeBlock(customer)}
-              disabled={updating !== null || loading}
-              aria-label={`${customer.blocked ? "Habilitar" : "Bloquear"} a ${customer.name}`}
-              sx={{ minHeight: 44, justifySelf: { xs: "stretch", md: "end" } }}
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                justifyContent: { md: "flex-end" },
+              }}
             >
-              {updating === customer.googleId ? (
-                <CircularProgress size={18} />
-              ) : customer.blocked ? (
-                "Habilitar"
-              ) : (
-                "Bloquear"
-              )}
-            </Button>
+              <Button
+                variant="outlined"
+                color={customer.blocked ? "primary" : "error"}
+                onClick={() => void changeBlock(customer)}
+                disabled={updating !== null || loading}
+                aria-label={`${customer.blocked ? "Habilitar" : "Bloquear"} a ${customer.name}`}
+                sx={{
+                  minHeight: 44,
+                  justifySelf: { xs: "stretch", md: "end" },
+                }}
+              >
+                {updating === customer.googleId ? (
+                  <CircularProgress size={18} />
+                ) : customer.blocked ? (
+                  "Habilitar"
+                ) : (
+                  "Bloquear"
+                )}
+              </Button>
+              <Button
+                color="error"
+                onClick={() => void removeCustomer(customer)}
+                disabled={updating !== null || loading}
+                aria-label={`Eliminar a ${customer.name}`}
+                sx={{ minHeight: 44 }}
+              >
+                Eliminar
+              </Button>
+            </Box>
           </Paper>
         ))}
         {!loading && data?.total === 0 && (

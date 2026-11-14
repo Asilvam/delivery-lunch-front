@@ -30,9 +30,17 @@ export interface DashboardSummary {
   pedidosCancelados: number;
   pedidosPendientes: number;
   pedidosEnPreparacion: number;
+  pedidosListos?: number;
   menusVendidos: number;
   tasaCompletacion: number;
   ingresosTotales: number;
+  pagos?: {
+    total: number;
+    efectivo: number;
+    transferencia: number;
+    porCobrar: number;
+    sinRegistro: number;
+  };
   periodo: {
     startDate: string;
     endDate: string;

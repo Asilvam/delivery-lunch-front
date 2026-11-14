@@ -23,7 +23,9 @@ export function useAdminOrdersStream(
   const updateOrder = useCallback((updated: Order) => {
     setOrders((prev) =>
       pending(updated)
-        ? prev.map((order) => (order._id === updated._id ? updated : order))
+        ? prev.some((order) => order._id === updated._id)
+          ? prev.map((order) => (order._id === updated._id ? updated : order))
+          : [updated, ...prev]
         : prev.filter((order) => order._id !== updated._id),
     );
   }, []);
@@ -60,15 +62,21 @@ export function useAdminOrdersStream(
       onmessage: (event) => {
         if (ctrl.signal.aborted) return;
         if (
-          !["new_order", "order_cancelled", "order_validated"].includes(
-            event.event,
-          )
+          ![
+            "new_order",
+            "order_cancelled",
+            "order_validated",
+            "payment_update",
+          ].includes(event.event)
         )
           return;
         try {
           const order = JSON.parse(event.data) as Order;
           setOrders((prev) => {
-            if (event.event !== "new_order" || !pending(order))
+            if (
+              !["new_order", "payment_update"].includes(event.event) ||
+              !pending(order)
+            )
               return prev.filter((current) => current._id !== order._id);
             return prev.some((current) => current._id === order._id)
               ? prev.map((current) =>

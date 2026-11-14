@@ -15,10 +15,13 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { appAlert } from "../../utils/notifications";
 import { OrderStatus, type Order } from "../../types/order";
+import OrderPayment from "../admin/OrderPayment";
+import OrderWaitTime from "../admin/OrderWaitTime";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   [OrderStatus.PENDIENTE]: "Pendiente",
   [OrderStatus.EN_PREPARACION]: "En preparación",
+  [OrderStatus.LISTO]: "Listo para entregar",
   [OrderStatus.ENTREGADO]: "Entregado",
   [OrderStatus.CANCELADO]: "Cancelado",
 };
@@ -29,6 +32,7 @@ const STATUS_COLOR: Record<
 > = {
   [OrderStatus.PENDIENTE]: "warning",
   [OrderStatus.EN_PREPARACION]: "default",
+  [OrderStatus.LISTO]: "success",
   [OrderStatus.ENTREGADO]: "success",
   [OrderStatus.CANCELADO]: "error",
 };
@@ -51,14 +55,16 @@ export default function KitchenOrderCard({
 
   const nextStatus: Record<OrderStatus, OrderStatus | null> = {
     [OrderStatus.PENDIENTE]: OrderStatus.EN_PREPARACION,
-    [OrderStatus.EN_PREPARACION]: OrderStatus.ENTREGADO,
+    [OrderStatus.EN_PREPARACION]: OrderStatus.LISTO,
+    [OrderStatus.LISTO]: OrderStatus.ENTREGADO,
     [OrderStatus.ENTREGADO]: null,
     [OrderStatus.CANCELADO]: null,
   };
 
   const nextStatusLabel: Record<OrderStatus, string | null> = {
     [OrderStatus.PENDIENTE]: "Iniciar preparación",
-    [OrderStatus.EN_PREPARACION]: "Marcar entregado",
+    [OrderStatus.EN_PREPARACION]: "Marcar listo",
+    [OrderStatus.LISTO]: "Marcar entregado",
     [OrderStatus.ENTREGADO]: null,
     [OrderStatus.CANCELADO]: null,
   };
@@ -78,7 +84,9 @@ export default function KitchenOrderCard({
       void showActionSuccess(
         next === OrderStatus.ENTREGADO
           ? "Pedido entregado"
-          : "Preparación iniciada",
+          : next === OrderStatus.LISTO
+            ? "Pedido listo para entregar"
+            : "Preparación iniciada",
       );
     } catch (error) {
       await showActionError(error);
@@ -172,6 +180,8 @@ export default function KitchenOrderCard({
         </Box>
 
         {/* Fechas relevantes */}
+        <OrderWaitTime order={order} />
+        <OrderPayment order={order} />
         <Box mb={1.5}>
           <Typography variant="caption" color="text.secondary" display="block">
             <b>Creado:</b>{" "}
@@ -196,6 +206,21 @@ export default function KitchenOrderCard({
                 month: "2-digit",
               })}{" "}
               {new Date(order.aceptadoEn).toLocaleTimeString("es-CL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Typography>
+          )}
+          {order.listoEn && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
+              <b>Listo:</b>{" "}
+              {new Date(order.listoEn).toLocaleString("es-CL", {
+                day: "2-digit",
+                month: "2-digit",
                 hour: "2-digit",
                 minute: "2-digit",
               })}

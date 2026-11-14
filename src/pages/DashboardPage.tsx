@@ -11,6 +11,7 @@ import {
   Button,
   Alert,
   Typography,
+  Paper,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -198,6 +199,14 @@ export default function DashboardPage() {
       ) : summary && !error ? (
         <>
           {/* KPIs */}
+          <Typography
+            component="h2"
+            variant="h6"
+            fontWeight={700}
+            sx={{ mb: 2 }}
+          >
+            {startDate === endDate ? "Resumen del día" : "Resumen del período"}
+          </Typography>
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid size={{ xs: 6, sm: 6, md: 3 }} sx={{ minWidth: 0 }}>
               <KpiCard
@@ -229,8 +238,12 @@ export default function DashboardPage() {
             <Grid size={{ xs: 6, sm: 6, md: 3 }} sx={{ minWidth: 0 }}>
               <KpiCard
                 title="Pedidos por atender"
-                value={summary.pedidosPendientes + summary.pedidosEnPreparacion}
-                subtitle={`${summary.pedidosPendientes} pendientes · ${summary.pedidosEnPreparacion} en preparación`}
+                value={
+                  summary.pedidosPendientes +
+                  summary.pedidosEnPreparacion +
+                  (summary.pedidosListos ?? 0)
+                }
+                subtitle={`${summary.pedidosPendientes} pendientes · ${summary.pedidosEnPreparacion} en preparación${summary.pedidosListos ? ` · ${summary.pedidosListos} listos` : ""}`}
                 icon={<PendingActionsIcon />}
                 color="warning"
               />
@@ -238,6 +251,64 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Charts Row 1 */}
+          {summary.pagos && (
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 3 }}>
+              <Typography variant="h6" fontWeight={700}>
+                Pagos
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: { xs: 2, sm: 5 },
+                  mt: 1,
+                }}
+              >
+                <Box>
+                  <Typography variant="body2">
+                    Cobros registrados en el período
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    color="success.main"
+                    fontWeight={800}
+                  >
+                    ${summary.pagos.total.toLocaleString("es-CL")}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Efectivo: ${summary.pagos.efectivo.toLocaleString("es-CL")}{" "}
+                    · Transferencia: $
+                    {summary.pagos.transferencia.toLocaleString("es-CL")}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2">
+                    Por cobrar · entregados del período
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    color="warning.main"
+                    fontWeight={800}
+                  >
+                    ${summary.pagos.porCobrar.toLocaleString("es-CL")}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {summary.pagos.sinRegistro} pedidos anteriores con pago sin
+                    registrar
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                sx={{ mt: 1 }}
+              >
+                Los cobros se agrupan por fecha de registro. Los pagos de
+                pedidos cancelados se revisan manualmente.
+              </Typography>
+            </Paper>
+          )}
           <Grid container spacing={3} sx={{ mb: 3, mt: 0 }}>
             <Grid size={{ xs: 12, md: 7 }} sx={{ mb: { xs: 2, md: 0 } }}>
               <RevenueChart data={revenue} />
@@ -265,6 +336,8 @@ export default function DashboardPage() {
             startDate={startDate}
             endDate={endDate}
             loading={loading}
+            summary={summary}
+            onPaymentRecorded={() => void loadData()}
           />
         </>
       ) : null}

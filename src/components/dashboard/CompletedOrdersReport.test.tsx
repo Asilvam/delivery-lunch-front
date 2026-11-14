@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import CompletedOrdersReport from "./CompletedOrdersReport";
+vi.mock("../admin/OrderPayment", () => ({ default: () => null }));
 import { staffAlert } from "../../utils/notifications";
 vi.mock("../../utils/notifications", () => ({ staffAlert: { fire: vi.fn() } }));
 import {
@@ -14,6 +15,7 @@ import {
   downloadOrdersExcel,
 } from "../../utils/ordersExcel";
 import type { Order } from "../../types/order";
+import type { DashboardSummary } from "../../data/services/statisticsApi.service";
 vi.mock("../../utils/ordersExcel", () => ({
   createOrdersExcel: vi.fn(),
   downloadOrdersExcel: vi.fn(),
@@ -70,6 +72,7 @@ it("exports the completed orders for the selected metrics period", async () => {
     [order, cancelled],
     "2026-11-01",
     "2026-11-06",
+    undefined,
   );
   expect(staffAlert.fire).toHaveBeenCalledWith({
     icon: "info",
@@ -83,6 +86,38 @@ it("does not show an export when there are no completed rows", () => {
   expect(
     screen.getByRole("button", { name: "Exportar a Excel" }),
   ).toHaveProperty("disabled", true);
+});
+it("exports the metrics summary even when there are only open orders", async () => {
+  const summary: DashboardSummary = {
+    pedidosTotales: 1,
+    pedidosCompletados: 0,
+    pedidosCancelados: 0,
+    pedidosPendientes: 0,
+    pedidosEnPreparacion: 0,
+    pedidosListos: 1,
+    menusVendidos: 0,
+    ingresosTotales: 0,
+    tasaCompletacion: 0,
+    periodo: { startDate: "2026-11-14", endDate: "2026-11-14" },
+  };
+  render(
+    <CompletedOrdersReport
+      orders={[]}
+      startDate="2026-11-14"
+      endDate="2026-11-14"
+      loading={false}
+      summary={summary}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Exportar a Excel" }));
+  await waitFor(() =>
+    expect(createOrdersExcel).toHaveBeenCalledWith(
+      [],
+      "2026-11-14",
+      "2026-11-14",
+      summary,
+    ),
+  );
 });
 it("blocks repeated clicks while generating the file", async () => {
   let complete!: (file: { blob: Blob; filename: string }) => void;

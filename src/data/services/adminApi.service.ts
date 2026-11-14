@@ -60,3 +60,16 @@ export async function updateOrderStatus(
   );
   return res.data;
 }
+export async function registerOrderPayment(
+  token: string,
+  id: string,
+  medioPago: "efectivo" | "transferencia",
+): Promise<Order> {
+  return (
+    await axios.patch<Order>(
+      `${BASE_URL}/orders/${id}/payment`,
+      { medioPago },
+      { headers: authHeaders(token), timeout: 15000 },
+    )
+  ).data;
+}

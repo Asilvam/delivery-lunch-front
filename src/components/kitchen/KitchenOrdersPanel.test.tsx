@@ -33,7 +33,50 @@ const order = {
   estado: "en_preparacion",
   createdAt: "2026-11-13T12:00:00Z",
   fecha: "2026-11-13",
+  items: [
+    {
+      platoId: "hipo",
+      nombre: "Hipo",
+      cantidad: 2,
+      precio: 5500,
+      selecciones: { proteina: "Atún", postre: "Fruta" },
+    },
+  ],
 } as Order;
+it("totals dishes and proteins by stage without counting unapproved or finished work", () => {
+  render(
+    <KitchenOrdersPanel
+      orders={[
+        order,
+        { ...order, _id: "preparing2" },
+        { ...order, _id: "queued", estado: "pendiente" },
+        {
+          ...order,
+          _id: "ready",
+          estado: "listo",
+          items: [
+            {
+              ...order.items[0],
+              selecciones: { proteina: "Pollo", postre: "Fruta" },
+            },
+          ],
+        },
+        { ...order, _id: "unapproved", validadoPorAdmin: false },
+        { ...order, _id: "done", estado: "entregado" },
+      ]}
+      connected
+      error={null}
+      onStatusChange={vi.fn()}
+      isAdmin
+    />,
+  );
+  const summary = screen.getByLabelText("Resumen de producción de hoy");
+  expect(within(summary).getByText("4× Hipo · Atún")).toBeDefined();
+  expect(within(summary).getByText("2× Hipo · Atún")).toBeDefined();
+  expect(within(summary).getByText("2× Hipo · Pollo")).toBeDefined();
+  expect(within(summary).getByText("Listos para entregar")).toBeDefined();
+  expect(screen.getByTestId("card-ready")).toBeDefined();
+});
 it("keeps only approved active orders in kitchen and removes the completed report and export", () => {
   render(
     <KitchenOrdersPanel
