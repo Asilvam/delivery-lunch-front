@@ -67,6 +67,45 @@ const Items = ({ order }: { order: Order }) => (
     ))}
   </Box>
 );
+const ItemsSummary = ({ order }: { order: Order }) => {
+  const dishes = new Map<
+    string,
+    { name: string; quantity: number; proteins: Map<string, number> }
+  >();
+  for (const item of order.items) {
+    const dish = dishes.get(item.platoId) ?? {
+      name: item.nombre,
+      quantity: 0,
+      proteins: new Map<string, number>(),
+    };
+    dish.quantity += item.cantidad;
+    const protein = item.selecciones?.proteina;
+    if (protein)
+      dish.proteins.set(
+        protein,
+        (dish.proteins.get(protein) ?? 0) + item.cantidad,
+      );
+    dishes.set(item.platoId, dish);
+  }
+  return (
+    <Box sx={{ display: "grid", gap: 0.75 }}>
+      {[...dishes].map(([id, dish]) => (
+        <Box key={id}>
+          <Typography variant="body2" fontWeight={600}>
+            {dish.quantity}× {dish.name}
+          </Typography>
+          {dish.proteins.size > 0 && (
+            <Typography variant="caption" color="text.secondary">
+              {[...dish.proteins]
+                .map(([name, quantity]) => `${name} (${quantity})`)
+                .join(" · ")}
+            </Typography>
+          )}
+        </Box>
+      ))}
+    </Box>
+  );
+};
 
 export default function CompletedOrdersReport({
   orders,
@@ -262,23 +301,25 @@ export default function CompletedOrdersReport({
             stickyHeader
             aria-label="Historial de pedidos completados"
             sx={{
-              minWidth: 1320,
+              width: "100%",
+              minWidth: 960,
               tableLayout: "fixed",
-              "& th, & td": { px: 1.5 },
+              "& th, & td": { px: 1, fontSize: "0.8125rem" },
+              "& .MuiTypography-body2": { fontSize: "0.8125rem" },
+              "& .MuiChip-root": { fontSize: "0.75rem" },
+              "& .MuiChip-label": { px: 0.75 },
             }}
           >
             <colgroup>
-              {[150, 110, 220, 110, 110, 110, 130, 270, 110].map(
-                (width, index) => (
-                  <col key={index} style={{ width }} />
-                ),
-              )}
+              {[11, 9, 15, 10, 10, 10, 10, 17, 8].map((width, index) => (
+                <col key={index} style={{ width: `${width}%` }} />
+              ))}
             </colgroup>
             <TableHead>
               <TableRow>
                 <TableCell>Cliente</TableCell>
                 <TableCell>Estado</TableCell>
-                <TableCell>Pago</TableCell>
+                <TableCell>Tipo de pago</TableCell>
                 <TableCell>Recibido</TableCell>
                 <TableCell>Preparación</TableCell>
                 <TableCell>Listo</TableCell>
@@ -302,6 +343,7 @@ export default function CompletedOrdersReport({
                   </TableCell>
                   <TableCell>
                     <OrderPayment
+                      compact
                       order={order}
                       onRecorded={onPaymentRecorded}
                     />
@@ -319,7 +361,7 @@ export default function CompletedOrdersReport({
                     {formatDate(finishedAt(order))}
                   </TableCell>
                   <TableCell sx={{ overflowWrap: "break-word" }}>
-                    <Items order={order} />
+                    <ItemsSummary order={order} />
                   </TableCell>
                   <TableCell
                     align="right"

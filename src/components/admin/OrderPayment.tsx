@@ -10,9 +10,11 @@ import type { Order } from "../../types/order";
 export default function OrderPayment({
   order,
   onRecorded,
+  compact = false,
 }: {
   order: Order;
   onRecorded?: () => void;
+  compact?: boolean;
 }) {
   const { token, role } = useAuth();
   const mounted = useMountedRef();
@@ -58,23 +60,47 @@ export default function OrderPayment({
       sx={{
         display: "flex",
         flexWrap: "wrap",
-        alignItems: "center",
+        alignItems: compact ? "flex-start" : "center",
         gap: 1,
-        my: 1,
+        my: compact ? 0 : 1,
       }}
     >
       <Chip
         size="small"
         variant="outlined"
+        sx={
+          compact
+            ? {
+                maxWidth: "100%",
+                height: "auto",
+                minHeight: 24,
+                "& .MuiChip-label": {
+                  whiteSpace: "normal",
+                  py: 0.25,
+                  lineHeight: 1.35,
+                },
+              }
+            : undefined
+        }
         color={
-          paid ? "success" : order.pagado === false ? "warning" : "default"
+          paid
+            ? "success"
+            : order.pagado === false && order.estado !== "cancelado"
+              ? "warning"
+              : "default"
         }
         label={
           paid
-            ? `Pagado · ${method === "efectivo" ? "Efectivo" : "Transferencia"}`
+            ? `${compact ? "" : "Pagado · "}${method === "efectivo" ? "Efectivo" : "Transferencia"}`
             : order.pagado === false
-              ? "Pago pendiente"
-              : "Pago sin registrar"
+              ? compact
+                ? order.estado === "cancelado"
+                  ? "Sin pago"
+                  : "Pendiente"
+                : "Pago pendiente"
+              : compact
+                ? "Sin registro"
+                : "Pago sin registrar"
         }
       />
       {!paid && order.estado !== "cancelado" && role === "admin" && (
