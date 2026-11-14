@@ -1,19 +1,18 @@
-// src/hooks/useAdminOrdersStream.ts
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
-import type { Order } from "../types/order";
+import { OrderStatus, type Order } from "../types/order";
+import { fetchOrders } from "../data/services/adminApi.service";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
-interface UseAdminOrdersStreamResult {
+export interface UseAdminOrdersStreamResult {
   orders: Order[];
-  /** Reemplaza un pedido existente en la lista (por _id) o lo ignora si no existe */
   updateOrder: (updated: Order) => void;
-  /** Elimina un pedido de la lista (útil tras validación: sale del panel admin) */
   removeOrder: (id: string) => void;
   connected: boolean;
   error: string | null;
 }
+const pending = (order: Order) =>
+  !order.validadoPorAdmin && order.estado === OrderStatus.PENDIENTE;
 
 export function useAdminOrdersStream(
   token: string | null,
@@ -21,75 +20,82 @@ export function useAdminOrdersStream(
   const [orders, setOrders] = useState<Order[]>([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-
   const updateOrder = useCallback((updated: Order) => {
-    setOrders((prev) => prev.map((o) => (o._id === updated._id ? updated : o)));
+    setOrders((prev) =>
+      pending(updated)
+        ? prev.map((order) => (order._id === updated._id ? updated : order))
+        : prev.filter((order) => order._id !== updated._id),
+    );
   }, []);
-
   const removeOrder = useCallback((id: string) => {
-    setOrders((prev) => prev.filter((o) => o._id !== id));
+    setOrders((prev) => prev.filter((order) => order._id !== id));
   }, []);
-
   useEffect(() => {
     if (!token) return;
-
     const ctrl = new AbortController();
-    abortRef.current = ctrl;
-
     void fetchEventSource(`${BASE_URL}/orders/stream/admin`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: ctrl.signal,
-
       onopen: async (res) => {
-        if (res.ok) {
-          setConnected(true);
-          setError(null);
-        } else {
-          if (res.status === 401) { window.dispatchEvent(new Event('staff-session-expired')); ctrl.abort(); }
-          setConnected(false);
-          setError('No pudimos actualizar los pedidos. Revisando conexión…');
-          throw new Error('No se pudo establecer la conexión');
-        }
-      },
-
-      onmessage: (ev) => {
-        if (ev.event === 'order_cancelled' || ev.event === 'order_validated') {
-          try { const order = JSON.parse(ev.data) as Order; setOrders(prev => prev.filter(o => o._id !== order._id)); } catch { /* mensaje inválido */ }
-          return;
-        }
-        if (ev.event === "new_order") {
-          try {
-            const order = JSON.parse(ev.data) as Order;
-            setOrders((prev) => {
-              // Evitar duplicados (replay puede re-enviar pedidos ya en lista)
-              if (prev.some((o) => o._id === order._id)) return prev;
-              return [order, ...prev];
-            });
-          } catch {
-            /* noop */
+        if (ctrl.signal.aborted) return;
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.dispatchEvent(new Event("staff-session-expired"));
+            ctrl.abort();
           }
+          throw new Error("No se pudo establecer la conexión");
+        }
+        // Reconcile the whole queue on reconnect, including approvals missed offline.
+        // Live events are buffered by fetchEventSource until onopen completes.
+        const snapshot = await fetchOrders(
+          token,
+          OrderStatus.PENDIENTE,
+          ctrl.signal,
+        );
+        if (ctrl.signal.aborted) return;
+        setOrders(snapshot.filter(pending));
+        setConnected(true);
+        setError(null);
+      },
+      onmessage: (event) => {
+        if (ctrl.signal.aborted) return;
+        if (
+          !["new_order", "order_cancelled", "order_validated"].includes(
+            event.event,
+          )
+        )
+          return;
+        try {
+          const order = JSON.parse(event.data) as Order;
+          setOrders((prev) => {
+            if (event.event !== "new_order" || !pending(order))
+              return prev.filter((current) => current._id !== order._id);
+            return prev.some((current) => current._id === order._id)
+              ? prev.map((current) =>
+                  current._id === order._id ? order : current,
+                )
+              : [order, ...prev];
+          });
+        } catch {
+          /* Ignore malformed events without changing the queue. */
         }
       },
-
       onerror: () => {
+        if (ctrl.signal.aborted) return;
         setConnected(false);
-        setError("Conexión interrumpida. Estamos intentando recuperar los pedidos.");
-        // fetchEventSource reintenta automáticamente; no relanzamos
+        setError(
+          "Conexión interrumpida. Estamos intentando recuperar los pedidos.",
+        );
       },
-
       onclose: () => {
+        if (ctrl.signal.aborted) return;
         setConnected(false);
-        if (!ctrl.signal.aborted) throw new Error('Conexión cerrada; reintentando');
+        throw new Error("Conexión cerrada; reintentando");
       },
     });
-
     return () => {
       ctrl.abort();
-      abortRef.current = null;
-      setConnected(false);
     };
   }, [token]);
-
   return { orders, updateOrder, removeOrder, connected, error };
 }

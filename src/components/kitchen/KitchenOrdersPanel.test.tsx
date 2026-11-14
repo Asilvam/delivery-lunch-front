@@ -1,17 +1,38 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import KitchenOrdersPanel from "./KitchenOrdersPanel";
 import type { Order } from "../../types/order";
 vi.mock("./KitchenOrderCard", () => ({
-  default: ({ order }: { order: Order }) => <div>{order.cliente}</div>,
+  default: ({
+    order,
+    showMenuDate,
+  }: {
+    order: Order;
+    showMenuDate?: boolean;
+  }) => (
+    <div
+      data-testid={`card-${order._id}`}
+      data-date={showMenuDate ? order.fecha : undefined}
+    >
+      {order.cliente}
+    </div>
+  ),
 }));
-afterEach(cleanup);
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-11-13T15:00:00Z"));
+});
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 const order = {
   _id: "order",
   cliente: "En cocina",
   validadoPorAdmin: true,
   estado: "en_preparacion",
-  createdAt: "2026-11-06T12:00:00Z",
+  createdAt: "2026-11-13T12:00:00Z",
+  fecha: "2026-11-13",
 } as Order;
 it("keeps only approved active orders in kitchen and removes the completed report and export", () => {
   render(
@@ -50,4 +71,141 @@ it("shows the empty active queue even when there are completed orders", () => {
     />,
   );
   expect(screen.getByText("Sin comandas activas")).toBeTruthy();
+});
+
+it("separates earlier menu dates from new orders and keeps FIFO in each group", () => {
+  const older = {
+    ...order,
+    _id: "older",
+    cliente: "Anterior primero",
+    fecha: "2026-11-11",
+    createdAt: "2026-11-11T14:00:00Z",
+    estado: "pendiente",
+  } as Order;
+  const yesterday = {
+    ...order,
+    _id: "yesterday",
+    cliente: "Anterior segundo",
+    fecha: "2026-11-12",
+    createdAt: "2026-11-12T14:00:00Z",
+  };
+  const todayLater = {
+    ...order,
+    _id: "later",
+    cliente: "Hoy segundo",
+    createdAt: "2026-11-13T14:00:00Z",
+  };
+  render(
+    <KitchenOrdersPanel
+      orders={[todayLater, yesterday, older, order]}
+      connected
+      error={null}
+      onStatusChange={vi.fn()}
+      isAdmin
+    />,
+  );
+  const current = screen.getByRole("region", { name: "En curso (2)" });
+  const previous = screen.getByRole("region", {
+    name: "Pendientes de días anteriores (2)",
+  });
+  expect(
+    within(current)
+      .getAllByTestId(/^card-/)
+      .map((node) => node.textContent),
+  ).toEqual(["En cocina", "Hoy segundo"]);
+  expect(
+    within(previous)
+      .getAllByTestId(/^card-/)
+      .map((node) => node.textContent),
+  ).toEqual(["Anterior primero", "Anterior segundo"]);
+  expect(
+    within(previous).getByTestId("card-older").getAttribute("data-date"),
+  ).toBe("2026-11-11");
+  expect(
+    within(current).getByTestId("card-order").hasAttribute("data-date"),
+  ).toBe(false);
+});
+it("keeps older work until manually delivered or cancelled, excluding unapproved orders", () => {
+  const previous = { ...order, fecha: "2026-11-12" };
+  const onStatusChange = vi.fn();
+  const view = render(
+    <KitchenOrdersPanel
+      orders={[
+        previous,
+        {
+          ...previous,
+          _id: "unapproved",
+          cliente: "Sin aprobar",
+          validadoPorAdmin: false,
+        },
+      ]}
+      connected
+      error={null}
+      onStatusChange={onStatusChange}
+      isAdmin
+    />,
+  );
+  expect(screen.getByText("Sin comandas de hoy")).toBeDefined();
+  expect(screen.queryByText("Sin aprobar")).toBeNull();
+  expect(
+    screen.getByRole("region", { name: "Pendientes de días anteriores (1)" }),
+  ).toBeDefined();
+  expect(onStatusChange).not.toHaveBeenCalled();
+  view.rerender(
+    <KitchenOrdersPanel
+      orders={[
+        { ...previous, estado: "entregado" },
+        { ...previous, _id: "cancelled", estado: "cancelado" },
+      ]}
+      connected
+      error={null}
+      onStatusChange={onStatusChange}
+      isAdmin
+    />,
+  );
+  expect(
+    screen.queryByRole("region", { name: /Pendientes de días anteriores/ }),
+  ).toBeNull();
+  expect(screen.getByText("Sin comandas activas")).toBeDefined();
+});
+it("moves active work into the previous-days section at midnight without changing its status", () => {
+  vi.setSystemTime(new Date("2026-11-14T02:59:59Z"));
+  const onStatusChange = vi.fn();
+  render(
+    <KitchenOrdersPanel
+      orders={[order]}
+      connected
+      error={null}
+      onStatusChange={onStatusChange}
+      isAdmin
+    />,
+  );
+  expect(
+    screen.queryByRole("region", { name: /Pendientes de días anteriores/ }),
+  ).toBeNull();
+  act(() => {
+    vi.advanceTimersByTime(1000);
+  });
+  expect(
+    screen.getByRole("region", { name: "Pendientes de días anteriores (1)" }),
+  ).toBeDefined();
+  expect(onStatusChange).not.toHaveBeenCalled();
+});
+it("rechecks the day when returning to a background tab", () => {
+  render(
+    <KitchenOrdersPanel
+      orders={[order]}
+      connected
+      error={null}
+      onStatusChange={vi.fn()}
+      isAdmin
+    />,
+  );
+  act(() => {
+    vi.setSystemTime(new Date("2026-11-14T11:00:00Z"));
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  expect(
+    screen.getByRole("region", { name: "Pendientes de días anteriores (1)" }),
+  ).toBeDefined();
 });

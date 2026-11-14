@@ -77,7 +77,10 @@ export function BrandFooter() {
         sx={{
           py: 1.5,
           display: "grid",
-          gridTemplateColumns: { xs: "minmax(0, 1fr) auto", sm: "minmax(0, 1fr) auto auto" },
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr) auto",
+            sm: "minmax(0, 1fr) auto auto",
+          },
           gridTemplateAreas: {
             xs: '"copyright access" "metadata metadata"',
             sm: '"copyright metadata access"',
@@ -87,7 +90,11 @@ export function BrandFooter() {
           rowGap: 0.5,
         }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ gridArea: "copyright" }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ gridArea: "copyright" }}
+        >
           © {new Date().getFullYear()} Sabores Angelicales
         </Typography>
         <Typography
@@ -96,7 +103,8 @@ export function BrandFooter() {
           sx={{ gridArea: "metadata", fontSize: "0.7rem" }}
           title={`Commit: ${commit}`}
         >
-          v{version} · Compilación {commit.slice(0, 7)}{localBuild ? " · local" : ""}
+          v{version} · Compilación {commit.slice(0, 7)}
+          {localBuild ? " · local" : ""}
         </Typography>
         <Link
           component={RouterLink}
@@ -124,13 +132,27 @@ export function PageLayout({
   header,
   children,
   mainId,
+  mobileNavigation = false,
 }: {
   header: ReactNode;
   children: ReactNode;
   mainId?: string;
+  mobileNavigation?: boolean;
 }) {
   return (
-    <Box sx={{ minHeight: "100svh", bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        minHeight: "100svh",
+        bgcolor: "background.default",
+        "--staff-nav-offset": {
+          xs: mobileNavigation
+            ? "calc(56px + env(safe-area-inset-bottom, 0px))"
+            : "0px",
+          sm: "0px",
+        },
+        pb: "var(--staff-nav-offset)",
+      }}
+    >
       {header}
       <Container
         component="main"

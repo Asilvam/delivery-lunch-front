@@ -134,7 +134,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <PageLayout header={<StaffNavigation />}>
+    <PageLayout header={<StaffNavigation />} mobileNavigation>
       <Box sx={{ mb: 2 }}>
         <Typography
           component="h1"

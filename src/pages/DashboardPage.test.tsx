@@ -1,3 +1,6 @@
+vi.mock("../hooks/usePendingOrders", () => ({
+  usePendingOrders: () => ({ orders: [], connected: true, error: null }),
+}));
 import {
   act,
   cleanup,

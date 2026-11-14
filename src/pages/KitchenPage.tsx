@@ -19,7 +19,10 @@ export default function KitchenPage() {
   };
 
   return (
-    <PageLayout header={<StaffNavigation />}>
+    <PageLayout
+      header={<StaffNavigation />}
+      mobileNavigation={role === "admin"}
+    >
       <Typography
         component="h1"
         variant="h4"

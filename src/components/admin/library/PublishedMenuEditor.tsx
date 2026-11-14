@@ -494,7 +494,7 @@ export default function PublishedMenuEditor({
         variant="outlined"
         sx={{
           position: "sticky",
-          bottom: 0,
+          bottom: "var(--staff-nav-offset, 0px)",
           zIndex: 2,
           mt: 2,
           p: 2,

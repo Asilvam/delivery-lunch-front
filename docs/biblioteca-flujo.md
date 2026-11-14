@@ -74,3 +74,15 @@ Las fotos subidas antes están registradas en `biblioteca-platos.json`. La lista
 ## Avisos
 
 Los avisos automáticos se muestran como SweetAlert centrados con cierre automático: hasta 3 segundos para clientes, 2 para personal y 1 para acciones rápidas como aprobar. Las confirmaciones y los comprobantes esperan la decisión del usuario. El aviso toma el foco por encima de otros diálogos y lo devuelve al control disponible al cerrarse.
+
+## Comandas de días anteriores
+
+Cocina conserva los pedidos aprobados pendientes o en preparación. Al cambiar el día, aparecen en **Pendientes de días anteriores**, con la fecha del menú en cada tarjeta, separados de las comandas nuevas. La separación se actualiza sin recargar y al regresar a la pestaña; cada grupo conserva el orden FIFO por creación.
+
+Las acciones siguen siendo manuales: cocina puede iniciar la preparación o marcar entregado; administración también puede cancelar con confirmación. Al entregar o cancelar, el pedido sale de las comandas activas y permanece en el historial de métricas. El paso de los días no cancela ni modifica el estado del pedido.
+
+## Navegación del administrador
+
+El orden es **Pedidos → Cocina → Menús → Clientes → Métricas**, con Pedidos como entrada habitual. En escritorio se usa la barra superior y en móvil una barra inferior fija con iconos, nombres y la sección activa destacada. El espacio inferior del contenido incluye la altura de la barra y el área segura del dispositivo.
+
+Pedidos muestra un contador de solicitudes pendientes de aprobación, compartido con el listado y actualizado al recibir, aprobar o cancelar. Al reconectar se comprueba la cola completa para retirar solicitudes atendidas durante la desconexión. Las cuentas de cocina conservan únicamente su acceso a Cocina.

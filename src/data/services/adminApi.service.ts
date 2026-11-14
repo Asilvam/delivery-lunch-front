@@ -12,11 +12,13 @@ function authHeaders(token: string) {
 export async function fetchOrders(
   token: string,
   estado?: OrderStatus,
+  signal?: AbortSignal,
 ): Promise<Order[]> {
   const params = estado ? { estado } : {};
   const res = await axios.get<Order[]>(`${BASE_URL}/orders`, {
     headers: authHeaders(token),
     params,
+    signal,
     timeout: 10000,
   });
   return res.data;

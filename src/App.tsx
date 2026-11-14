@@ -1,3 +1,4 @@
+import StaffOrdersLayout from "./components/admin/StaffOrdersLayout";
 // src/App.tsx
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
@@ -27,52 +28,54 @@ export default function App() {
       </Route>
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Solo admin */}
-      <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-        <Route
-          path="/admin"
-          element={
-            <Suspense fallback={<Spinner />}>
-              <AdminPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/admin/clientes"
-          element={
-            <Suspense fallback={<Spinner />}>
-              <CustomersPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/admin/menus"
-          element={
-            <Suspense fallback={<Spinner />}>
-              <MenuPricesPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <Suspense fallback={<Spinner />}>
-              <DashboardPage />
-            </Suspense>
-          }
-        />
-      </Route>
-
-      {/* Admin o cocina */}
       <Route element={<PrivateRoute allowedRoles={["admin", "kitchen"]} />}>
-        <Route
-          path="/cocina"
-          element={
-            <Suspense fallback={<Spinner />}>
-              <KitchenPage />
-            </Suspense>
-          }
-        />
+        <Route element={<StaffOrdersLayout />}>
+          {/* Solo admin */}
+          <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <AdminPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin/clientes"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <CustomersPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin/menus"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <MenuPricesPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <Suspense fallback={<Spinner />}>
+                  <DashboardPage />
+                </Suspense>
+              }
+            />
+          </Route>
+
+          {/* Cocina comparte la navegación y conserva su permiso propio. */}
+          <Route
+            path="/cocina"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <KitchenPage />
+              </Suspense>
+            }
+          />
+        </Route>
       </Route>
     </Routes>
   );

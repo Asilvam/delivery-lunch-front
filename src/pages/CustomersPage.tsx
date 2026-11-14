@@ -127,7 +127,7 @@ export default function CustomersPage() {
     }
   };
   return (
-    <PageLayout header={<StaffNavigation />}>
+    <PageLayout header={<StaffNavigation />} mobileNavigation>
       <Typography
         component="h1"
         variant="h4"

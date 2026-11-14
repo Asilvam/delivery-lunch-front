@@ -10,7 +10,7 @@ function authHeaders(token: string) {
 
 /**
  * Carga el snapshot inicial de pedidos visibles en cocina:
- * todos los estados relevantes del día (excluyendo PENDIENTE que aún no fue validado).
+ * pedidos aprobados de todas las fechas. El panel separa los activos por día.
  */
 export async function fetchKitchenOrders(token: string): Promise<Order[]> {
   const res = await axios.get<Order[]>(`${BASE_URL}/orders/ByAdminTrue`, {

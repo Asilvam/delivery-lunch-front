@@ -3,7 +3,7 @@ import StaffNavigation from "../components/admin/StaffNavigation";
 // src/pages/AdminPage.tsx
 import { Typography } from "@mui/material";
 import { useAuth } from "../hooks/useAuth";
-import { useAdminOrdersStream } from "../hooks/useAdminOrdersStream";
+import { usePendingOrders } from "../hooks/usePendingOrders";
 import {
   adminValidateOrder,
   cancelOrder,
@@ -12,7 +12,7 @@ import AdminOrdersPanel from "../components/admin/AdminOrdersPanel";
 
 export default function AdminPage() {
   const { token } = useAuth();
-  const { orders, removeOrder, connected, error } = useAdminOrdersStream(token);
+  const { orders, removeOrder, connected, error } = usePendingOrders();
 
   const handleValidate = async (id: string) => {
     if (!token) return;
@@ -29,7 +29,7 @@ export default function AdminPage() {
   };
 
   return (
-    <PageLayout header={<StaffNavigation />}>
+    <PageLayout header={<StaffNavigation />} mobileNavigation>
       <Typography variant="h5" fontWeight={800} mb={1}>
         Pedidos pendientes de aprobación
       </Typography>

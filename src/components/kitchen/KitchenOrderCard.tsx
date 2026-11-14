@@ -37,12 +37,14 @@ interface Props {
   order: Order;
   onStatusChange: (id: string, estado: OrderStatus) => Promise<void>;
   isAdmin: boolean;
+  showMenuDate?: boolean;
 }
 
 export default function KitchenOrderCard({
   order,
   onStatusChange,
   isAdmin,
+  showMenuDate = false,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
@@ -131,6 +133,16 @@ export default function KitchenOrderCard({
           flex: 1,
         }}
       >
+        {showMenuDate && (
+          <Typography
+            variant="caption"
+            color="warning.dark"
+            fontWeight={700}
+            sx={{ mb: 1 }}
+          >
+            Menú del {order.fecha.split("-").reverse().join("/")}
+          </Typography>
+        )}
         {/* Header */}
         <Box
           display="flex"
