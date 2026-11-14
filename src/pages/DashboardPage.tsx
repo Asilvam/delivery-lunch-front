@@ -17,6 +17,10 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useAuth } from "../hooks/useAuth";
 import DateRangeFilter from "../components/dashboard/DateRangeFilter";
 import KpiCard from "../components/dashboard/KpiCard";
@@ -252,57 +256,101 @@ export default function DashboardPage() {
 
           {/* Charts Row 1 */}
           {summary.pagos && (
-            <Paper variant="outlined" sx={{ p: 2.5, mb: 3 }}>
-              <Typography variant="h6" fontWeight={700}>
+            <Paper
+              component="section"
+              aria-labelledby="payments-title"
+              variant="outlined"
+              sx={{ p: { xs: 2, sm: 2.5 }, mb: 3 }}
+            >
+              <Typography
+                id="payments-title"
+                component="h2"
+                variant="h6"
+                fontWeight={700}
+              >
                 Pagos
               </Typography>
               <Box
                 sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: { xs: 2, sm: 5 },
-                  mt: 1,
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "minmax(0, 1fr)",
+                    md: "repeat(3, minmax(0, 1fr))",
+                  },
+                  gap: 2,
+                  mt: 2,
                 }}
               >
-                <Box>
-                  <Typography variant="body2">
-                    Cobros registrados en el período
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    color="success.main"
-                    fontWeight={800}
+                <KpiCard
+                  title="Cobrado"
+                  value={`$${summary.pagos.total.toLocaleString("es-CL")}`}
+                  icon={<AccountBalanceWalletOutlinedIcon />}
+                  color="success"
+                >
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gap: 1,
+                      pt: 1.5,
+                      mt: 1,
+                      borderTop: "1px solid",
+                      borderColor: "divider",
+                    }}
                   >
-                    ${summary.pagos.total.toLocaleString("es-CL")}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Efectivo: ${summary.pagos.efectivo.toLocaleString("es-CL")}{" "}
-                    · Transferencia: $
-                    {summary.pagos.transferencia.toLocaleString("es-CL")}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2">
-                    Por cobrar · entregados del período
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    color="warning.main"
-                    fontWeight={800}
-                  >
-                    ${summary.pagos.porCobrar.toLocaleString("es-CL")}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {summary.pagos.sinRegistro} pedidos anteriores con pago sin
-                    registrar
-                  </Typography>
-                </Box>
+                    {[
+                      {
+                        label: "Efectivo",
+                        value: summary.pagos.efectivo,
+                        icon: PaymentsOutlinedIcon,
+                      },
+                      {
+                        label: "Transferencia",
+                        value: summary.pagos.transferencia,
+                        icon: AccountBalanceOutlinedIcon,
+                      },
+                    ].map(({ label, value, icon: Icon }) => (
+                      <Box
+                        key={label}
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Icon sx={{ fontSize: 18, color: "text.secondary" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {label}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          sx={{
+                            ml: "auto",
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          ${value.toLocaleString("es-CL")}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </KpiCard>
+                <KpiCard
+                  title="Por cobrar"
+                  value={`$${summary.pagos.porCobrar.toLocaleString("es-CL")}`}
+                  subtitle="Pedidos entregados del período marcados con pago pendiente."
+                  icon={<PendingActionsIcon />}
+                  color={summary.pagos.porCobrar > 0 ? "warning" : "primary"}
+                />
+                <KpiCard
+                  title="Sin registro de pago"
+                  value={`${summary.pagos.sinRegistro} ${summary.pagos.sinRegistro === 1 ? "pedido" : "pedidos"}`}
+                  subtitle="Pedidos entregados del período cuyo pago aún no se ha registrado."
+                  icon={<HelpOutlineIcon />}
+                  color={summary.pagos.sinRegistro > 0 ? "warning" : "primary"}
+                />
               </Box>
               <Typography
                 variant="caption"
                 color="text.secondary"
                 display="block"
-                sx={{ mt: 1 }}
+                sx={{ mt: 2 }}
               >
                 Los cobros se agrupan por fecha de registro. Los pagos de
                 pedidos cancelados se revisan manualmente.

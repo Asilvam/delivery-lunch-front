@@ -12,6 +12,7 @@ interface KpiCardProps {
   trendLabel?: string;
   icon?: React.ReactNode;
   color?: "primary" | "success" | "warning" | "error";
+  children?: React.ReactNode;
 }
 
 const colorMap = {
@@ -29,6 +30,7 @@ export default function KpiCard({
   trendLabel,
   icon,
   color = "primary",
+  children,
 }: KpiCardProps) {
   const TrendIcon =
     trend === "up"
@@ -103,6 +105,7 @@ export default function KpiCard({
           </Typography>
         )}
       </Box>
+      {children}
     </Paper>
   );
 }

@@ -63,7 +63,7 @@ export default function StaffNavigation() {
               aria-label="Navegación del personal"
               sx={{ display: "flex", gap: 1, overflowX: "auto" }}
             >
-              {links.map(({ to, label }) => (
+              {links.map(({ to, label, icon: Icon }) => (
                 <Button
                   key={to}
                   component={NavLink}
@@ -71,6 +71,7 @@ export default function StaffNavigation() {
                   end
                   aria-label={accessibleLabel(label)}
                   variant={pathname === to ? "contained" : "text"}
+                  startIcon={<Icon />}
                   sx={{ flexShrink: 0 }}
                 >
                   {label}
