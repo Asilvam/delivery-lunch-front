@@ -1,12 +1,12 @@
-import { userToast } from "./notifications";
-export { userToast } from "./notifications";
+import { userAlert } from "./notifications";
+export { userAlert } from "./notifications";
 
 export const showAddToCartFeedback = async (
   dishName: string,
   nextQuantity: number,
   wasExisting: boolean,
 ): Promise<void> => {
-  await userToast.fire({
+  await userAlert.fire({
     icon: "success",
     title: wasExisting
       ? `${dishName} ahora tiene ${nextQuantity} ${nextQuantity === 1 ? "unidad" : "unidades"}`
@@ -19,7 +19,7 @@ export const showStockLimitFeedback = async (
   isSoldOut: boolean,
   remainingStock = 0,
 ): Promise<void> => {
-  await userToast.fire({
+  await userAlert.fire({
     icon: isSoldOut ? "error" : "warning",
     title: isSoldOut
       ? `${dishName} está agotado`

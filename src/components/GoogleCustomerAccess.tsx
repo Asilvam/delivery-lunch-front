@@ -1,5 +1,5 @@
 import { useMountedRef } from "../hooks/useMountedRef";
-import { userToast } from "../utils/notifications";
+import { userAlert } from "../utils/notifications";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import { customerAuthMessage } from "../domain/auth/customerSession";
 import { useCustomerSession } from "../hooks/useCustomerSession";
 
 export function GoogleCustomerAccess({
@@ -17,7 +18,8 @@ export function GoogleCustomerAccess({
 }: {
   disabled?: boolean;
 }) {
-  const { session, signIn, signOut } = useCustomerSession();
+  const { session, signIn, signOut, restoring, sessionError, refreshSession } =
+    useCustomerSession();
   const [loading, setLoading] = useState(false);
   const mounted = useMountedRef();
   const verifying = useRef(false);
@@ -37,9 +39,19 @@ export function GoogleCustomerAccess({
   }, [session]);
 
   const reportError = (title: string) => {
-    if (mounted.current) void userToast.fire({ icon: "error", title });
+    if (mounted.current) void userAlert.fire({ icon: "error", title });
   };
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  if (restoring)
+    return (
+      <Box
+        role="status"
+        sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}
+      >
+        <CircularProgress size={20} />
+        <Typography variant="body2">Recuperando tu sesión…</Typography>
+      </Box>
+    );
   if (session)
     return (
       <Box
@@ -70,9 +82,17 @@ export function GoogleCustomerAccess({
         </Box>
         <Button
           size="small"
-          disabled={disabled}
-          onClick={() => {
-            signOut();
+          disabled={disabled || loading}
+          onClick={async () => {
+            if (disabled || loading) return;
+            setLoading(true);
+            try {
+              await signOut();
+            } catch (error) {
+              reportError(customerAuthMessage(error));
+            } finally {
+              if (mounted.current) setLoading(false);
+            }
           }}
         >
           Cambiar cuenta
@@ -81,6 +101,23 @@ export function GoogleCustomerAccess({
     );
   return (
     <Box ref={buttonContainer} sx={{ width: "100%", minWidth: 0 }}>
+      {sessionError && (
+        <Box role="status" sx={{ mb: 1.5 }}>
+          <Typography variant="body2" color="error">
+            {sessionError}
+          </Typography>
+          <Button
+            size="small"
+            onClick={() =>
+              void refreshSession().catch((error: unknown) =>
+                reportError(customerAuthMessage(error)),
+              )
+            }
+          >
+            Reintentar sesión
+          </Button>
+        </Box>
+      )}
       {!clientId ? (
         <Alert severity="warning">
           El acceso con Google no está configurado. Contacta al local.
@@ -124,10 +161,8 @@ export function GoogleCustomerAccess({
                 setLoading(true);
                 try {
                   await signIn(response.credential);
-                } catch {
-                  reportError(
-                    "No pudimos verificar tu cuenta. Intenta nuevamente; tu pedido sigue guardado.",
-                  );
+                } catch (error) {
+                  reportError(customerAuthMessage(error));
                 } finally {
                   verifying.current = false;
                   if (mounted.current) setLoading(false);

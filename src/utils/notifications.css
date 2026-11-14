@@ -7,9 +7,9 @@
   border-radius: 16px;
   box-shadow: 0 8px 28px rgba(88, 25, 53, 0.12);
 }
-.brand-alert-popup.swal2-toast .swal2-title {
-  font-size: 0.95rem;
-  line-height: 1.5;
+.brand-timed-alert .swal2-title {
+  font-size: 1.25rem;
+  line-height: 1.4;
 }
 .brand-alert-popup .swal2-html-container {
   line-height: 1.6;

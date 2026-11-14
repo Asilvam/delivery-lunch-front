@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Skeleton, Typography, useMediaQuery } from "@mui/material";
-import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
+import { Box, Skeleton, useMediaQuery } from "@mui/material";
 import type { Dish } from "../types/menu";
-import { getHeroDishImage } from "../data/mappers/heroImages";
+import {
+  DEFAULT_HERO_IMAGE,
+  getHeroDishImage,
+} from "../data/mappers/heroImages";
 import styles from "./HeroDishCarousel.module.css";
 
 const IMAGE_SIZES =
@@ -42,6 +44,7 @@ export function HeroDishCarousel({
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const slide = slides.find((dish) => dish.id === activeId) ?? slides[0];
   const previous = slides.find((dish) => dish.id === previousId);
+  const fallback = getHeroDishImage(DEFAULT_HERO_IMAGE)!;
 
   useEffect(() => {
     // La primera foto ya está visible; las siguientes completan la ronda al azar.
@@ -112,8 +115,12 @@ export function HeroDishCarousel({
     <Box
       component="figure"
       role="region"
-      aria-roledescription="carrusel"
-      aria-label="Platos del día. La rotación se pausa al enfocar la fotografía."
+      aria-roledescription={slides.length > 1 ? "carrusel" : undefined}
+      aria-label={
+        slides.length
+          ? "Platos del día. La rotación se pausa al enfocar la fotografía."
+          : "Sabores Angelicales"
+      }
       aria-live="off"
       tabIndex={slides.length > 1 ? 0 : undefined}
       onMouseEnter={() => setHovered(true)}
@@ -192,22 +199,26 @@ export function HeroDishCarousel({
         />
       ) : (
         <Box
+          component="img"
+          src={fallback.large}
+          srcSet={`${fallback.small} 640w, ${fallback.large} 1120w`}
+          sizes={IMAGE_SIZES}
+          width={1120}
+          height={840}
+          alt="Sabores Angelicales"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
           sx={{
-            display: "grid",
-            placeContent: "center",
+            position: "absolute",
+            inset: 0,
+            display: "block",
+            width: "100%",
             height: "100%",
-            p: 3,
-            textAlign: "center",
-            gap: 1,
+            objectFit: "cover",
+            objectPosition: "center 55%",
           }}
-        >
-          <RestaurantMenuIcon
-            sx={{ mx: "auto", fontSize: 40, color: "primary.dark" }}
-          />
-          <Typography variant="body2" color="text.secondary">
-            Las fotografías aparecerán cuando se publique el menú.
-          </Typography>
-        </Box>
+        />
       )}
     </Box>
   );

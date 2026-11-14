@@ -4,7 +4,7 @@ import MenuCompositionEditor from "./MenuCompositionEditor";
 import type { LibraryDish } from "../../../data/services/dishLibraryApi.service";
 vi.mock("../../../utils/notifications", () => ({
   appAlert: { fire: vi.fn() },
-  staffToast: { fire: vi.fn() },
+  staffAlert: { fire: vi.fn() },
 }));
 const library: LibraryDish[] = [
   {

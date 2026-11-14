@@ -10,8 +10,8 @@ import {
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import axios from "axios";
 import LoginPage from "./LoginPage";
-import { staffToast } from "../utils/notifications";
-vi.mock("../utils/notifications", () => ({ staffToast: { fire: vi.fn() } }));
+import { staffAlert } from "../utils/notifications";
+vi.mock("../utils/notifications", () => ({ staffAlert: { fire: vi.fn() } }));
 const { loginMock } = vi.hoisted(() => ({ loginMock: vi.fn() }));
 vi.mock("../hooks/useAuth", () => ({
   useAuth: () => ({ role: null, login: loginMock }),
@@ -63,7 +63,7 @@ describe("Staff login experience", () => {
     setup();
     fireEvent.click(screen.getByRole("button", { name: "Entrar a mi panel" }));
     await waitFor(() =>
-      expect(staffToast.fire).toHaveBeenCalledWith({
+      expect(staffAlert.fire).toHaveBeenCalledWith({
         icon: "error",
         title: "No pudimos conectar con el servidor. Intenta nuevamente.",
       }),
@@ -121,12 +121,12 @@ it("keeps empty-field validation next to each login input", () => {
   expect(screen.getByText("Ingresa tu usuario.")).toBeDefined();
   expect(screen.getByText("Ingresa tu contraseña.")).toBeDefined();
   expect(axios.post).not.toHaveBeenCalled();
-  expect(staffToast.fire).not.toHaveBeenCalled();
+  expect(staffAlert.fire).not.toHaveBeenCalled();
 });
 it("shows session expiry through the shared toast once", () => {
   sessionStorage.setItem("staff-session-expired", "1");
   setup();
-  expect(staffToast.fire).toHaveBeenCalledWith({
+  expect(staffAlert.fire).toHaveBeenCalledWith({
     icon: "info",
     title: "Tu sesión venció",
     text: "Ingresa nuevamente para continuar.",
@@ -161,6 +161,6 @@ it.each(["failure", "success"])(
         });
     });
     expect(loginMock).not.toHaveBeenCalled();
-    expect(staffToast.fire).not.toHaveBeenCalled();
+    expect(staffAlert.fire).not.toHaveBeenCalled();
   },
 );

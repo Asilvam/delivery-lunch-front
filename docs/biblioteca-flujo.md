@@ -14,7 +14,7 @@ Las notas internas permiten revisar detalles de las fotos, como la preparación 
 
 ## Crear un menú
 
-1. Pulsar **Crear nuevo menú** y elegir la fecha (se sugiere la próxima disponible desde hoy). **Continuar** abre el editor; no guarda ni publica todavía. Si ya existe un menú, se ofrece abrirlo sin sobrescribirlo. La fecha de la barra permite consultar otros días. Solo se pueden crear o publicar menús para hoy o una fecha futura; los históricos permanecen disponibles para consulta.
+1. Pulsar **Crear nuevo menú** y elegir la fecha (se sugiere la próxima disponible desde hoy). **Continuar** abre el editor; no guarda ni publica todavía. Si ya existe un menú, se ofrece abrirlo sin sobrescribirlo. La fecha de la barra permite consultar otros días. Solo se pueden crear o publicar menús para hoy o una fecha futura. Desde las 16:00 la fecha mínima y la sugerencia pasan al día siguiente, incluso si el selector estaba abierto al cerrar. Los históricos y las publicaciones existentes permanecen disponibles para consulta y edición.
 2. Si la fecha está libre, aparece el editor. El precio general inicia en **$5.500**, con ensalada surtida, pan fresco del día y postre del día editables.
 3. Buscar y seleccionar platos. Cada selección propone 20 porciones, o 10 para el hipocalórico; las cantidades se pueden editar. Dejar **Precio especial** vacío para heredar el general, o escribir un valor distinto.
 4. En el hipocalórico elegir cuáles de sus proteínas estarán disponibles ese día. El stock es del plato completo, compartido entre sus opciones.
@@ -53,12 +53,24 @@ Al vencer, los platos siguen visibles, pero no se pueden aumentar cantidades ni 
 
 Los carritos del formato anterior solo se vinculan si todos sus identificadores de plato pertenecen al mismo menú consultado. Si falta información para verificarlo, se conserva el contenido y se bloquea la confirmación. Los envíos pendientes de respuesta mantienen su clave y contenido original para recuperar el resultado sin duplicarlo, incluso después del cierre.
 
+## Clientes y sesión recordada
+
+En **Administrador → Clientes** se consultan cuentas verificadas, datos de contacto y sus pedidos. La búsqueda y el filtro de habilitados/bloqueados se aplican al cambiar los controles. Bloquear requiere confirmación y puede incluir un motivo visible solo para administración. Conserva los pedidos registrados e impide nuevos envíos con sesiones anteriores; rehabilitar exige entrar nuevamente con Google. Cada pedido nuevo sigue sujeto a aprobación del administrador.
+
+Después de entrar con Google, el sitio recuerda la cuenta hasta 30 días en ese navegador. El acceso de 15 minutos se renueva sin volver a mostrar Google; la cookie de sesión es HttpOnly y el token de acceso solo vive en memoria. Al regresar pueden recuperarse el nombre de contacto y teléfono del último pedido válido. **Cambiar cuenta** cierra la sesión recordada del dispositivo. El carrito y cualquier envío pendiente se conservan; recuperar un envío exige la cuenta con la que se inició.
+
+La sesión usa `/api/auth` en el dominio del frontend para funcionar también en Safari. Localmente lo atiende el proxy de Vite; el código de la función para Cloudflare Pages queda en `functions/api/auth/[[path]].ts`. Configuración y pasos de despliegue: ver README del backend y `.env.example`; estos cambios se verifican localmente, sin modificar producción.
+
 ## Implementación y verificación
 
 - Backend: `dish_library`, importación inicial idempotente, CRUD de administrador, validación Cloudinary y composición transaccional.
 - Público: los borradores se excluyen del listado y de las consultas por fecha; checkout los rechaza.
-- Fotografías: nuevas publicaciones usan las URLs de Cloudinary de la biblioteca y sus derivados para reducir la carga en móvil.
+- Fotografías: nuevas publicaciones usan las URLs de Cloudinary de la biblioteca y sus derivados para reducir la carga en móvil. El hero muestra las fotos del menú del día; cuando no hay menú, usa una fotografía fija de Cloudinary como imagen por defecto.
 - La copia del endpoint anterior también crea un borrador con identificadores nuevos y stock cero.
 - Las pruebas utilizan MongoDB temporal y WhatsApp simulado; no escriben en producción.
 
 Las fotos subidas antes están registradas en `biblioteca-platos.json`. La lista inicial incluida en el backend es una copia de esos datos públicos, sin rutas locales ni credenciales.
+
+## Avisos
+
+Los avisos automáticos se muestran como SweetAlert centrados con cierre automático: hasta 3 segundos para clientes, 2 para personal y 1 para acciones rápidas como aprobar. Las confirmaciones y los comprobantes esperan la decisión del usuario. El aviso toma el foco por encima de otros diálogos y lo devuelve al control disponible al cerrarse.

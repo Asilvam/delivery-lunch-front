@@ -1,3 +1,4 @@
+import { useSweetAlertOpen } from "../hooks/useSweetAlertOpen";
 import CloseIcon from "@mui/icons-material/Close";
 import { normalizePhone, phoneError } from "../domain/checkout/contact";
 import { OrderSummary } from "./OrderSummary";
@@ -49,6 +50,7 @@ export const OrderConfirmDialog = ({
   orderingOpen = true,
   cartIssue,
 }: OrderConfirmDialogProps) => {
+  const sweetAlertOpen = useSweetAlertOpen();
   const { session } = useCustomerSession();
   const submitting = useRef(false);
   const formId = useId();
@@ -65,8 +67,12 @@ export const OrderConfirmDialog = ({
     }
   })();
   const [cliente, setCliente] = useState<string | null>(stored.cliente ?? null);
-  const customerName = cliente ?? session?.customer.name ?? "";
-  const [telefono, setTelefono] = useState(stored.telefono || "");
+  const customerName =
+    cliente ?? (session?.customer.contactName || session?.customer.name || "");
+  const [telefono, setTelefono] = useState<string | null>(
+    stored.telefono ?? null,
+  );
+  const contactPhone = telefono ?? session?.customer.phone ?? "";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ cliente?: string; telefono?: string }>(
     {},
@@ -81,7 +87,7 @@ export const OrderConfirmDialog = ({
   const validate = () => {
     const next: typeof errors = {};
     if (!customerName.trim()) next.cliente = "El nombre es obligatorio";
-    next.telefono = phoneError(telefono);
+    next.telefono = phoneError(contactPhone);
     if (!next.telefono) delete next.telefono;
     setErrors(next);
     if (next.cliente) nameRef.current?.focus();
@@ -100,7 +106,7 @@ export const OrderConfirmDialog = ({
       menuId: menu!.id,
       fecha: menu!.isoDate,
       cliente: customerName.trim(),
-      telefono: normalizePhone(telefono),
+      telefono: normalizePhone(contactPhone),
       total: totalPrice,
       items: cartItems.map((item) => ({
         platoId: item.dish.id,
@@ -134,6 +140,7 @@ export const OrderConfirmDialog = ({
 
   return (
     <Dialog
+      disableEnforceFocus={sweetAlertOpen}
       open={open}
       onClose={handleClose}
       disableRestoreFocus
@@ -259,7 +266,7 @@ export const OrderConfirmDialog = ({
                 <TextField
                   label="Teléfono"
                   type="tel"
-                  value={pendingPayload?.telefono ?? telefono}
+                  value={pendingPayload?.telefono ?? contactPhone}
                   placeholder="+56 9 1234 5678"
                   onChange={(e) => {
                     setTelefono(e.target.value);
@@ -267,10 +274,10 @@ export const OrderConfirmDialog = ({
                   }}
                   onBlur={() => {
                     if (!pendingPayload) {
-                      setTelefono(normalizePhone(telefono));
+                      setTelefono(normalizePhone(contactPhone));
                       setErrors((prev) => ({
                         ...prev,
-                        telefono: phoneError(telefono),
+                        telefono: phoneError(contactPhone),
                       }));
                     }
                   }}

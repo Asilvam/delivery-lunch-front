@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { useAuth } from "../../../hooks/useAuth";
 import {
-  staffToast,
+  staffAlert,
   STAFF_ACTION_DURATION_MS,
 } from "../../../utils/notifications";
 import {
@@ -67,7 +67,7 @@ export default function DishLibraryManager() {
     try {
       const result = await importInitialLibrary(token);
       if (mounted.current) {
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "success",
           title: result.agregados
             ? `${result.agregados} platos agregados`
@@ -78,7 +78,7 @@ export default function DishLibraryManager() {
       }
     } catch (e) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(e, "No pudimos cargar los platos preparados"),
         });
@@ -95,7 +95,7 @@ export default function DishLibraryManager() {
         setRows((current) =>
           current.map((p) => (p._id === result._id ? result : p)),
         );
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "success",
           title: result.activo ? "Plato activado" : "Plato archivado",
           timer: STAFF_ACTION_DURATION_MS,
@@ -103,7 +103,7 @@ export default function DishLibraryManager() {
       }
     } catch (e) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(e, "No pudimos cambiar el plato"),
         });
@@ -273,7 +273,7 @@ export default function DishLibraryManager() {
           onSaved={() => {
             setEditor(null);
             reload();
-            void staffToast.fire({
+            void staffAlert.fire({
               icon: "success",
               title: "Plato guardado",
               timer: STAFF_ACTION_DURATION_MS,

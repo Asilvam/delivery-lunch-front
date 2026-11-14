@@ -1,3 +1,4 @@
+import { useSweetAlertOpen } from "./hooks/useSweetAlertOpen";
 import { useCartValidity } from "./hooks/useCartValidity";
 import {
   CART_STORAGE_KEY,
@@ -46,7 +47,7 @@ import { appAlert } from "./utils/notifications";
 import { appTheme } from "./theme/appTheme";
 import { buildCartItemKey } from "./domain/cart/cartHelpers";
 import {
-  userToast,
+  userAlert,
   showAddToCartFeedback,
   showStockLimitFeedback,
   triggerCompletionFeedback,
@@ -73,10 +74,11 @@ import { canAddDish, getRemainingDishStock } from "./domain/cart/stock.rules";
 import { logger } from "./shared/utils/logger";
 
 export default function CustomerApp() {
-  const { session, signOut } = useCustomerSession();
+  const sweetAlertOpen = useSweetAlertOpen();
+  const { session, getSession, refreshSession } = useCustomerSession();
   const orderingOpen = useOrderingHours();
   const notifyClosed = () =>
-    void userToast.fire({ icon: "info", title: ORDERING_HOURS_MESSAGE });
+    void userAlert.fire({ icon: "info", title: ORDERING_HOURS_MESSAGE });
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const previousPathname = useRef(pathname);
@@ -165,7 +167,7 @@ export default function CustomerApp() {
         setSelectedMenuIndex(0);
         if (data.length === 0) {
           logger.warn("[App] El backend no retornó menús para hoy");
-          void userToast.fire({
+          void userAlert.fire({
             icon: "info",
             title: "Sin menús disponibles para hoy.",
           });
@@ -175,7 +177,7 @@ export default function CustomerApp() {
         logger.error("[App] Error al cargar menús", error);
         setMenuLoadError("No se pudieron cargar los menús diarios.");
         setMenus([]);
-        void userToast.fire({
+        void userAlert.fire({
           icon: "error",
           title: "Error al cargar menús. Intenta nuevamente.",
         });
@@ -207,7 +209,7 @@ export default function CustomerApp() {
   const ensureCartReady = () => {
     const status = menuCartStatus(menuCart, menus, isLoadingMenus);
     if (status === "ready") return true;
-    void userToast.fire({
+    void userAlert.fire({
       icon: "info",
       title: cartStatusMessage[status] ?? "Tu carrito está vacío.",
     });
@@ -234,7 +236,7 @@ export default function CustomerApp() {
       return;
     }
     if (getPendingOrder()) {
-      void userToast.fire({
+      void userAlert.fire({
         icon: "info",
         title:
           "Confirma el resultado del envío pendiente antes de cambiar el pedido.",
@@ -249,7 +251,7 @@ export default function CustomerApp() {
       !Number.isFinite(Date.parse(selectedMenu.expiresAt)) ||
       Date.now() >= Date.parse(selectedMenu.expiresAt)
     ) {
-      void userToast.fire({
+      void userAlert.fire({
         icon: "info",
         title: "Este menú ya no está vigente. Revisa el menú del día.",
       });
@@ -370,7 +372,7 @@ export default function CustomerApp() {
     }
     if (!getPendingOrder() && !ensureCartReady()) return;
     if (cartItems.length === 0) {
-      void userToast.fire({
+      void userAlert.fire({
         icon: "info",
         title: "No hay platos en el carrito.",
       });
@@ -396,15 +398,18 @@ export default function CustomerApp() {
     if (!session || sending.current) return;
     sending.current = true;
     try {
+      const activeSession = await getSession();
+      if (!activeSession) return;
       const order = await sendOrder(
         payload,
-        session.access_token,
-        session.customer.googleId,
+        activeSession.access_token,
+        activeSession.customer.googleId,
       );
       setPendingOrder(null);
       setCheckoutOpen(false);
       setCartItems([]);
       sessionStorage.removeItem("checkout_contact");
+      void refreshSession().catch(() => null);
       triggerCompletionFeedback();
       setReceipt({ order, payload });
       try {
@@ -425,13 +430,13 @@ export default function CustomerApp() {
           const fresh = await fetchDailyMenus();
           setMenus(fresh);
           setMenuCart((current) => reconcileMenuCart(current, fresh));
-          void userToast.fire({
+          void userAlert.fire({
             icon: "info",
             title: "El precio cambió",
             text: "Actualizamos tu resumen. Revisa el nuevo total antes de continuar.",
           });
         } catch {
-          void userToast.fire({
+          void userAlert.fire({
             icon: "error",
             title: "No pudimos actualizar los precios",
             text: "Conservamos tus platos. Recarga el menú antes de volver a enviar.",
@@ -439,12 +444,17 @@ export default function CustomerApp() {
         }
         return;
       }
-      if (axios.isAxiosError(error) && error.response?.status === 401)
-        signOut();
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 ||
+          error.response?.data?.code === "CUSTOMER_BLOCKED" ||
+          error.response?.data?.code === "CUSTOMER_UNAVAILABLE")
+      )
+        await refreshSession().catch(() => null);
       const serverMessage = axios.isAxiosError(error)
         ? error.response?.data?.message
         : null;
-      void userToast.fire({
+      void userAlert.fire({
         icon: pending ? "warning" : "error",
         title: pending
           ? "El envío sigue sin confirmar"
@@ -546,6 +556,7 @@ export default function CustomerApp() {
       {/* ─── CARRITO ──────────────────────────────────────────────────────────── */}
       {isMobile ? (
         <Dialog
+          disableEnforceFocus={sweetAlertOpen}
           open={isCartOpen}
           onClose={() => setCartOpen(false)}
           disableRestoreFocus
@@ -585,6 +596,7 @@ export default function CustomerApp() {
         </Dialog>
       ) : (
         <Drawer
+          disableEnforceFocus={sweetAlertOpen}
           anchor="right"
           ModalProps={{ disableRestoreFocus: true }}
           slotProps={{ transition: { onExited: restoreCartFocus } }}

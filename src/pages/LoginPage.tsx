@@ -1,5 +1,5 @@
 import { useMountedRef } from "../hooks/useMountedRef";
-import { staffToast } from "../utils/notifications";
+import { staffAlert } from "../utils/notifications";
 import { PageLayout, BrandHeader } from "../components/layout/PageLayout";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
@@ -59,7 +59,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!role && sessionStorage.getItem("staff-session-expired") === "1") {
       sessionStorage.removeItem("staff-session-expired");
-      void staffToast.fire({
+      void staffAlert.fire({
         icon: "info",
         title: "Tu sesión venció",
         text: "Ingresa nuevamente para continuar.",
@@ -124,7 +124,7 @@ export default function LoginPage() {
       navigate(destination(decoded.role || "admin"), { replace: true });
     } catch (error) {
       if (!mounted.current) return;
-      void staffToast.fire({
+      void staffAlert.fire({
         icon: "error",
         title:
           axios.isAxiosError(error) && error.response?.status === 401

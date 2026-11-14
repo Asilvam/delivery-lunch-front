@@ -1,4 +1,4 @@
-import { staffToast } from "../utils/notifications";
+import { staffAlert } from "../utils/notifications";
 import { PageLayout } from "../components/layout/PageLayout";
 import StaffNavigation from "../components/admin/StaffNavigation";
 // src/pages/DashboardPage.tsx
@@ -99,7 +99,7 @@ export default function DashboardPage() {
       .catch(() => {
         if (version === requestVersion.current) {
           setError("No pudimos actualizar las métricas. Intenta nuevamente.");
-          void staffToast.fire({
+          void staffAlert.fire({
             icon: "error",
             title: "No pudimos actualizar las métricas",
             text: "Revisa la conexión y vuelve a intentarlo.",

@@ -53,7 +53,15 @@ function checkout(
 ) {
   return (
     <CustomerSessionContext.Provider
-      value={{ session: customer, signIn: vi.fn(), signOut: vi.fn() }}
+      value={{
+        session: customer,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+        restoring: false,
+        sessionError: null,
+        refreshSession: vi.fn().mockResolvedValue(session),
+        getSession: vi.fn().mockResolvedValue(session),
+      }}
     >
       <OrderConfirmDialog
         open
@@ -153,7 +161,15 @@ describe("Progressive Google checkout", () => {
     const submit = vi.fn().mockResolvedValue(undefined);
     render(
       <CustomerSessionContext.Provider
-        value={{ session, signIn: vi.fn(), signOut: vi.fn() }}
+        value={{
+          session,
+          signIn: vi.fn(),
+          signOut: vi.fn(),
+          restoring: false,
+          sessionError: null,
+          refreshSession: vi.fn().mockResolvedValue(session),
+          getSession: vi.fn().mockResolvedValue(session),
+        }}
       >
         <OrderConfirmDialog
           open
@@ -190,7 +206,15 @@ it("blocks both the button and form submission if the open checkout expires", ()
   );
   render(
     <CustomerSessionContext.Provider
-      value={{ session, signIn: vi.fn(), signOut: vi.fn() }}
+      value={{
+        session,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+        restoring: false,
+        sessionError: null,
+        refreshSession: vi.fn().mockResolvedValue(session),
+        getSession: vi.fn().mockResolvedValue(session),
+      }}
     >
       <OrderConfirmDialog
         open
@@ -209,5 +233,25 @@ it("blocks both the button and form submission if the open checkout expires", ()
   expect(submit).not.toHaveBeenCalled();
   expect(screen.getByRole("status").textContent).toContain(
     "Tu carrito venció.",
+  );
+});
+
+it("reuses the verified account contact saved with a previous valid order", () => {
+  const returning = {
+    ...session,
+    customer: {
+      ...session.customer,
+      contactName: "Nombre de contacto",
+      phone: "+56912345678",
+    },
+  };
+  render(checkout(returning));
+  expect(screen.getByRole("textbox", { name: /Nombre/ })).toHaveProperty(
+    "value",
+    "Nombre de contacto",
+  );
+  expect(screen.getByRole("textbox", { name: /Teléfono/ })).toHaveProperty(
+    "value",
+    "+56912345678",
   );
 });

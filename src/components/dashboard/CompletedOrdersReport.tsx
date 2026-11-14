@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useMountedRef } from "../../hooks/useMountedRef";
-import { staffToast } from "../../utils/notifications";
+import { staffAlert } from "../../utils/notifications";
 import { OrderStatus, type Order } from "../../types/order";
 
 const money = (value: number) => `$${value.toLocaleString("es-CL")}`;
@@ -106,13 +106,13 @@ export default function CompletedOrdersReport({
       const file = await createOrdersExcel(completed, startDate, endDate);
       if (!mounted.current) return;
       downloadOrdersExcel(file);
-      void staffToast.fire({
+      void staffAlert.fire({
         icon: "info",
         title: `Descarga solicitada para ${completed.length} ${completed.length === 1 ? "pedido" : "pedidos"}. Si la cancelaste, puedes volver a exportar.`,
       });
     } catch {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title:
             "No pudimos generar el Excel. Intenta nuevamente; los pedidos siguen disponibles.",

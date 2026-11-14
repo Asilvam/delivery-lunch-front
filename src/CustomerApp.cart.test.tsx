@@ -33,7 +33,7 @@ vi.mock("./components/OrderReceiptDialog", () => ({
 }));
 vi.mock("./utils/notifications", () => ({ appAlert: { close: vi.fn() } }));
 vi.mock("./utils/feedback", () => ({
-  userToast: { fire: vi.fn() },
+  userAlert: { fire: vi.fn() },
   showAddToCartFeedback: vi.fn(),
   showStockLimitFeedback: vi.fn(),
   triggerCompletionFeedback: vi.fn(),
@@ -92,7 +92,15 @@ function MenuHarness() {
 function app() {
   return render(
     <CustomerSessionContext.Provider
-      value={{ session, signIn: vi.fn(), signOut: vi.fn() }}
+      value={{
+        session,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+        restoring: false,
+        sessionError: null,
+        refreshSession: vi.fn().mockResolvedValue(session),
+        getSession: vi.fn().mockResolvedValue(session),
+      }}
     >
       <MemoryRouter initialEntries={["/menu"]}>
         <Routes>

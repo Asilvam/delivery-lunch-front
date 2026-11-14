@@ -1,3 +1,6 @@
+import { useSweetAlertOpen } from "../../../hooks/useSweetAlertOpen";
+import { earliestMenuDate } from "../../../domain/menu/creationDate";
+import { useOrderingHours } from "../../../hooks/useOrderingHours";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -18,7 +21,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useMountedRef } from "../../../hooks/useMountedRef";
 import {
   appAlert,
-  staffToast,
+  staffAlert,
   STAFF_ACTION_DURATION_MS,
 } from "../../../utils/notifications";
 import {
@@ -45,14 +48,12 @@ export default function DailyMenuManager({
   onDirtyChange: (dirty: boolean) => void;
   onOpenLibrary: () => void;
 }) {
+  const sweetAlertOpen = useSweetAlertOpen();
   const { token } = useAuth();
   const mounted = useMountedRef();
-  const today = new Date().toLocaleDateString("en-CA", {
-    timeZone: "America/Santiago",
-  });
-  const [date, setDate] = useState(() =>
-    new Date().toLocaleDateString("en-CA", { timeZone: "America/Santiago" }),
-  );
+  useOrderingHours();
+  const minimumDate = earliestMenuDate();
+  const [date, setDate] = useState(earliestMenuDate);
   const [menu, setMenu] = useState<BackendDailyMenuDto | null>(null);
   const [library, setLibrary] = useState<LibraryDish[]>([]);
   const [previous, setPrevious] = useState<AdminMenuSummary[]>([]);
@@ -63,7 +64,8 @@ export default function DailyMenuManager({
   const [creating, setCreating] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [checkingDate, setCheckingDate] = useState(false);
-  const [existingDate, setExistingDate] = useState(false);
+  const [existingDate, setExistingDate] = useState<string | null>(null);
+  const creationDate = newDate && newDate < minimumDate ? minimumDate : newDate;
   const [createError, setCreateError] = useState("");
   const dirty = useRef(false);
   const mark = (value: boolean) => {
@@ -128,6 +130,14 @@ export default function DailyMenuManager({
   };
   const save = async (input: MenuCompositionInput) => {
     if (!token || saving) return;
+    if (input.fecha < earliestMenuDate()) {
+      void staffAlert.fire({
+        icon: "info",
+        title:
+          "La fecha ya no permite crear ni publicar un menú. Elige el próximo día disponible.",
+      });
+      return;
+    }
     setSaving(true);
     try {
       const result = await saveComposition(token, input, menu?._id);
@@ -144,7 +154,7 @@ export default function DailyMenuManager({
           },
           ...current.filter((p) => p._id !== result._id),
         ]);
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "success",
           title:
             result.estado === "borrador"
@@ -155,7 +165,7 @@ export default function DailyMenuManager({
       }
     } catch (e) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(
             e,
@@ -174,7 +184,7 @@ export default function DailyMenuManager({
       if (mounted.current) {
         mark(false);
         setMenu(result);
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "success",
           title: "Menú actualizado",
           timer: STAFF_ACTION_DURATION_MS,
@@ -182,7 +192,7 @@ export default function DailyMenuManager({
       }
     } catch (error) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(
             error,
@@ -214,30 +224,28 @@ export default function DailyMenuManager({
   };
   const openCreate = () => {
     const occupied = new Set(previous.map((item) => item.fecha));
-    const candidate = new Date(`${today}T12:00:00Z`);
+    const candidate = new Date(`${earliestMenuDate()}T12:00:00Z`);
     while (occupied.has(candidate.toISOString().slice(0, 10)))
       candidate.setUTCDate(candidate.getUTCDate() + 1);
     setNewDate(candidate.toISOString().slice(0, 10));
-    setExistingDate(false);
+    setExistingDate(null);
     setCreateError("");
     setCreating(true);
   };
   const startMenu = async () => {
-    if (!token || checkingDate || !parseIsoDate(newDate)) return;
-    if (newDate < today) {
-      setCreateError("No puedes crear menús con fecha pasada.");
-      return;
-    }
+    const requestedDate =
+      newDate && newDate < earliestMenuDate() ? earliestMenuDate() : newDate;
+    if (!token || checkingDate || !parseIsoDate(requestedDate)) return;
     setCheckingDate(true);
     setCreateError("");
     try {
-      const existing = await fetchAdminMenu(token, newDate);
+      const existing = await fetchAdminMenu(token, requestedDate);
       if (!mounted.current) return;
-      if (existing && !existingDate) {
-        setExistingDate(true);
+      if (existing && existingDate !== requestedDate) {
+        setExistingDate(requestedDate);
         return;
       }
-      if (await changeDate(newDate)) setCreating(false);
+      if (await changeDate(requestedDate)) setCreating(false);
     } catch (error) {
       if (mounted.current)
         setCreateError(
@@ -304,6 +312,7 @@ export default function DailyMenuManager({
         </Button>
       </Paper>
       <Dialog
+        disableEnforceFocus={sweetAlertOpen}
         open={creating}
         onClose={() => {
           if (!checkingDate) setCreating(false);
@@ -328,22 +337,22 @@ export default function DailyMenuManager({
             <TextField
               label="Fecha del nuevo menú"
               type="date"
-              value={newDate}
+              value={creationDate}
               autoFocus
               fullWidth
               required
               disabled={checkingDate}
               onChange={(event) => {
                 setNewDate(event.target.value);
-                setExistingDate(false);
+                setExistingDate(null);
                 setCreateError("");
               }}
               slotProps={{
                 inputLabel: { shrink: true },
-                htmlInput: { min: today },
+                htmlInput: { min: minimumDate },
               }}
             />
-            {existingDate && (
+            {existingDate === creationDate && (
               <Alert severity="info">
                 Ya existe un menú para esta fecha. Puedes abrirlo para editarlo
                 o elegir otra fecha.
@@ -359,12 +368,14 @@ export default function DailyMenuManager({
               type="submit"
               variant="contained"
               disabled={
-                checkingDate || !parseIsoDate(newDate) || newDate < today
+                checkingDate ||
+                !parseIsoDate(creationDate) ||
+                creationDate < minimumDate
               }
             >
               {checkingDate
                 ? "Comprobando…"
-                : existingDate
+                : existingDate === creationDate
                   ? "Abrir menú existente"
                   : "Continuar"}
             </Button>

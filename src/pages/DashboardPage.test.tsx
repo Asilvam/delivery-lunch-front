@@ -10,11 +10,11 @@ import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import DashboardPage from "./DashboardPage";
 import { fetchDashboardSummary } from "../data/services/statisticsApi.service";
-import { staffToast } from "../utils/notifications";
+import { staffAlert } from "../utils/notifications";
 vi.mock("../hooks/useAuth", () => ({
   useAuth: () => ({ token: "test-token", role: "admin", logout: vi.fn() }),
 }));
-vi.mock("../utils/notifications", () => ({ staffToast: { fire: vi.fn() } }));
+vi.mock("../utils/notifications", () => ({ staffAlert: { fire: vi.fn() } }));
 vi.mock("../data/services/statisticsApi.service", () => ({
   fetchDashboardSummary: vi.fn(),
   fetchTopDishes: vi.fn().mockResolvedValue([]),
@@ -46,7 +46,7 @@ it("ignores a metrics request failure after navigating away", async () => {
   await act(async () => {
     reject(new Error("late metrics failure"));
   });
-  expect(staffToast.fire).not.toHaveBeenCalled();
+  expect(staffAlert.fire).not.toHaveBeenCalled();
 });
 
 it("refreshes the selected period without leaving loading stuck and replaces ticket with menu units", async () => {

@@ -7,8 +7,8 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import CompletedOrdersReport from "./CompletedOrdersReport";
-import { staffToast } from "../../utils/notifications";
-vi.mock("../../utils/notifications", () => ({ staffToast: { fire: vi.fn() } }));
+import { staffAlert } from "../../utils/notifications";
+vi.mock("../../utils/notifications", () => ({ staffAlert: { fire: vi.fn() } }));
 import {
   createOrdersExcel,
   downloadOrdersExcel,
@@ -71,7 +71,7 @@ it("exports the completed orders for the selected metrics period", async () => {
     "2026-11-01",
     "2026-11-06",
   );
-  expect(staffToast.fire).toHaveBeenCalledWith({
+  expect(staffAlert.fire).toHaveBeenCalledWith({
     icon: "info",
     title:
       "Descarga solicitada para 2 pedidos. Si la cancelaste, puedes volver a exportar.",
@@ -108,7 +108,7 @@ it("lets an administrator retry a failed export without changing any orders", as
   render(panel([order]));
   fireEvent.click(screen.getByRole("button", { name: "Exportar a Excel" }));
   await waitFor(() =>
-    expect(staffToast.fire).toHaveBeenCalledWith(
+    expect(staffAlert.fire).toHaveBeenCalledWith(
       expect.objectContaining({
         icon: "error",
         title: expect.stringContaining("No pudimos generar el Excel"),

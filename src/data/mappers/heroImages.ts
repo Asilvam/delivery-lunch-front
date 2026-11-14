@@ -8,3 +8,7 @@ export function getHeroDishImage(source: string) {
     large: cloudinaryImage(source, 1120),
   };
 }
+
+/** Static brand photograph when today's menu has not been published. */
+export const DEFAULT_HERO_IMAGE =
+  "https://res.cloudinary.com/dsbpineil/image/upload/v1794017542/delivery-lunch/biblioteca/pollo-asado-arroz-papas-fritas-7be5b8760d4b.png";

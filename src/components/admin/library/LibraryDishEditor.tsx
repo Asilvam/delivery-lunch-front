@@ -1,3 +1,4 @@
+import { useSweetAlertOpen } from "../../../hooks/useSweetAlertOpen";
 import { useEffect, useRef, useState } from "react";
 import {
   Box,
@@ -14,7 +15,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { staffToast } from "../../../utils/notifications";
+import { staffAlert } from "../../../utils/notifications";
 import {
   libraryError,
   saveLibraryDish,
@@ -36,6 +37,7 @@ export default function LibraryDishEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const sweetAlertOpen = useSweetAlertOpen();
   const mounted = useMountedRef();
   const [input, setInput] = useState<LibraryDishInput>(() =>
     dish
@@ -88,7 +90,7 @@ export default function LibraryDishEditor({
       !["image/png", "image/jpeg", "image/webp"].includes(file.type) ||
       file.size > 10 * 1024 * 1024
     ) {
-      void staffToast.fire({
+      void staffAlert.fire({
         icon: "error",
         title: "Usa PNG, JPG o WebP de hasta 10 MB",
       });
@@ -101,7 +103,7 @@ export default function LibraryDishEditor({
         change({ imagenUrl: result.url, imagenPublicId: result.public_id });
     } catch (error) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(error, "No pudimos subir la fotografía"),
         });
@@ -135,7 +137,7 @@ export default function LibraryDishEditor({
       }
     } catch (error) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(error, "No pudimos guardar el plato"),
         });
@@ -145,6 +147,7 @@ export default function LibraryDishEditor({
   };
   return (
     <Dialog
+      disableEnforceFocus={sweetAlertOpen}
       open
       onClose={(_, reason) => {
         if (!dirty || reason !== "backdropClick") void close();

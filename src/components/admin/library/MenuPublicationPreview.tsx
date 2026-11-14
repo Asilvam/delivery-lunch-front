@@ -1,3 +1,4 @@
+import { useSweetAlertOpen } from "../../../hooks/useSweetAlertOpen";
 import {
   Box,
   Button,
@@ -36,8 +37,10 @@ export default function MenuPublicationPreview({
   dishes: PreviewDish[];
   onClose: () => void;
 }) {
+  const sweetAlertOpen = useSweetAlertOpen();
   return (
     <Dialog
+      disableEnforceFocus={sweetAlertOpen}
       open
       onClose={onClose}
       fullWidth

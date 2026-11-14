@@ -13,6 +13,7 @@ export default function StaffNavigation() {
           ["/admin/menus", "Menús"],
           ["/cocina", "Cocina"],
           ["/dashboard", "Métricas"],
+          ["/admin/clientes", "Clientes"],
         ]
       : [["/cocina", "Cocina"]];
   return (
@@ -26,7 +27,7 @@ export default function StaffNavigation() {
         <Box
           component="nav"
           aria-label="Navegación del personal"
-          sx={{ display: "flex", gap: 1, overflowX: "auto" }}
+          sx={{ display: "flex", gap: { xs: 0.25, sm: 1 }, overflowX: "auto" }}
         >
           {links.map(([to, label]) => (
             <Button
@@ -34,7 +35,12 @@ export default function StaffNavigation() {
               component={NavLink}
               to={to}
               variant={pathname === to ? "contained" : "text"}
-              sx={{ flexShrink: 0 }}
+              sx={{
+                flexShrink: 0,
+                minWidth: { xs: 44, sm: 64 },
+                px: { xs: 0.75, sm: 2 },
+                fontSize: { xs: "0.8rem", sm: "0.875rem" },
+              }}
             >
               {label}
             </Button>

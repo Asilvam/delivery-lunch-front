@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { appAlert, userToast, staffToast } from "./notifications";
+import { appAlert, userAlert, staffAlert } from "./notifications";
 beforeEach(() => {
   vi.useFakeTimers();
   vi.stubGlobal("scrollTo", vi.fn());
@@ -23,20 +23,24 @@ afterEach(async () => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
-it("automatically removes the shared toast after three seconds", async () => {
-  void userToast.fire({
+it("shows a centered SweetAlert and removes it after the same three seconds", async () => {
+  void userAlert.fire({
     icon: "info",
     title: "Descarga solicitada",
     animation: false,
   });
   await vi.advanceTimersByTimeAsync(0);
-  expect(document.querySelector(".swal2-toast")?.textContent).toContain(
+  expect(document.querySelector(".swal2-popup")?.textContent).toContain(
     "Descarga solicitada",
   );
-  await vi.advanceTimersByTimeAsync(2900);
-  expect(document.querySelector(".swal2-toast")).not.toBeNull();
-  await vi.advanceTimersByTimeAsync(200);
   expect(document.querySelector(".swal2-toast")).toBeNull();
+  expect(
+    document.querySelector(".swal2-container.swal2-center"),
+  ).not.toBeNull();
+  await vi.advanceTimersByTimeAsync(2900);
+  expect(document.querySelector(".swal2-popup")).not.toBeNull();
+  await vi.advanceTimersByTimeAsync(200);
+  expect(document.querySelector(".swal2-popup")).toBeNull();
 });
 it("requires an explicit decision for confirmation instead of expiring", async () => {
   const decision = appAlert.fire({
@@ -51,13 +55,25 @@ it("requires an explicit decision for confirmation instead of expiring", async (
 });
 
 it("removes staff notifications within two seconds", async () => {
-  void staffToast.fire({
+  void staffAlert.fire({
     icon: "info",
     title: "Descarga solicitada",
     animation: false,
   });
   await vi.advanceTimersByTimeAsync(1900);
-  expect(document.querySelector(".swal2-toast")).not.toBeNull();
+  expect(document.querySelector(".swal2-popup")).not.toBeNull();
   await vi.advanceTimersByTimeAsync(200);
-  expect(document.querySelector(".swal2-toast")).toBeNull();
+  expect(document.querySelector(".swal2-popup")).toBeNull();
+});
+
+it("preserves the one-second duration of quick staff actions", async () => {
+  void staffAlert.fire({
+    title: "Pedido aprobado",
+    timer: 1000,
+    animation: false,
+  });
+  await vi.advanceTimersByTimeAsync(900);
+  expect(staffAlert.getPopup()?.textContent).toContain("Pedido aprobado");
+  await vi.advanceTimersByTimeAsync(200);
+  expect(document.querySelector(".swal2-popup")).toBeNull();
 });

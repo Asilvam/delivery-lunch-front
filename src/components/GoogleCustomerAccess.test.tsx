@@ -10,8 +10,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { GoogleCustomerAccess } from "./GoogleCustomerAccess";
 import { useCustomerSession } from "../hooks/useCustomerSession";
-import { userToast } from "../utils/notifications";
-vi.mock("../utils/notifications", () => ({ userToast: { fire: vi.fn() } }));
+import { userAlert } from "../utils/notifications";
+vi.mock("../utils/notifications", () => ({ userAlert: { fire: vi.fn() } }));
 vi.mock("../hooks/useCustomerSession", () => ({ useCustomerSession: vi.fn() }));
 vi.mock("@react-oauth/google", () => ({
   GoogleOAuthProvider: ({ children }: { children: ReactNode }) => children,
@@ -33,6 +33,10 @@ beforeEach(() => {
     session: null,
     signIn,
     signOut: vi.fn(),
+    restoring: false,
+    sessionError: null,
+    refreshSession: vi.fn(),
+    getSession: vi.fn(),
   });
 });
 afterEach(() => {
@@ -44,10 +48,10 @@ it("shows a verification failure through the client toast while the checkout is 
   render(<GoogleCustomerAccess />);
   fireEvent.click(screen.getByRole("button", { name: "Continuar con Google" }));
   await waitFor(() =>
-    expect(userToast.fire).toHaveBeenCalledWith(
+    expect(userAlert.fire).toHaveBeenCalledWith(
       expect.objectContaining({
         icon: "error",
-        title: expect.stringContaining("No pudimos verificar tu cuenta"),
+        title: expect.stringContaining("No pudimos recuperar tu sesión"),
       }),
     ),
   );
@@ -70,5 +74,5 @@ it("does not show a late error after closing checkout", async () => {
   await act(async () => {
     reject(new Error("late verification failure"));
   });
-  expect(userToast.fire).not.toHaveBeenCalled();
+  expect(userAlert.fire).not.toHaveBeenCalled();
 });

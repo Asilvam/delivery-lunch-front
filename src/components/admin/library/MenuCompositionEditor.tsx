@@ -13,7 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { appAlert, staffToast } from "../../../utils/notifications";
+import { appAlert, staffAlert } from "../../../utils/notifications";
 import {
   fetchAdminMenu,
   libraryError,
@@ -236,13 +236,13 @@ export default function MenuCompositionEditor({
       setBread(source.pan);
       setDessert(strings(source.postre, "Postre del día"));
       mark();
-      void staffToast.fire({
+      void staffAlert.fire({
         icon: "info",
         title: "Selección copiada. Revisa las porciones de este día.",
       });
     } catch (error) {
       if (mounted.current)
-        void staffToast.fire({
+        void staffAlert.fire({
           icon: "error",
           title: libraryError(error, "No pudimos recuperar la selección"),
         });
