@@ -42,6 +42,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import TodayIcon from "@mui/icons-material/Today";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { appAlert } from "./utils/notifications";
 
 import { appTheme } from "./theme/appTheme";
@@ -775,6 +776,33 @@ export function CustomerMenuPage() {
                 Los platos con precio especial lo indican junto a Agregar.
               </Typography>
             )}
+            <Box
+              component="aside"
+              aria-label="Información sobre el menú"
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 1.25,
+                mt: 2,
+                p: { xs: 1.5, sm: 2 },
+                borderRadius: 2,
+                bgcolor: "rgba(216,27,96,0.05)",
+              }}
+            >
+              <InfoOutlinedIcon
+                fontSize="small"
+                sx={{ color: "primary.dark", mt: 0.2, flexShrink: 0 }}
+              />
+              <Box>
+                <Typography variant="body2" fontWeight={700} color="primary.dark">
+                  Acompañamientos y porciones fijos
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No realizamos cambios de acompañamientos ni compensamos uno por
+                  una mayor cantidad de otro.
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         )}
         {!isLoadingMenus && menusForNavigation.length > 1 && (
